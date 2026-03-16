@@ -50,11 +50,11 @@
         ::-webkit-scrollbar-thumb { background: #333; border-radius: 5px; border: 2px solid #000; }
         ::-webkit-scrollbar-thumb:hover { background: #444; }
 
-        .view-section { display: none; padding-top: 8rem; padding-bottom: 6rem; padding-left: 2rem; padding-right: 2rem; max-width: 90rem; margin-left: auto; margin-right: auto; }
-        @media (max-width: 768px) { .view-section { padding-top: 6rem; padding-left: 1.25rem; padding-right: 1.25rem; } }
+        .view-section { display: none; padding-top: calc(8rem + env(safe-area-inset-top)); padding-bottom: calc(6rem + env(safe-area-inset-bottom)); padding-left: max(2rem, env(safe-area-inset-left)); padding-right: max(2rem, env(safe-area-inset-right)); max-width: 90rem; margin-left: auto; margin-right: auto; }
+        @media (max-width: 768px) { .view-section { padding-top: calc(6rem + env(safe-area-inset-top)); padding-left: max(1.25rem, env(safe-area-inset-left)); padding-right: max(1.25rem, env(safe-area-inset-right)); } }
         .view-section.active { display: block; animation: fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
-        .modal-overlay { display: none; position: fixed; inset: 0; z-index: 60; background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(12px); align-items: center; justify-content: center; padding: 1.5rem; }
+        .modal-overlay { display: none; position: fixed; inset: 0; z-index: 60; background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(12px); align-items: center; justify-content: center; padding: max(1.5rem, env(safe-area-inset-top)); }
         .modal-overlay.open { display: flex; animation: fade-in-up 0.3s ease-out forwards; }
         .tab-btn.active { background-color: #27272a; color: white; box-shadow: 0 0 20px rgba(255, 255, 255, 0.05); }
         
@@ -63,6 +63,22 @@
         .type-btn.selected { background-color: #27272a; color: #fff; border-color: rgba(99, 102, 241, 0.5); }
         .type-btn svg { width: 1.5rem; height: 1.5rem; color: #a1a1aa; }
         .type-btn.selected svg { color: #fff; }
+
+        /* --- Ajustes de Safe Area (Notch) e Apple Watch --- */
+        #navbar { padding-top: env(safe-area-inset-top); }
+        #mobile-menu { top: calc(4rem + env(safe-area-inset-top)) !important; max-height: calc(100vh - 4rem - env(safe-area-inset-top)); overflow-y: auto; }
+        
+        @media (max-width: 380px) {
+            .loader-logo { width: 100px; height: 100px; }
+            .grid-cols-2 { grid-template-columns: 1fr !important; }
+            .text-4xl, .text-5xl { font-size: 2rem !important; }
+            .text-3xl { font-size: 1.5rem !important; }
+            .p-8 { padding: 1.25rem !important; }
+            .gap-6 { gap: 1rem !important; }
+            .gap-4 { gap: 0.75rem !important; }
+            #filter-avatars { display: none !important; }
+            .modal-overlay { padding: 0.5rem; }
+        }
     </style>
 </head>
 <body>
