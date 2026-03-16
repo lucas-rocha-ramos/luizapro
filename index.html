@@ -57,6 +57,12 @@
         .modal-overlay { display: none; position: fixed; inset: 0; z-index: 60; background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(12px); align-items: center; justify-content: center; padding: 1.5rem; }
         .modal-overlay.open { display: flex; animation: fade-in-up 0.3s ease-out forwards; }
         .tab-btn.active { background-color: #27272a; color: white; box-shadow: 0 0 20px rgba(255, 255, 255, 0.05); }
+        
+        .type-btn { background-color: #18181b; padding: 1.25rem; border-radius: 1rem; text-align: center; font-size: 0.875rem; font-weight: 500; color: #a1a1aa; border: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; cursor: pointer; }
+        .type-btn:hover { background-color: #27272a; }
+        .type-btn.selected { background-color: #27272a; color: #fff; border-color: rgba(99, 102, 241, 0.5); }
+        .type-btn svg { width: 1.5rem; height: 1.5rem; color: #a1a1aa; }
+        .type-btn.selected svg { color: #fff; }
     </style>
 </head>
 <body>
@@ -209,7 +215,7 @@
             homeFilter: { month: new Date().getMonth(), year: new Date().getFullYear() },
             dashboardFilter: { month: new Date().getMonth(), year: new Date().getFullYear() },
             filterView: { category: 'Todas', month: new Date().getMonth(), year: new Date().getFullYear() },
-            newTransaction: {}, modalMode: 'expense'
+            newTransaction: { type: 'single' }, modalMode: 'expense'
         };
 
         window.addEventListener('load', () => {
@@ -259,9 +265,8 @@
 
         function doLogin(user) { 
             state.currentUser = user; 
-            // INICIALIZA SELECIONANDO TODOS OS USUÁRIOS POR PADRÃO
-            state.selectedFilterUsers = state.users.map(u => String(u.id)); 
-            if(!state.selectedFilterUsers.includes(String(user.id))) state.selectedFilterUsers.push(String(user.id));
+            // AGORA O FILTRO INICIA APENAS COM O USUÁRIO LOGADO
+            state.selectedFilterUsers = [String(user.id)]; 
             
             document.getElementById('login-view').classList.add('hidden'); 
             document.getElementById('main-app').classList.remove('hidden'); 
@@ -281,12 +286,7 @@
         function renderApp() { document.getElementById('current-user-name').innerText = state.currentUser.name; document.getElementById('current-user-role').innerText = state.currentUser.role; document.getElementById('current-user-avatar').innerText = state.currentUser.avatar; renderUserFilter(); renderCurrentView(); }
         function renderCurrentView() { const tab = state.activeTab; if(tab === 'home') renderHome(); else if(tab === 'dashboard') renderDashboard(); else if(tab === 'bills') renderBills(); else if(tab === 'statement') renderStatement(); else if(tab === 'filter') renderFilterView(); else if(tab === 'users') renderUsers(); lucide.createIcons(); }
 
-        function getFilteredTransactions() { 
-            // SE TODOS ESTIVEREM SELECIONADOS, MOSTRA TUDO MESMO QUE O DONO SEJA DESCONHECIDO (ex: Admin)
-            if (state.selectedFilterUsers.length >= state.users.length) return state.transactions;
-            return state.transactions.filter(t => state.selectedFilterUsers.some(id => String(id) === String(t.userId))); 
-        }
-        
+        function getFilteredTransactions() { return state.transactions.filter(t => state.selectedFilterUsers.some(id => String(id) === String(t.userId))); }
         function formatCurrency(val) { return new Intl.NumberFormat('pt-BR', {style: 'currency', currency: 'BRL'}).format(val); }
         
         function safeGetYearMonth(dateStr) { 
@@ -311,7 +311,17 @@
 
         function renderHome() {
             const { month, year } = state.homeFilter; let rev = 0, exp = 0;
-            getFilteredTransactions().forEach(t => { const process = (date, val, kind) => { const {y, m} = safeGetYearMonth(date); if(m === month && y === year) kind === 'income' ? rev += val : exp += val; }; if(t.type === 'single') process(t.date, t.value, t.kind); else t.installments.forEach(i => process(i.date, i.value, t.kind)); });
+            getFilteredTransactions().forEach(t => { 
+                if(t.type === 'single') {
+                    const {y, m} = safeGetYearMonth(t.date); 
+                    if(m === month && y === year) kind === 'income' ? rev += t.value : exp += t.value; 
+                } else if(t.type === 'installment' && t.installments) {
+                    t.installments.forEach(i => {
+                        const {y, m} = safeGetYearMonth(i.date); 
+                        if(m === month && y === year) t.kind === 'income' ? rev += i.value : exp += i.value; 
+                    });
+                }
+            });
             document.getElementById('view-home').innerHTML = `
                 <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6"><div><h1 class="text-4xl md:text-5xl font-bold text-white tracking-tighter mb-2">Resumo</h1><p class="text-zinc-500">Fluxo de <span class="text-white font-medium">${MONTHS[month]} ${year}</span></p></div><div class="flex gap-3 w-full md:w-auto"><select onchange="updateHomeFilter('month', this.value)" class="flex-1 md:flex-none bg-zinc-900/80 border border-white/10 text-white py-3 px-5 rounded-2xl text-sm outline-none cursor-pointer hover:bg-zinc-800 transition-colors">${MONTHS.map((m,i)=>`<option value="${i}" ${i===month?'selected':''}>${m}</option>`).join('')}</select><select onchange="updateHomeFilter('year', this.value)" class="flex-1 md:flex-none bg-zinc-900/80 border border-white/10 text-white py-3 px-5 rounded-2xl text-sm outline-none cursor-pointer hover:bg-zinc-800 transition-colors">${YEARS.map(y=>`<option value="${y}" ${y===year?'selected':''}>${y}</option>`).join('')}</select></div></div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8"><div class="bg-zinc-900/40 border border-white/5 p-8 rounded-[2rem] backdrop-blur-md relative overflow-hidden group hover:border-white/10 transition-all"><div class="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div><div class="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 mb-6"><i data-lucide="trending-up" class="w-6 h-6"></i></div><p class="text-zinc-400 font-medium mb-1">Receitas (Mês)</p><h2 class="text-5xl md:text-6xl font-bold text-white tracking-tighter">${formatCurrency(rev)}</h2></div><div class="bg-zinc-900/40 border border-white/5 p-8 rounded-[2rem] backdrop-blur-md relative overflow-hidden group hover:border-white/10 transition-all"><div class="absolute top-0 right-0 w-64 h-64 bg-rose-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div><div class="w-14 h-14 rounded-2xl bg-rose-500/10 flex items-center justify-center text-rose-400 mb-6"><i data-lucide="trending-down" class="w-6 h-6"></i></div><p class="text-zinc-400 font-medium mb-1">Despesas (Mês)</p><h2 class="text-5xl md:text-6xl font-bold text-white tracking-tighter">${formatCurrency(exp)}</h2></div></div>
@@ -321,9 +331,29 @@
 
         function renderDashboard() {
             const { month, year } = state.dashboardFilter; let rev = 0, exp = 0;
-            getFilteredTransactions().forEach(t => { const process = (date, val, kind) => { const {y, m} = safeGetYearMonth(date); if(m === month && y === year) kind === 'income' ? rev += val : exp += val; }; if(t.type === 'single') process(t.date, t.value, t.kind); else t.installments.forEach(i => process(i.date, i.value, t.kind)); });
+            getFilteredTransactions().forEach(t => { 
+                if(t.type === 'single') {
+                    const {y, m} = safeGetYearMonth(t.date); 
+                    if(m === month && y === year) t.kind === 'income' ? rev += t.value : exp += t.value; 
+                } else if(t.type === 'installment' && t.installments) {
+                    t.installments.forEach(i => {
+                        const {y, m} = safeGetYearMonth(i.date); 
+                        if(m === month && y === year) t.kind === 'income' ? rev += i.value : exp += i.value; 
+                    });
+                }
+            });
             const chartData = Array(12).fill(0).map((_, i) => ({ inc: 0, exp: 0 }));
-            getFilteredTransactions().forEach(t => { const process = (date, val, kind) => { const {y, m} = safeGetYearMonth(date); if(y === year && m >= 0 && m < 12) { kind === 'income' ? chartData[m].inc += val : chartData[m].exp += val; }}; if(t.type === 'single') process(t.date, t.value, t.kind); else t.installments.forEach(i => process(i.date, i.value, t.kind)); });
+            getFilteredTransactions().forEach(t => { 
+                if(t.type === 'single') {
+                    const {y, m} = safeGetYearMonth(t.date); 
+                    if(y === year && m >= 0 && m < 12) { t.kind === 'income' ? chartData[m].inc += t.value : chartData[m].exp += t.value; }
+                } else if(t.type === 'installment' && t.installments) {
+                    t.installments.forEach(i => {
+                        const {y, m} = safeGetYearMonth(i.date); 
+                        if(y === year && m >= 0 && m < 12) { t.kind === 'income' ? chartData[m].inc += i.value : chartData[m].exp += i.value; }
+                    });
+                }
+            });
             const maxVal = Math.max(...chartData.map(d => Math.max(d.inc, d.exp)), 100);
             const bars = chartData.map((d, i) => `<div class="flex flex-col items-center gap-1 w-full h-full justify-end group relative"><div class="absolute -top-16 bg-zinc-800 border border-white/10 text-white text-[10px] p-2 rounded opacity-0 group-hover:opacity-100 transition-opacity z-20 pointer-events-none w-max"><div class="font-bold mb-1">${MONTHS[i]}</div><div class="text-emerald-400">+${formatCurrency(d.inc)}</div><div class="text-rose-400">-${formatCurrency(d.exp)}</div></div><div class="flex gap-1 items-end h-full justify-center w-full"><div class="w-1.5 md:w-3 bg-emerald-500/80 rounded-t-sm hover:bg-emerald-400 transition-colors" style="height:${(d.inc/maxVal)*100}%"></div><div class="w-1.5 md:w-3 bg-rose-500/80 rounded-t-sm hover:bg-rose-400 transition-colors" style="height:${(d.exp/maxVal)*100}%"></div></div></div>`).join('');
 
@@ -338,7 +368,7 @@
             const bills = getFilteredTransactions().filter(t => t.kind === 'expense');
             const rows = bills.map(t => {
                 const u = state.users.find(user => String(user.id) === String(t.userId));
-                return `<div onclick="openDetails(${t.id})" class="group flex flex-col md:grid md:grid-cols-12 gap-4 p-5 items-center hover:bg-white/5 transition-colors cursor-pointer border-b border-white/5">
+                return `<div onclick="openDetails('${t.id}')" class="group flex flex-col md:grid md:grid-cols-12 gap-4 p-5 items-center hover:bg-white/5 transition-colors cursor-pointer border-b border-white/5">
                     <div class="w-full md:col-span-4 text-white font-medium flex items-center gap-4"><div class="w-10 h-10 rounded-xl bg-zinc-800 flex items-center justify-center text-zinc-400 group-hover:text-white transition-colors"><i data-lucide="${t.type==='installment'?'list-checks':'credit-card'}" class="w-5 h-5"></i></div><div><div class="flex items-center gap-2 text-base">${t.name} ${t.type==='installment'?'<span class="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 rounded-full border border-indigo-500/20">Parcelado</span>':''}</div><p class="text-xs text-zinc-500">${t.store||''}</p></div></div>
                     <div class="w-full md:col-span-3 text-zinc-400 text-sm flex items-center gap-2"><div class="w-5 h-5 rounded-full bg-gradient-to-br ${u?.color||'bg-gray-500'} flex items-center justify-center text-[9px] text-white border border-white/10">${u?.avatar||'?'}</div><span>${t.category}</span></div>
                     <div class="w-full md:col-span-2 text-zinc-400 text-sm flex justify-between md:block"><span class="md:hidden">Vencimento:</span> ${t.date}</div>
@@ -361,7 +391,19 @@
         function renderFilterView() {
             const {category, month, year} = state.filterView;
             const catOptions = ['Todas', ...state.categories.map(c => c.name)].map(c => `<option value="${c}" ${c === category ? 'selected' : ''}>${c}</option>`).join(''); let total = 0;
-            const items = getFilteredTransactions().filter(t => t.kind === 'expense' && (category === 'Todas' || t.category === category)).reduce((arr, t) => { let val = 0; if(t.type === 'single') { const {y, m} = safeGetYearMonth(t.date); if(m === month && y === year) val = t.value; } else t.installments.forEach(i => { const {y, m} = safeGetYearMonth(i.date); if(m === month && y === year) val += i.value; }); if(val > 0) { total += val; arr.push({...t, val}); } return arr; }, []);
+            const items = getFilteredTransactions().filter(t => t.kind === 'expense' && (category === 'Todas' || t.category === category)).reduce((arr, t) => { 
+                let val = 0; 
+                if(t.type === 'single') { 
+                    const {y, m} = safeGetYearMonth(t.date); 
+                    if(m === month && y === year) val = t.value; 
+                } else if(t.type === 'installment' && t.installments) { 
+                    t.installments.forEach(i => { 
+                        const {y, m} = safeGetYearMonth(i.date); 
+                        if(m === month && y === year) val += i.value; 
+                    }); 
+                } 
+                if(val > 0) { total += val; arr.push({...t, val}); } return arr; 
+            }, []);
             const rows = items.map(t => `<div class="flex justify-between items-center p-5 border-b border-white/5 hover:bg-white/5 transition-colors"><div><p class="text-white font-medium text-base">${t.name} <span class="text-zinc-500 text-sm ml-2 font-normal">${t.store}</span></p><p class="text-xs text-zinc-500 mt-0.5">${t.category}</p></div><p class="text-rose-400 font-mono text-base font-medium">${formatCurrency(t.val)}</p></div>`).join('');
             document.getElementById('view-filter').innerHTML = `<div class="flex flex-col md:flex-row justify-between mb-10 gap-6"><div><h2 class="text-3xl font-bold text-white tracking-tight">Filtro Avançado</h2><p class="text-zinc-500 mt-2">Detalhamento de gastos por categoria.</p></div><div class="flex gap-3 flex-wrap md:flex-nowrap"><select onchange="updateFilterView('category', this.value)" class="bg-zinc-900 border border-white/10 text-white p-3 rounded-xl text-sm w-full md:w-auto outline-none">${catOptions}</select><select onchange="updateFilterView('month', this.value)" class="bg-zinc-900 border border-white/10 text-white p-3 rounded-xl text-sm w-full md:w-auto outline-none">${MONTHS.map((m,i)=>`<option value="${i}" ${i===month?'selected':''}>${m}</option>`).join('')}</select><select onchange="updateFilterView('year', this.value)" class="bg-zinc-900 border border-white/10 text-white p-3 rounded-xl text-sm w-full md:w-auto outline-none">${YEARS.map(y=>`<option value="${y}" ${y===year?'selected':''}>${y}</option>`).join('')}</select></div></div><div class="bg-zinc-900/50 p-8 rounded-[2rem] border border-white/5 mb-8 flex justify-between items-center shadow-lg"><div><p class="text-zinc-400 text-sm font-medium">Total em <span class="text-white">${category}</span></p><p class="text-xs text-zinc-500 mt-1">${MONTHS[month]} ${year}</p></div><h2 class="text-4xl md:text-5xl font-bold text-rose-400 tracking-tighter">${formatCurrency(total)}</h2></div><div class="bg-zinc-900/40 rounded-[2rem] border border-white/5 overflow-hidden backdrop-blur-md">${rows || '<p class="p-8 text-center text-zinc-500">Nenhum gasto encontrado.</p>'}</div>`;
         }
@@ -380,9 +422,6 @@
         
         function selectAllUsers() { 
             state.selectedFilterUsers = state.users.map(u => String(u.id)); 
-            if(state.currentUser && !state.selectedFilterUsers.includes(String(state.currentUser.id))) {
-                state.selectedFilterUsers.push(String(state.currentUser.id));
-            }
             renderApp(); 
         }
         
@@ -427,13 +466,17 @@
                 </div>
             `;
 
+            // MUDANÇA: Estrutura HTML robusta para os botões e campo de parcelas
             document.getElementById('modal-content').innerHTML = `
                 ${scanArea}
-                <div class="grid grid-cols-2 gap-4 mb-6"><button onclick="setTransType('single')" id="btn-type-single" class="bg-zinc-800 p-5 rounded-2xl text-center text-white text-sm font-medium hover:bg-zinc-700 transition-colors flex flex-col items-center gap-2 border border-indigo-500/50"><i data-lucide="dollar-sign" class="w-6 h-6 text-white"></i>À Vista</button><button onclick="setTransType('installment')" id="btn-type-inst" class="bg-zinc-900 p-5 rounded-2xl text-center text-zinc-400 text-sm font-medium hover:bg-zinc-800 transition-colors flex flex-col items-center gap-2 border border-white/5"><i data-lucide="list-checks" class="w-6 h-6 text-zinc-400"></i>Parcelado</button></div>
+                <div class="grid grid-cols-2 gap-4 mb-6">
+                    <div onclick="setTransType('single')" id="btn-type-single" class="type-btn selected"><i data-lucide="dollar-sign"></i>À Vista</div>
+                    <div onclick="setTransType('installment')" id="btn-type-inst" class="type-btn"><i data-lucide="list-checks"></i>Parcelado</div>
+                </div>
                 <div id="trans-form" class="space-y-4">
                     <div class="grid grid-cols-2 gap-4"><input id="t-store" type="text" placeholder="${mode==='expense'?'Loja':'Origem'}" class="w-full bg-black border border-white/10 rounded-2xl p-3.5 text-white text-sm focus:border-indigo-500 outline-none"><select id="t-cat" class="w-full bg-black border border-white/10 rounded-2xl p-3.5 text-white text-sm focus:border-indigo-500 outline-none"><option value="Geral">Sem Categoria</option>${catOpts}</select></div>
                     <input id="t-desc" type="text" placeholder="Descrição" class="w-full bg-black border border-white/10 rounded-2xl p-3.5 text-white text-sm focus:border-indigo-500 outline-none">
-                    <div class="grid grid-cols-2 gap-4"><input id="t-val" type="text" placeholder="Valor" class="w-full bg-black border border-white/10 rounded-2xl p-3.5 text-white text-sm focus:border-indigo-500 outline-none"><input id="t-date" type="date" class="w-full bg-black border border-white/10 rounded-2xl p-3.5 text-white text-sm focus:border-indigo-500 outline-none [color-scheme:dark]"></div>
+                    <div class="grid grid-cols-2 gap-4"><input id="t-val" type="text" placeholder="Valor Total" class="w-full bg-black border border-white/10 rounded-2xl p-3.5 text-white text-sm focus:border-indigo-500 outline-none"><input id="t-date" type="date" class="w-full bg-black border border-white/10 rounded-2xl p-3.5 text-white text-sm focus:border-indigo-500 outline-none [color-scheme:dark]"></div>
                     <div id="inst-inputs" style="display: none;"><input id="t-inst" type="number" placeholder="Qtd Parcelas" class="w-full bg-black border border-white/10 rounded-2xl p-3.5 text-white text-sm mt-4 focus:border-indigo-500 outline-none"></div>
                     <button onclick="submitTransaction()" class="w-full bg-white text-black font-bold p-4 rounded-2xl mt-4 hover:bg-zinc-200 transition-colors shadow-lg">Salvar</button>
                 </div>`;
@@ -444,21 +487,16 @@
             state.newTransaction.type = type; 
             const btnS = document.getElementById('btn-type-single'); 
             const btnI = document.getElementById('btn-type-inst');
-            const icS = btnS ? btnS.querySelector('svg, i') : null; 
-            const icI = btnI ? btnI.querySelector('svg, i') : null;
             const instDiv = document.getElementById('inst-inputs');
             
+            // Lógica blindada para trocar a visualização
             if(type === 'single') { 
-                if(btnS) btnS.className = "bg-zinc-800 p-5 rounded-2xl text-center text-white text-sm font-medium hover:bg-zinc-700 transition-colors flex flex-col items-center gap-2 border border-indigo-500/50"; 
-                if(btnI) btnI.className = "bg-zinc-900 p-5 rounded-2xl text-center text-zinc-400 text-sm font-medium hover:bg-zinc-800 transition-colors flex flex-col items-center gap-2 border border-white/5"; 
-                if(icS) { icS.classList.remove('text-zinc-400'); icS.classList.add('text-white'); }
-                if(icI) { icI.classList.remove('text-white'); icI.classList.add('text-zinc-400'); }
+                if(btnS) btnS.classList.add('selected');
+                if(btnI) btnI.classList.remove('selected');
                 if(instDiv) instDiv.style.display = 'none'; 
             } else { 
-                if(btnI) btnI.className = "bg-zinc-800 p-5 rounded-2xl text-center text-white text-sm font-medium hover:bg-zinc-700 transition-colors flex flex-col items-center gap-2 border border-indigo-500/50"; 
-                if(btnS) btnS.className = "bg-zinc-900 p-5 rounded-2xl text-center text-zinc-400 text-sm font-medium hover:bg-zinc-800 transition-colors flex flex-col items-center gap-2 border border-white/5"; 
-                if(icI) { icI.classList.remove('text-zinc-400'); icI.classList.add('text-white'); }
-                if(icS) { icS.classList.remove('text-white'); icS.classList.add('text-zinc-400'); }
+                if(btnI) btnI.classList.add('selected');
+                if(btnS) btnS.classList.remove('selected');
                 if(instDiv) instDiv.style.display = 'block'; 
             }
         }
@@ -475,17 +513,27 @@
             const cat = document.getElementById('t-cat').value;
             
             let instCount = 0;
+            let valPerInst = val; // Se for à vista, a parcela única é o valor total
+
+            // Bloqueio de segurança
             if (type === 'installment') {
+                const instDiv = document.getElementById('inst-inputs');
+                // Se a div estiver escondida, é porque o click no botão falhou. Força para single.
+                if(instDiv.style.display === 'none') {
+                    return alert("Erro: Selecione 'Parcelado' e preencha a quantidade de parcelas.");
+                }
+
                 instCount = parseInt(document.getElementById('t-inst').value);
                 if (isNaN(instCount) || instCount <= 0) return alert("Preencha a quantidade de parcelas corretamente.");
+                valPerInst = val / instCount; // Divide o valor total pelo número de parcelas
             }
 
             let status = state.modalMode === 'expense' ? (type === 'single' ? 'Pago' : 'Em andamento') : 'Recebido';
 
-            const payload = { id: String(Date.now()), userId: String(state.currentUser.id), kind: state.modalMode, name: document.getElementById('t-desc').value, store: document.getElementById('t-store').value, category: cat, value: type === 'installment' ? val * instCount : val, date, status: status, type, installmentValue: type === 'installment' ? val : 0, totalInstallments: instCount, paidInstallments: 0, installments: [] };
+            const payload = { id: String(Date.now()), userId: String(state.currentUser.id), kind: state.modalMode, name: document.getElementById('t-desc').value, store: document.getElementById('t-store').value, category: cat, value: val, date, status: status, type, installmentValue: type === 'installment' ? valPerInst : 0, totalInstallments: instCount, paidInstallments: 0, installments: [] };
             
             if(type === 'installment') {
-                for(let i=0; i<instCount; i++) payload.installments.push({number: i+1, value: val, date: calculateInstallmentDate(date, i), status: 'Pendente'});
+                for(let i=0; i<instCount; i++) payload.installments.push({number: i+1, value: valPerInst, date: calculateInstallmentDate(date, i), status: 'Pendente'});
             }
             
             state.transactions.push(payload); closeModal('modal-transaction'); renderCurrentView(); await apiPost('addTransaction', {transaction: payload});
