@@ -51,7 +51,7 @@
         ::-webkit-scrollbar-thumb:hover { background: #444; }
 
         .view-section { display: none; padding-top: calc(8rem + env(safe-area-inset-top)); padding-bottom: calc(6rem + env(safe-area-inset-bottom)); padding-left: max(2rem, env(safe-area-inset-left)); padding-right: max(2rem, env(safe-area-inset-right)); max-width: 90rem; margin-left: auto; margin-right: auto; }
-        @media (max-width: 768px) { .view-section { padding-top: calc(6rem + env(safe-area-inset-top)); padding-left: max(1.25rem, env(safe-area-inset-left)); padding-right: max(1.25rem, env(safe-area-inset-right)); } }
+        @media (max-width: 768px) { .view-section { padding-top: calc(6rem + env(safe-area-inset-top)); padding-left: max(1.25rem, env(safe-area-inset-left)); padding-right: max(1.25rem, env(safe-area-inset-right)); padding-bottom: calc(8rem + env(safe-area-inset-bottom)); } }
         .view-section.active { display: block; animation: fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
         .modal-overlay { display: none; position: fixed; inset: 0; z-index: 60; background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(12px); align-items: center; justify-content: center; padding: max(1.5rem, env(safe-area-inset-top)); }
@@ -64,9 +64,10 @@
         .type-btn svg { width: 1.5rem; height: 1.5rem; color: #a1a1aa; }
         .type-btn.selected svg { color: #fff; }
 
-        /* --- Ajustes de Safe Area (Notch) e Apple Watch --- */
+        /* Ajustes de tela e Safe Area para Celulares e Watch */
         #navbar { padding-top: env(safe-area-inset-top); }
-        #mobile-menu { top: calc(4rem + env(safe-area-inset-top)) !important; max-height: calc(100vh - 4rem - env(safe-area-inset-top)); overflow-y: auto; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
         @media (max-width: 380px) {
             .loader-logo { width: 100px; height: 100px; }
@@ -76,7 +77,6 @@
             .p-8 { padding: 1.25rem !important; }
             .gap-6 { gap: 1rem !important; }
             .gap-4 { gap: 0.75rem !important; }
-            #filter-avatars { display: none !important; }
             .modal-overlay { padding: 0.5rem; }
         }
     </style>
@@ -121,10 +121,11 @@
 
     <div id="main-app" class="hidden min-h-screen bg-black text-zinc-100">
         <nav class="fixed top-0 w-full z-50 transition-all duration-300 bg-black/80 backdrop-blur-xl border-b border-white/10" id="navbar">
-            <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-                <div onclick="switchTab('home')" class="text-xl font-semibold tracking-tight text-white cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-3">
+            <div class="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
+                
+                <div onclick="switchTab('home')" class="text-xl font-semibold tracking-tight text-white cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-2 md:gap-3">
                     <img src="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png" class="w-8 h-8 object-contain">
-                    <div>LUISA <span class="text-zinc-600 font-light">PRO</span></div>
+                    <div class="hidden sm:block">LUISA <span class="text-zinc-600 font-light">PRO</span></div>
                     <span id="sync-indicator" class="hidden"><i data-lucide="refresh-cw" class="w-3 h-3 animate-spin text-zinc-600"></i></span>
                 </div>
 
@@ -137,37 +138,36 @@
                     <button onclick="switchTab('users')" class="tab-btn px-5 py-2 rounded-full text-xs font-medium transition-all duration-300 flex items-center gap-2 text-zinc-400 hover:text-white" data-tab="users">Config</button>
                 </div>
 
-                <div class="hidden md:flex items-center gap-6">
+                <div class="flex items-center gap-3 md:gap-6">
                     <div class="relative">
-                        <button onclick="toggleUserFilterDropdown()" class="flex items-center gap-2 bg-zinc-900/80 border border-white/10 px-4 py-2 rounded-full hover:bg-zinc-800 transition-all hover:border-white/20">
-                            <div id="filter-avatars" class="flex -space-x-2"></div><span class="text-xs font-medium text-zinc-300" id="filter-label">Todos</span><i data-lucide="chevron-down" class="w-3.5 h-3.5 text-zinc-500"></i>
+                        <button onclick="toggleUserFilterDropdown()" class="flex items-center gap-1.5 md:gap-2 bg-zinc-900/80 border border-white/10 px-3 py-1.5 md:px-4 md:py-2 rounded-full hover:bg-zinc-800 transition-all hover:border-white/20">
+                            <div id="filter-avatars" class="flex -space-x-2"></div><span class="text-[10px] md:text-xs font-medium text-zinc-300" id="filter-label">Todos</span><i data-lucide="chevron-down" class="w-3.5 h-3.5 text-zinc-500"></i>
                         </button>
                         <div id="user-filter-dropdown" class="hidden absolute right-0 top-full mt-3 w-64 bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl p-2 z-50 flex flex-col gap-1 backdrop-blur-xl">
                             <div class="px-3 py-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider flex justify-between items-center border-b border-white/5 mb-1"><span>Visualizar</span><button onclick="selectAllUsers()" class="text-indigo-400 hover:text-indigo-300 transition-colors">Todos</button></div>
                             <div id="user-filter-list" class="max-h-60 overflow-y-auto"></div>
                         </div>
                     </div>
-                    <div class="h-6 w-[1px] bg-white/10"></div>
-                    <div class="flex items-center gap-3">
-                        <div class="text-right"><p class="text-sm font-semibold text-white leading-none" id="current-user-name">User</p><p class="text-[10px] text-zinc-500 leading-tight mt-1" id="current-user-role">Role</p></div>
-                        <div id="current-user-avatar" class="w-9 h-9 rounded-full bg-zinc-800 border border-white/10 flex items-center justify-center text-sm font-bold shadow-inner">U</div>
-                        <button onclick="logout()" class="text-zinc-600 hover:text-rose-500 transition-colors ml-2" title="Sair"><i data-lucide="log-out" class="w-5 h-5"></i></button>
+                    <div class="h-6 w-[1px] bg-white/10 hidden md:block"></div>
+                    <div class="flex items-center gap-2 md:gap-3">
+                        <div class="text-right hidden md:block"><p class="text-sm font-semibold text-white leading-none" id="current-user-name">User</p><p class="text-[10px] text-zinc-500 leading-tight mt-1" id="current-user-role">Role</p></div>
+                        <div id="current-user-avatar" class="w-8 h-8 md:w-9 md:h-9 rounded-full bg-zinc-800 border border-white/10 flex items-center justify-center text-xs md:text-sm font-bold shadow-inner">U</div>
+                        <button onclick="logout()" class="text-zinc-600 hover:text-rose-500 transition-colors" title="Sair"><i data-lucide="log-out" class="w-5 h-5"></i></button>
                     </div>
                 </div>
-
-                <div class="md:hidden"><button onclick="toggleMobileMenu()" class="text-white p-2 rounded-lg hover:bg-white/10"><i data-lucide="menu" class="w-6 h-6"></i></button></div>
-            </div>
-
-            <div id="mobile-menu" class="hidden md:hidden absolute top-16 left-0 w-full bg-zinc-950 border-b border-white/10 p-4 flex flex-col space-y-2 shadow-2xl z-40">
-                <button onclick="switchTab('home')" class="p-4 rounded-xl text-sm font-medium text-zinc-400 hover:text-white bg-zinc-900/50">Início</button>
-                <button onclick="switchTab('dashboard')" class="p-4 rounded-xl text-sm font-medium text-zinc-400 hover:text-white bg-zinc-900/50">Dashboard</button>
-                <button onclick="switchTab('bills')" class="p-4 rounded-xl text-sm font-medium text-zinc-400 hover:text-white bg-zinc-900/50">Contas</button>
-                <button onclick="switchTab('statement')" class="p-4 rounded-xl text-sm font-medium text-zinc-400 hover:text-white bg-zinc-900/50">Extrato</button>
-                <button onclick="switchTab('filter')" class="p-4 rounded-xl text-sm font-medium text-zinc-400 hover:text-white bg-zinc-900/50">Filtro</button>
-                <button onclick="switchTab('users')" class="p-4 rounded-xl text-sm font-medium text-zinc-400 hover:text-white bg-zinc-900/50">Config</button>
-                <div class="border-t border-white/10 pt-4"><button onclick="logout()" class="w-full text-left p-4 rounded-xl text-sm font-medium text-rose-400 hover:bg-white/5 flex items-center gap-2"><i data-lucide="log-out" class="w-4 h-4"></i> Sair</button></div>
             </div>
         </nav>
+
+        <div class="md:hidden fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 w-[95%] max-w-[400px] z-50">
+            <div class="flex items-center justify-between space-x-1 bg-zinc-900/95 p-1.5 rounded-full border border-white/10 backdrop-blur-xl shadow-2xl shadow-black/80 overflow-x-auto hide-scrollbar">
+                <button onclick="switchTab('home')" class="tab-btn active shrink-0 px-3.5 py-2.5 rounded-full text-[11px] font-medium transition-all duration-300 text-zinc-400 hover:text-white" data-tab="home">Início</button>
+                <button onclick="switchTab('dashboard')" class="tab-btn shrink-0 px-3.5 py-2.5 rounded-full text-[11px] font-medium transition-all duration-300 text-zinc-400 hover:text-white" data-tab="dashboard">Dash</button>
+                <button onclick="switchTab('bills')" class="tab-btn shrink-0 px-3.5 py-2.5 rounded-full text-[11px] font-medium transition-all duration-300 text-zinc-400 hover:text-white" data-tab="bills">Contas</button>
+                <button onclick="switchTab('statement')" class="tab-btn shrink-0 px-3.5 py-2.5 rounded-full text-[11px] font-medium transition-all duration-300 text-zinc-400 hover:text-white" data-tab="statement">Extrato</button>
+                <button onclick="switchTab('filter')" class="tab-btn shrink-0 px-3.5 py-2.5 rounded-full text-[11px] font-medium transition-all duration-300 text-zinc-400 hover:text-white" data-tab="filter">Filtro</button>
+                <button onclick="switchTab('users')" class="tab-btn shrink-0 px-3.5 py-2.5 rounded-full text-[11px] font-medium transition-all duration-300 text-zinc-400 hover:text-white" data-tab="users">Config</button>
+            </div>
+        </div>
 
         <section id="view-home" class="view-section active"></section>
         <section id="view-dashboard" class="view-section"></section>
@@ -289,7 +289,7 @@
         function switchTab(tab) {
             state.activeTab = tab;
             document.querySelectorAll('.tab-btn').forEach(b => { if(b.dataset.tab === tab) b.classList.add('active', 'bg-zinc-800', 'text-white'); else b.classList.remove('active', 'bg-zinc-800', 'text-white'); });
-            document.getElementById('mobile-menu').classList.add('hidden');
+            
             document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
             document.getElementById(`view-${tab}`).classList.add('active'); renderCurrentView();
         }
@@ -660,8 +660,7 @@
 
         function closeModal(id) { document.getElementById(id).classList.remove('open'); }
         function setLoading(b, id='login-loading-text') { const el=document.getElementById(id); if(el) b?el.classList.remove('hidden'):el.classList.add('hidden'); }
-        function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
-
+        
         async function handleReceiptScan(input) {
             const file = input.files[0]; if (!file) return;
             const loadingEl = document.getElementById('ocr-loading'); const statusEl = document.getElementById('ocr-status'); const progressEl = document.getElementById('ocr-progress');
