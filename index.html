@@ -257,7 +257,14 @@
             else { const err = document.getElementById('login-error'); err.classList.remove('hidden'); err.innerText = "Dados incorretos."; }
         });
 
-        function doLogin(user) { state.currentUser = user; state.selectedFilterUsers = [user.id]; document.getElementById('login-view').classList.add('hidden'); document.getElementById('main-app').classList.remove('hidden'); renderApp(); }
+        function doLogin(user) { 
+            state.currentUser = user; 
+            state.selectedFilterUsers = [String(user.id)]; 
+            document.getElementById('login-view').classList.add('hidden'); 
+            document.getElementById('main-app').classList.remove('hidden'); 
+            renderApp(); 
+        }
+        
         function logout() { state.currentUser = null; document.getElementById('main-app').classList.add('hidden'); document.getElementById('login-view').classList.remove('hidden'); document.getElementById('login-form').reset(); }
         
         function switchTab(tab) {
@@ -271,7 +278,9 @@
         function renderApp() { document.getElementById('current-user-name').innerText = state.currentUser.name; document.getElementById('current-user-role').innerText = state.currentUser.role; document.getElementById('current-user-avatar').innerText = state.currentUser.avatar; renderUserFilter(); renderCurrentView(); }
         function renderCurrentView() { const tab = state.activeTab; if(tab === 'home') renderHome(); else if(tab === 'dashboard') renderDashboard(); else if(tab === 'bills') renderBills(); else if(tab === 'statement') renderStatement(); else if(tab === 'filter') renderFilterView(); else if(tab === 'users') renderUsers(); lucide.createIcons(); }
 
-        function getFilteredTransactions() { return state.transactions.filter(t => state.selectedFilterUsers.includes(t.userId)); }
+        // FORÇANDO A CONVERSÃO PARA TEXTO PARA NÃO TER CONFLITO COM O GOOGLE SHEETS
+        function getFilteredTransactions() { return state.transactions.filter(t => state.selectedFilterUsers.some(id => String(id) === String(t.userId))); }
+        
         function formatCurrency(val) { return new Intl.NumberFormat('pt-BR', {style: 'currency', currency: 'BRL'}).format(val); }
         function calculateInstallmentDate(base, offset) { const d=new Date(base); d.setMonth(d.getMonth()+offset); return d.toISOString().split('T')[0]; }
 
@@ -303,7 +312,8 @@
         function renderBills() {
             const bills = getFilteredTransactions().filter(t => t.kind === 'expense');
             const rows = bills.map(t => {
-                const u = state.users.find(user => user.id === t.userId);
+                // FORÇANDO A CONVERSÃO PARA TEXTO PARA NÃO TER CONFLITO
+                const u = state.users.find(user => String(user.id) === String(t.userId));
                 return `<div onclick="openDetails(${t.id})" class="group flex flex-col md:grid md:grid-cols-12 gap-4 p-5 items-center hover:bg-white/5 transition-colors cursor-pointer border-b border-white/5">
                     <div class="w-full md:col-span-4 text-white font-medium flex items-center gap-4"><div class="w-10 h-10 rounded-xl bg-zinc-800 flex items-center justify-center text-zinc-400 group-hover:text-white transition-colors"><i data-lucide="${t.type==='installment'?'list-checks':'credit-card'}" class="w-5 h-5"></i></div><div><div class="flex items-center gap-2 text-base">${t.name} ${t.type==='installment'?'<span class="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 rounded-full border border-indigo-500/20">Parcelado</span>':''}</div><p class="text-xs text-zinc-500">${t.store||''}</p></div></div>
                     <div class="w-full md:col-span-3 text-zinc-400 text-sm flex items-center gap-2"><div class="w-5 h-5 rounded-full bg-gradient-to-br ${u?.color||'bg-gray-500'} flex items-center justify-center text-[9px] text-white border border-white/10">${u?.avatar||'?'}</div><span>${t.category}</span></div>
@@ -334,7 +344,7 @@
 
         function renderUsers() {
             const isAdmin = state.currentUser.role === 'Administrador';
-            const usersHtml = state.users.map(u => `<div class="bg-zinc-900/50 p-6 rounded-[1.5rem] border border-white/5 flex items-center justify-between group hover:border-white/10 transition-all"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-gradient-to-br ${u.color} flex items-center justify-center text-white font-bold text-lg shadow-lg">${u.avatar}</div><div><p class="text-white font-medium text-base">${u.name}</p><p class="text-xs text-zinc-500 mt-0.5">${u.role}</p></div></div>${isAdmin && u.id !== state.currentUser.id ? `<button onclick="deleteUser(${u.id})" class="text-zinc-600 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all"><i data-lucide="trash-2" class="w-5 h-5"></i></button>` : ''}</div>`).join('');
+            const usersHtml = state.users.map(u => `<div class="bg-zinc-900/50 p-6 rounded-[1.5rem] border border-white/5 flex items-center justify-between group hover:border-white/10 transition-all"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-gradient-to-br ${u.color} flex items-center justify-center text-white font-bold text-lg shadow-lg">${u.avatar}</div><div><p class="text-white font-medium text-base">${u.name}</p><p class="text-xs text-zinc-500 mt-0.5">${u.role}</p></div></div>${isAdmin && String(u.id) !== String(state.currentUser.id) ? `<button onclick="deleteUser('${u.id}')" class="text-zinc-600 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all"><i data-lucide="trash-2" class="w-5 h-5"></i></button>` : ''}</div>`).join('');
             const catsHtml = state.categories.map(c => `<div class="bg-zinc-900/50 p-4 rounded-xl border border-white/5 flex justify-between items-center text-sm hover:bg-zinc-800/50 transition-colors"><span class="text-zinc-300 font-medium">${c.name}</span><button onclick="deleteCategory(${c.id})" class="text-zinc-600 hover:text-rose-500 transition-colors"><i data-lucide="x" class="w-4 h-4"></i></button></div>`).join('');
             document.getElementById('view-users').innerHTML = `<div class="mb-12"><div class="flex justify-between items-center mb-6"><h2 class="text-3xl font-bold text-white tracking-tight">Usuários</h2>${isAdmin?`<button onclick="openUserModal()" class="bg-white text-black px-4 py-2 rounded-xl text-sm font-bold hover:bg-zinc-200 transition-colors">Novo Usuário</button>`:''}</div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">${usersHtml}</div></div><div><div class="flex justify-between items-center mb-6"><h2 class="text-3xl font-bold text-white tracking-tight">Categorias</h2><button onclick="openCategoryModal()" class="bg-zinc-800 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-zinc-700 transition-colors border border-white/10">Nova Categoria</button></div><div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">${catsHtml}</div></div>`;
         }
@@ -343,14 +353,37 @@
         function updateDashFilter(k,v) { state.dashboardFilter[k]=Number(v); renderDashboard(); }
         function updateFilterView(k,v) { state.filterView[k]=isNaN(Number(v))?v:Number(v); renderFilterView(); }
         function toggleUserFilterDropdown() { document.getElementById('user-filter-dropdown').classList.toggle('hidden'); }
-        function selectAllUsers() { state.selectedFilterUsers = state.users.map(u => u.id); renderApp(); }
-        function toggleUser(id) { state.selectedFilterUsers.includes(id) ? state.selectedFilterUsers = state.selectedFilterUsers.filter(x => x !== id) : state.selectedFilterUsers.push(id); renderApp(); }
+        
+        function selectAllUsers() { 
+            state.selectedFilterUsers = state.users.map(u => String(u.id)); 
+            renderApp(); 
+        }
+        
+        function toggleUser(id) { 
+            const strId = String(id);
+            if(state.selectedFilterUsers.some(x => String(x) === strId)) { 
+                state.selectedFilterUsers = state.selectedFilterUsers.filter(x => String(x) !== strId); 
+            } else { 
+                state.selectedFilterUsers.push(strId); 
+            } 
+            renderApp(); 
+        }
+        
         function renderUserFilter() {
-            const list = state.users.map(u => `<button onclick="toggleUser(${u.id})" class="flex items-center gap-3 w-full p-2.5 rounded-xl text-sm transition-colors ${state.selectedFilterUsers.includes(u.id) ? 'bg-white/10 text-white' : 'text-zinc-400 hover:text-white hover:bg-white/5'}"><div class="w-6 h-6 rounded-full bg-gradient-to-br ${u.color} flex items-center justify-center text-[9px] text-white font-bold border border-white/10">${u.avatar}</div><span class="flex-1 text-left font-medium">${u.name}</span>${state.selectedFilterUsers.includes(u.id) ? '<i data-lucide="check" class="w-4 h-4 text-emerald-400"></i>' : ''}</button>`).join('');
+            const list = state.users.map(u => {
+                const isSelected = state.selectedFilterUsers.some(x => String(x) === String(u.id));
+                return `<button onclick="toggleUser('${u.id}')" class="flex items-center gap-3 w-full p-2.5 rounded-xl text-sm transition-colors ${isSelected ? 'bg-white/10 text-white' : 'text-zinc-400 hover:text-white hover:bg-white/5'}"><div class="w-6 h-6 rounded-full bg-gradient-to-br ${u.color} flex items-center justify-center text-[9px] text-white font-bold border border-white/10">${u.avatar}</div><span class="flex-1 text-left font-medium">${u.name}</span>${isSelected ? '<i data-lucide="check" class="w-4 h-4 text-emerald-400"></i>' : ''}</button>`;
+            }).join('');
             document.getElementById('user-filter-list').innerHTML = list;
-            const avatars = state.selectedFilterUsers.slice(0, 3).map(id => { const u = state.users.find(user => user.id === id); return u ? `<div class="w-7 h-7 rounded-full bg-gradient-to-br ${u.color} border-2 border-zinc-900 flex items-center justify-center text-[9px] font-bold text-white">${u.avatar}</div>` : ''; }).join('');
+            
+            const avatars = state.selectedFilterUsers.slice(0, 3).map(id => { 
+                const u = state.users.find(user => String(user.id) === String(id)); 
+                return u ? `<div class="w-7 h-7 rounded-full bg-gradient-to-br ${u.color} border-2 border-zinc-900 flex items-center justify-center text-[9px] font-bold text-white">${u.avatar}</div>` : ''; 
+            }).join('');
+            
             document.getElementById('filter-avatars').innerHTML = avatars + (state.selectedFilterUsers.length > 3 ? `<div class="w-7 h-7 rounded-full bg-zinc-800 border-2 border-zinc-900 flex items-center justify-center text-[9px] text-white font-bold">+${state.selectedFilterUsers.length - 3}</div>` : '');
-            document.getElementById('filter-label').innerText = state.selectedFilterUsers.length === state.users.length ? 'Todos' : 'Filtrar'; lucide.createIcons();
+            document.getElementById('filter-label').innerText = state.selectedFilterUsers.length === state.users.length ? 'Todos' : 'Filtrar'; 
+            lucide.createIcons();
         }
 
         function openTransactionModal(mode) {
@@ -422,7 +455,7 @@
 
             let status = state.modalMode === 'expense' ? (type === 'single' ? 'Pago' : 'Em andamento') : 'Recebido';
 
-            const payload = { id: Date.now(), userId: state.currentUser.id, kind: state.modalMode, name: document.getElementById('t-desc').value, store: document.getElementById('t-store').value, category: cat, value: type === 'installment' ? val * instCount : val, date, status: status, type, installmentValue: type === 'installment' ? val : 0, totalInstallments: instCount, paidInstallments: 0, installments: [] };
+            const payload = { id: String(Date.now()), userId: String(state.currentUser.id), kind: state.modalMode, name: document.getElementById('t-desc').value, store: document.getElementById('t-store').value, category: cat, value: type === 'installment' ? val * instCount : val, date, status: status, type, installmentValue: type === 'installment' ? val : 0, totalInstallments: instCount, paidInstallments: 0, installments: [] };
             
             if(type === 'installment') {
                 for(let i=0; i<instCount; i++) payload.installments.push({number: i+1, value: val, date: calculateInstallmentDate(date, i), status: 'Pendente'});
@@ -432,22 +465,22 @@
         }
 
         function openCategoryModal() { document.getElementById('modal-category').classList.add('open'); }
-        async function submitAddCategory() { const name = document.getElementById('new-cat-name').value; const type = document.getElementById('new-cat-type').value; if(!name) return; const cat = { id: Date.now(), name, type }; state.categories.push(cat); closeModal('modal-category'); renderCurrentView(); await apiPost('addCategory', { category: cat }); }
-        async function deleteCategory(id) { if(!confirm('Remover categoria?')) return; state.categories = state.categories.filter(c => c.id !== id); renderCurrentView(); await apiPost('deleteCategory', { id }); }
+        async function submitAddCategory() { const name = document.getElementById('new-cat-name').value; const type = document.getElementById('new-cat-type').value; if(!name) return; const cat = { id: String(Date.now()), name, type }; state.categories.push(cat); closeModal('modal-category'); renderCurrentView(); await apiPost('addCategory', { category: cat }); }
+        async function deleteCategory(id) { if(!confirm('Remover categoria?')) return; state.categories = state.categories.filter(c => String(c.id) !== String(id)); renderCurrentView(); await apiPost('deleteCategory', { id }); }
         
         function openUserModal() { document.getElementById('modal-user').classList.add('open'); }
-        async function submitAddUser() { const name = document.getElementById('new-user-name').value; const username = document.getElementById('new-user-username').value; const password = document.getElementById('new-user-password').value; if(!name||!username||!password) return alert("Preencha tudo"); const user = { id: Date.now(), name, username, password, role: 'Financeiro', avatar: name.substring(0,2).toUpperCase(), color: 'from-blue-500 to-cyan-500', status: 'Ativo' }; state.users.push(user); closeModal('modal-user'); renderCurrentView(); await apiPost('addUser', { user }); }
-        async function deleteUser(id) { if(confirm('Remover usuário?')) { state.users = state.users.filter(u => u.id !== id); renderCurrentView(); await apiPost('deleteUser', { id }); } }
+        async function submitAddUser() { const name = document.getElementById('new-user-name').value; const username = document.getElementById('new-user-username').value; const password = document.getElementById('new-user-password').value; if(!name||!username||!password) return alert("Preencha tudo"); const user = { id: String(Date.now()), name, username, password, role: 'Financeiro', avatar: name.substring(0,2).toUpperCase(), color: 'from-blue-500 to-cyan-500', status: 'Ativo' }; state.users.push(user); closeModal('modal-user'); renderCurrentView(); await apiPost('addUser', { user }); }
+        async function deleteUser(id) { if(confirm('Remover usuário?')) { state.users = state.users.filter(u => String(u.id) !== String(id)); renderCurrentView(); await apiPost('deleteUser', { id }); } }
 
         function openDetails(id) {
-            const t = state.transactions.find(x => x.id === id); if(!t || t.type !== 'installment') return;
+            const t = state.transactions.find(x => String(x.id) === String(id)); if(!t || t.type !== 'installment') return;
             document.getElementById('detail-title').innerText = t.name; document.getElementById('detail-store').innerText = t.store; document.getElementById('detail-value').innerText = formatCurrency(t.value);
             const container = document.getElementById('detail-content'); const progress = Math.round((t.paidInstallments / t.totalInstallments) * 100);
-            const list = t.installments.map(inst => `<div class="flex justify-between items-center p-4 border-b border-white/5 rounded-xl bg-zinc-800/20 mb-2"><div><span class="text-white font-medium text-sm">Parcela ${inst.number}</span> <span class="text-xs text-zinc-500 block">${inst.date}</span></div><button onclick="toggleInstallment(${t.id}, ${inst.number})" class="text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${inst.status==='Pago'?'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20':'bg-white text-black hover:bg-zinc-200'}">${inst.status==='Pago'?'Pago':'Pagar'}</button></div>`).join('');
+            const list = t.installments.map(inst => `<div class="flex justify-between items-center p-4 border-b border-white/5 rounded-xl bg-zinc-800/20 mb-2"><div><span class="text-white font-medium text-sm">Parcela ${inst.number}</span> <span class="text-xs text-zinc-500 block">${inst.date}</span></div><button onclick="toggleInstallment('${t.id}', ${inst.number})" class="text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${inst.status==='Pago'?'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20':'bg-white text-black hover:bg-zinc-200'}">${inst.status==='Pago'?'Pago':'Pagar'}</button></div>`).join('');
             container.innerHTML = `<div class="flex justify-between mb-2 text-xs font-medium text-zinc-400"><span>Progresso</span> <span>${progress}%</span></div><div class="h-3 bg-zinc-800 rounded-full overflow-hidden mb-6"><div class="h-full bg-gradient-to-r from-indigo-600 to-blue-500 transition-all duration-500" style="width:${progress}%"></div></div>${list}`;
             document.getElementById('modal-details').classList.add('open');
         }
-        async function toggleInstallment(tid, num) { const t = state.transactions.find(x => x.id === tid); t.installments.forEach(i => { if(i.number === num) i.status = i.status === 'Pago' ? 'Pendente' : 'Pago'; }); t.paidInstallments = t.installments.filter(i => i.status === 'Pago').length; t.status = t.paidInstallments === t.totalInstallments ? 'Pago' : 'Em andamento'; openDetails(tid); renderCurrentView(); await apiPost('updateTransaction', { transaction: t }); }
+        async function toggleInstallment(tid, num) { const t = state.transactions.find(x => String(x.id) === String(tid)); t.installments.forEach(i => { if(i.number === num) i.status = i.status === 'Pago' ? 'Pendente' : 'Pago'; }); t.paidInstallments = t.installments.filter(i => i.status === 'Pago').length; t.status = t.paidInstallments === t.totalInstallments ? 'Pago' : 'Em andamento'; openDetails(tid); renderCurrentView(); await apiPost('updateTransaction', { transaction: t }); }
 
         function closeModal(id) { document.getElementById(id).classList.remove('open'); }
         function setLoading(b, id='login-loading-text') { const el=document.getElementById(id); if(el) b?el.classList.remove('hidden'):el.classList.add('hidden'); }
@@ -480,7 +513,7 @@
             if (detectedCategory) {
                 const select = document.getElementById('t-cat'); let found = false;
                 for (let i = 0; i < select.options.length; i++) { if (select.options[i].value === detectedCategory) { select.selectedIndex = i; found = true; break; } }
-                if (!found) { const newCat = { id: Date.now(), name: detectedCategory, type: 'expense' }; state.categories.push(newCat); const opt = document.createElement('option'); opt.value = detectedCategory; opt.text = detectedCategory; select.add(opt); select.value = detectedCategory; apiPost('addCategory', { category: newCat }); }
+                if (!found) { const newCat = { id: String(Date.now()), name: detectedCategory, type: 'expense' }; state.categories.push(newCat); const opt = document.createElement('option'); opt.value = detectedCategory; opt.text = detectedCategory; select.add(opt); select.value = detectedCategory; apiPost('addCategory', { category: newCat }); }
                 pulseField('t-cat');
             }
         }
