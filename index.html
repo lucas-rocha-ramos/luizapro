@@ -222,17 +222,14 @@
             }, 3000);
         });
 
+        // REQUISIÇÃO ÚNICA PARA VELOCIDADE MÁXIMA
         async function loadData() {
             setLoading(true);
             try {
-                const [usersRes, transRes, catsRes] = await Promise.all([
-                    fetch(`${API_URL}?action=getUsers`).then(res => res.json()),
-                    fetch(`${API_URL}?action=getTransactions`).then(res => res.json()),
-                    fetch(`${API_URL}?action=getCategories`).then(res => res.json())
-                ]);
-                state.users = Array.isArray(usersRes) ? usersRes : [];
-                state.transactions = Array.isArray(transRes) ? transRes : [];
-                state.categories = Array.isArray(catsRes) ? catsRes : [];
+                const res = await fetch(`${API_URL}?action=getAllData`).then(r => r.json());
+                state.users = Array.isArray(res.users) ? res.users : [];
+                state.transactions = Array.isArray(res.transactions) ? res.transactions : [];
+                state.categories = Array.isArray(res.categories) ? res.categories : [];
                 if (state.currentUser) renderApp();
             } catch (e) { console.error(e); }
             setLoading(false);
@@ -281,7 +278,6 @@
         function getFilteredTransactions() { return state.transactions.filter(t => state.selectedFilterUsers.some(id => String(id) === String(t.userId))); }
         function formatCurrency(val) { return new Intl.NumberFormat('pt-BR', {style: 'currency', currency: 'BRL'}).format(val); }
         
-        // FUNÇÃO DE SEGURANÇA PARA RESOLVER O BUG DE FUSO HORÁRIO NO NAVEGADOR
         function safeGetYearMonth(dateStr) { 
             if(!dateStr) return {y:0, m:0}; 
             if(typeof dateStr === 'string' && dateStr.includes('-')) { 
