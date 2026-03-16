@@ -265,7 +265,6 @@
 
         function doLogin(user) { 
             state.currentUser = user; 
-            // AGORA O FILTRO INICIA APENAS COM O USUÁRIO LOGADO
             state.selectedFilterUsers = [String(user.id)]; 
             
             document.getElementById('login-view').classList.add('hidden'); 
@@ -309,16 +308,30 @@
             const d=new Date(base); d.setMonth(d.getMonth()+offset); return d.toISOString().split('T')[0]; 
         }
 
+        function parseInputMoney(valStr) {
+            let s = valStr.toString().trim();
+            if (s.includes(',') && s.includes('.')) {
+                s = s.replace(/\./g, '').replace(',', '.');
+            } else if (s.includes(',')) {
+                s = s.replace(',', '.');
+            }
+            return parseFloat(s);
+        }
+
         function renderHome() {
             const { month, year } = state.homeFilter; let rev = 0, exp = 0;
             getFilteredTransactions().forEach(t => { 
                 if(t.type === 'single') {
                     const {y, m} = safeGetYearMonth(t.date); 
-                    if(m === month && y === year) kind === 'income' ? rev += t.value : exp += t.value; 
+                    if(m === month && y === year) {
+                        t.kind === 'income' ? rev += t.value : exp += t.value; 
+                    }
                 } else if(t.type === 'installment' && t.installments) {
                     t.installments.forEach(i => {
                         const {y, m} = safeGetYearMonth(i.date); 
-                        if(m === month && y === year) t.kind === 'income' ? rev += i.value : exp += i.value; 
+                        if(m === month && y === year) {
+                            t.kind === 'income' ? rev += i.value : exp += i.value; 
+                        }
                     });
                 }
             });
@@ -334,11 +347,15 @@
             getFilteredTransactions().forEach(t => { 
                 if(t.type === 'single') {
                     const {y, m} = safeGetYearMonth(t.date); 
-                    if(m === month && y === year) t.kind === 'income' ? rev += t.value : exp += t.value; 
+                    if(m === month && y === year) {
+                        t.kind === 'income' ? rev += t.value : exp += t.value; 
+                    }
                 } else if(t.type === 'installment' && t.installments) {
                     t.installments.forEach(i => {
                         const {y, m} = safeGetYearMonth(i.date); 
-                        if(m === month && y === year) t.kind === 'income' ? rev += i.value : exp += i.value; 
+                        if(m === month && y === year) {
+                            t.kind === 'income' ? rev += i.value : exp += i.value; 
+                        }
                     });
                 }
             });
@@ -346,11 +363,15 @@
             getFilteredTransactions().forEach(t => { 
                 if(t.type === 'single') {
                     const {y, m} = safeGetYearMonth(t.date); 
-                    if(y === year && m >= 0 && m < 12) { t.kind === 'income' ? chartData[m].inc += t.value : chartData[m].exp += t.value; }
+                    if(y === year && m >= 0 && m < 12) { 
+                        t.kind === 'income' ? chartData[m].inc += t.value : chartData[m].exp += t.value; 
+                    }
                 } else if(t.type === 'installment' && t.installments) {
                     t.installments.forEach(i => {
                         const {y, m} = safeGetYearMonth(i.date); 
-                        if(y === year && m >= 0 && m < 12) { t.kind === 'income' ? chartData[m].inc += i.value : chartData[m].exp += i.value; }
+                        if(y === year && m >= 0 && m < 12) { 
+                            t.kind === 'income' ? chartData[m].inc += i.value : chartData[m].exp += i.value; 
+                        }
                     });
                 }
             });
@@ -466,7 +487,6 @@
                 </div>
             `;
 
-            // MUDANÇA: Estrutura HTML robusta para os botões e campo de parcelas
             document.getElementById('modal-content').innerHTML = `
                 ${scanArea}
                 <div class="grid grid-cols-2 gap-4 mb-6">
@@ -489,7 +509,6 @@
             const btnI = document.getElementById('btn-type-inst');
             const instDiv = document.getElementById('inst-inputs');
             
-            // Lógica blindada para trocar a visualização
             if(type === 'single') { 
                 if(btnS) btnS.classList.add('selected');
                 if(btnI) btnI.classList.remove('selected');
@@ -505,7 +524,7 @@
             const type = state.newTransaction.type;
             const valInput = document.getElementById('t-val').value;
             
-            const val = parseFloat(valInput.toString().replace(',', '.'));
+            const val = parseInputMoney(valInput);
             const date = document.getElementById('t-date').value;
             
             if (isNaN(val) || val <= 0 || !date) return alert("Preencha o valor e a data corretamente!");
@@ -513,19 +532,17 @@
             const cat = document.getElementById('t-cat').value;
             
             let instCount = 0;
-            let valPerInst = val; // Se for à vista, a parcela única é o valor total
+            let valPerInst = val; 
 
-            // Bloqueio de segurança
             if (type === 'installment') {
                 const instDiv = document.getElementById('inst-inputs');
-                // Se a div estiver escondida, é porque o click no botão falhou. Força para single.
                 if(instDiv.style.display === 'none') {
                     return alert("Erro: Selecione 'Parcelado' e preencha a quantidade de parcelas.");
                 }
 
                 instCount = parseInt(document.getElementById('t-inst').value);
                 if (isNaN(instCount) || instCount <= 0) return alert("Preencha a quantidade de parcelas corretamente.");
-                valPerInst = val / instCount; // Divide o valor total pelo número de parcelas
+                valPerInst = val / instCount; 
             }
 
             let status = state.modalMode === 'expense' ? (type === 'single' ? 'Pago' : 'Em andamento') : 'Recebido';
@@ -596,7 +613,7 @@
         function pulseField(id, value) { const el = document.getElementById(id); if(value) el.value = value; el.classList.add('border-indigo-500', 'bg-indigo-500/20'); setTimeout(() => el.classList.remove('border-indigo-500', 'bg-indigo-500/20'), 1500); }
         function findStoreInText(text) { const lines = text.split('\n'); const ignorePatterns = ['cnpj', 'cpf', 'enpj', 'im:', 'ie:', 'extrato', 'fiscal', 'cupom', 'danfe', 'sat', 'caixa', 'notinha', 'rua', 'av.', 'tel', 'item', 'qtd', 'total', 'pago', 'troco', 'crédito', 'débito', 'venda', 'data']; const cnpjRegex = /\d{2}[\.\s]?\d{3}[\.\s]?\d{3}[\/\s]?\d{4}[-\s]?\d{2}/; const candidates = lines.map(l => l.trim()).filter(l => { const lower = l.toLowerCase(); if (l.length < 3) return false; if (ignorePatterns.some(w => lower.includes(w))) return false; if (cnpjRegex.test(l)) return false; const digits = l.replace(/[^0-9]/g, '').length; if (digits > 4) return false; return true; }); if (candidates.length > 0) return candidates[0].replace(/^[^a-zA-Z0-9À-ÿ]+/, '').substring(0, 30).trim(); return null; }
         function findValueInText(text) { const lines = text.split('\n'); let maxVal = 0; const valorRegex = /R?\s?(\d{1,3}(\.?\d{3})*,\d{2})/gi; for (let line of lines) { const lowerLine = line.toLowerCase(); if ((lowerLine.includes('total') || lowerLine.includes('valor a pagar')) && !lowerLine.includes('subtotal') && !lowerLine.includes('itens')) { const match = line.match(valorRegex); if (match) { const v = parseMoney(match[match.length - 1]); if (v > 0) return v; } } const matches = line.match(valorRegex); if (matches) { matches.forEach(m => { const v = parseMoney(m); if (v > maxVal && v < 50000) maxVal = v; }); } } return maxVal > 0 ? maxVal : null; }
-        function parseMoney(str) { return parseFloat(str.replace(/[^\d,]/g, '').replace(',', '.')); }
+        
         function findDateInText(text) { const match = text.match(/(\d{2})[\/\s\.](\d{2})[\/\s\.](\d{4})/); return match ? `${match[3]}-${match[2]}-${match[1]}` : null; }
     </script>
     
