@@ -222,7 +222,6 @@
             }, 3000);
         });
 
-        // REVERTIDO PARA AS 3 REQUISIÇÕES CONCORRENTES PARA EVITAR ERRO DE CACHE NO APPS SCRIPT
         async function loadData() {
             setLoading(true);
             try {
@@ -260,7 +259,10 @@
 
         function doLogin(user) { 
             state.currentUser = user; 
-            state.selectedFilterUsers = [String(user.id)]; 
+            // INICIALIZA SELECIONANDO TODOS OS USUÁRIOS POR PADRÃO
+            state.selectedFilterUsers = state.users.map(u => String(u.id)); 
+            if(!state.selectedFilterUsers.includes(String(user.id))) state.selectedFilterUsers.push(String(user.id));
+            
             document.getElementById('login-view').classList.add('hidden'); 
             document.getElementById('main-app').classList.remove('hidden'); 
             renderApp(); 
@@ -279,7 +281,12 @@
         function renderApp() { document.getElementById('current-user-name').innerText = state.currentUser.name; document.getElementById('current-user-role').innerText = state.currentUser.role; document.getElementById('current-user-avatar').innerText = state.currentUser.avatar; renderUserFilter(); renderCurrentView(); }
         function renderCurrentView() { const tab = state.activeTab; if(tab === 'home') renderHome(); else if(tab === 'dashboard') renderDashboard(); else if(tab === 'bills') renderBills(); else if(tab === 'statement') renderStatement(); else if(tab === 'filter') renderFilterView(); else if(tab === 'users') renderUsers(); lucide.createIcons(); }
 
-        function getFilteredTransactions() { return state.transactions.filter(t => state.selectedFilterUsers.some(id => String(id) === String(t.userId))); }
+        function getFilteredTransactions() { 
+            // SE TODOS ESTIVEREM SELECIONADOS, MOSTRA TUDO MESMO QUE O DONO SEJA DESCONHECIDO (ex: Admin)
+            if (state.selectedFilterUsers.length >= state.users.length) return state.transactions;
+            return state.transactions.filter(t => state.selectedFilterUsers.some(id => String(id) === String(t.userId))); 
+        }
+        
         function formatCurrency(val) { return new Intl.NumberFormat('pt-BR', {style: 'currency', currency: 'BRL'}).format(val); }
         
         function safeGetYearMonth(dateStr) { 
@@ -373,6 +380,9 @@
         
         function selectAllUsers() { 
             state.selectedFilterUsers = state.users.map(u => String(u.id)); 
+            if(state.currentUser && !state.selectedFilterUsers.includes(String(state.currentUser.id))) {
+                state.selectedFilterUsers.push(String(state.currentUser.id));
+            }
             renderApp(); 
         }
         
