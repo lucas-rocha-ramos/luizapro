@@ -310,52 +310,49 @@
 
         function parseInputMoney(valStr) {
             let s = valStr.toString().trim();
-            if (s.includes(',') && s.includes('.')) {
-                s = s.replace(/\./g, '').replace(',', '.');
-            } else if (s.includes(',')) {
-                s = s.replace(',', '.');
-            }
+            if (s.includes(',') && s.includes('.')) { s = s.replace(/\./g, '').replace(',', '.'); } else if (s.includes(',')) { s = s.replace(',', '.'); }
             return parseFloat(s);
         }
 
+        // SALDO ACUMULADO
         function renderHome() {
-            const { month, year } = state.homeFilter; let rev = 0, exp = 0;
+            const { month, year } = state.homeFilter; 
+            let rev = 0, exp = 0, totalAccumulated = 0;
+            
             getFilteredTransactions().forEach(t => { 
                 if(t.type === 'single') {
                     const {y, m} = safeGetYearMonth(t.date); 
-                    if(m === month && y === year) {
-                        t.kind === 'income' ? rev += t.value : exp += t.value; 
-                    }
+                    if(m === month && y === year) { t.kind === 'income' ? rev += t.value : exp += t.value; }
+                    if(y < year || (y === year && m <= month)) { t.kind === 'income' ? totalAccumulated += t.value : totalAccumulated -= t.value; }
                 } else if(t.type === 'installment' && t.installments) {
                     t.installments.forEach(i => {
                         const {y, m} = safeGetYearMonth(i.date); 
-                        if(m === month && y === year) {
-                            t.kind === 'income' ? rev += i.value : exp += i.value; 
-                        }
+                        if(m === month && y === year) { t.kind === 'income' ? rev += i.value : exp += i.value; }
+                        if(y < year || (y === year && m <= month)) { t.kind === 'income' ? totalAccumulated += i.value : totalAccumulated -= i.value; }
                     });
                 }
             });
+            
             document.getElementById('view-home').innerHTML = `
                 <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6"><div><h1 class="text-4xl md:text-5xl font-bold text-white tracking-tighter mb-2">Resumo</h1><p class="text-zinc-500">Fluxo de <span class="text-white font-medium">${MONTHS[month]} ${year}</span></p></div><div class="flex gap-3 w-full md:w-auto"><select onchange="updateHomeFilter('month', this.value)" class="flex-1 md:flex-none bg-zinc-900/80 border border-white/10 text-white py-3 px-5 rounded-2xl text-sm outline-none cursor-pointer hover:bg-zinc-800 transition-colors">${MONTHS.map((m,i)=>`<option value="${i}" ${i===month?'selected':''}>${m}</option>`).join('')}</select><select onchange="updateHomeFilter('year', this.value)" class="flex-1 md:flex-none bg-zinc-900/80 border border-white/10 text-white py-3 px-5 rounded-2xl text-sm outline-none cursor-pointer hover:bg-zinc-800 transition-colors">${YEARS.map(y=>`<option value="${y}" ${y===year?'selected':''}>${y}</option>`).join('')}</select></div></div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8"><div class="bg-zinc-900/40 border border-white/5 p-8 rounded-[2rem] backdrop-blur-md relative overflow-hidden group hover:border-white/10 transition-all"><div class="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div><div class="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 mb-6"><i data-lucide="trending-up" class="w-6 h-6"></i></div><p class="text-zinc-400 font-medium mb-1">Receitas (Mês)</p><h2 class="text-5xl md:text-6xl font-bold text-white tracking-tighter">${formatCurrency(rev)}</h2></div><div class="bg-zinc-900/40 border border-white/5 p-8 rounded-[2rem] backdrop-blur-md relative overflow-hidden group hover:border-white/10 transition-all"><div class="absolute top-0 right-0 w-64 h-64 bg-rose-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div><div class="w-14 h-14 rounded-2xl bg-rose-500/10 flex items-center justify-center text-rose-400 mb-6"><i data-lucide="trending-down" class="w-6 h-6"></i></div><p class="text-zinc-400 font-medium mb-1">Despesas (Mês)</p><h2 class="text-5xl md:text-6xl font-bold text-white tracking-tighter">${formatCurrency(exp)}</h2></div></div>
-                <div class="bg-gradient-to-r from-zinc-900 to-zinc-900/60 border border-white/5 p-8 rounded-[2rem] flex items-center gap-8 relative overflow-hidden"><div class="absolute inset-0 bg-white/5 opacity-0 hover:opacity-100 transition-opacity"></div><div class="w-16 h-16 rounded-full ${rev-exp>=0?'bg-blue-600':'bg-rose-600'} flex items-center justify-center text-white shadow-xl shadow-black/50 z-10"><i data-lucide="wallet" class="w-7 h-7"></i></div><div class="z-10"><p class="text-zinc-400 uppercase text-xs font-bold tracking-widest mb-1">Saldo Líquido</p><p class="text-3xl md:text-4xl font-bold text-white tracking-tight">${formatCurrency(rev-exp)}</p></div></div>
+                <div class="bg-gradient-to-r from-zinc-900 to-zinc-900/60 border border-white/5 p-8 rounded-[2rem] flex items-center gap-8 relative overflow-hidden"><div class="absolute inset-0 bg-white/5 opacity-0 hover:opacity-100 transition-opacity"></div><div class="w-16 h-16 rounded-full ${totalAccumulated>=0?'bg-blue-600':'bg-rose-600'} flex items-center justify-center text-white shadow-xl shadow-black/50 z-10"><i data-lucide="wallet" class="w-7 h-7"></i></div><div class="z-10"><p class="text-zinc-400 uppercase text-xs font-bold tracking-widest mb-1">Saldo em Conta</p><p class="text-3xl md:text-4xl font-bold text-white tracking-tight">${formatCurrency(totalAccumulated)}</p></div></div>
             `;
         }
 
+        // SALDO ACUMULADO
         function renderDashboard() {
-            const { month, year } = state.dashboardFilter; let rev = 0, exp = 0;
+            const { month, year } = state.dashboardFilter; let rev = 0, exp = 0, totalAccumulated = 0;
             getFilteredTransactions().forEach(t => { 
                 if(t.type === 'single') {
                     const {y, m} = safeGetYearMonth(t.date); 
-                    if(m === month && y === year) {
-                        t.kind === 'income' ? rev += t.value : exp += t.value; 
-                    }
+                    if(m === month && y === year) { t.kind === 'income' ? rev += t.value : exp += t.value; }
+                    if(y < year || (y === year && m <= month)) { t.kind === 'income' ? totalAccumulated += t.value : totalAccumulated -= t.value; }
                 } else if(t.type === 'installment' && t.installments) {
                     t.installments.forEach(i => {
                         const {y, m} = safeGetYearMonth(i.date); 
-                        if(m === month && y === year) {
-                            t.kind === 'income' ? rev += i.value : exp += i.value; 
-                        }
+                        if(m === month && y === year) { t.kind === 'income' ? rev += i.value : exp += i.value; }
+                        if(y < year || (y === year && m <= month)) { t.kind === 'income' ? totalAccumulated += i.value : totalAccumulated -= i.value; }
                     });
                 }
             });
@@ -363,15 +360,11 @@
             getFilteredTransactions().forEach(t => { 
                 if(t.type === 'single') {
                     const {y, m} = safeGetYearMonth(t.date); 
-                    if(y === year && m >= 0 && m < 12) { 
-                        t.kind === 'income' ? chartData[m].inc += t.value : chartData[m].exp += t.value; 
-                    }
+                    if(y === year && m >= 0 && m < 12) { t.kind === 'income' ? chartData[m].inc += t.value : chartData[m].exp += t.value; }
                 } else if(t.type === 'installment' && t.installments) {
                     t.installments.forEach(i => {
                         const {y, m} = safeGetYearMonth(i.date); 
-                        if(y === year && m >= 0 && m < 12) { 
-                            t.kind === 'income' ? chartData[m].inc += i.value : chartData[m].exp += i.value; 
-                        }
+                        if(y === year && m >= 0 && m < 12) { t.kind === 'income' ? chartData[m].inc += i.value : chartData[m].exp += i.value; }
                     });
                 }
             });
@@ -380,7 +373,7 @@
 
             document.getElementById('view-dashboard').innerHTML = `
                 <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4"><h2 class="text-4xl font-bold text-white tracking-tight">Dashboard</h2><div class="flex gap-2 w-full md:w-auto"><select onchange="updateDashFilter('month', this.value)" class="bg-zinc-900 border border-white/10 text-white p-2.5 rounded-xl text-sm w-full md:w-auto">${MONTHS.map((m,i)=>`<option value="${i}" ${i===month?'selected':''}>${m}</option>`).join('')}</select><select onchange="updateDashFilter('year', this.value)" class="bg-zinc-900 border border-white/10 text-white p-2.5 rounded-xl text-sm w-full md:w-auto">${YEARS.map(y=>`<option value="${y}" ${y===year?'selected':''}>${y}</option>`).join('')}</select></div></div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"><div class="bg-zinc-900/50 p-6 rounded-3xl border border-white/5 backdrop-blur-sm"><p class="text-zinc-500 text-sm font-medium mb-1">Saldo</p><h3 class="text-2xl font-bold ${rev-exp>=0?'text-white':'text-rose-400'}">${formatCurrency(rev-exp)}</h3></div><div class="bg-zinc-900/50 p-6 rounded-3xl border border-white/5 backdrop-blur-sm"><p class="text-zinc-500 text-sm font-medium mb-1">Receitas</p><h3 class="text-2xl font-bold text-emerald-400">${formatCurrency(rev)}</h3></div><div class="bg-zinc-900/50 p-6 rounded-3xl border border-white/5 backdrop-blur-sm"><p class="text-zinc-500 text-sm font-medium mb-1">Despesas</p><h3 class="text-2xl font-bold text-rose-400">${formatCurrency(exp)}</h3></div></div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"><div class="bg-zinc-900/50 p-6 rounded-3xl border border-white/5 backdrop-blur-sm"><p class="text-zinc-500 text-sm font-medium mb-1">Saldo em Conta</p><h3 class="text-2xl font-bold ${totalAccumulated>=0?'text-white':'text-rose-400'}">${formatCurrency(totalAccumulated)}</h3></div><div class="bg-zinc-900/50 p-6 rounded-3xl border border-white/5 backdrop-blur-sm"><p class="text-zinc-500 text-sm font-medium mb-1">Receitas (Mês)</p><h3 class="text-2xl font-bold text-emerald-400">${formatCurrency(rev)}</h3></div><div class="bg-zinc-900/50 p-6 rounded-3xl border border-white/5 backdrop-blur-sm"><p class="text-zinc-500 text-sm font-medium mb-1">Despesas (Mês)</p><h3 class="text-2xl font-bold text-rose-400">${formatCurrency(exp)}</h3></div></div>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-2 bg-zinc-900/50 border border-white/5 rounded-3xl p-8 min-h-[400px] flex flex-col backdrop-blur-sm"><h3 class="text-zinc-300 font-semibold mb-6">Fluxo Anual (${year})</h3><div class="flex-1 flex items-end justify-between gap-2 border-b border-white/5 pb-4">${bars}</div><div class="flex justify-between text-zinc-600 text-[10px] mt-3 uppercase tracking-wider">${MONTHS.map(m=>`<span class="w-full text-center">${m.substring(0,3)}</span>`).join('')}</div></div><div class="bg-zinc-900/50 border border-white/5 rounded-3xl p-8 backdrop-blur-sm"><h3 class="text-zinc-300 font-semibold mb-6">Ações Rápidas</h3><div class="space-y-4"><button onclick="openTransactionModal('expense')" class="w-full bg-white text-black py-4 rounded-2xl font-bold hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2"><i data-lucide="dollar-sign" class="w-5 h-5"></i> Nova Despesa</button><button onclick="openTransactionModal('income')" class="w-full bg-zinc-800 text-white py-4 rounded-2xl font-bold hover:bg-zinc-700 transition-colors flex items-center justify-center gap-2 border border-white/10"><i data-lucide="trending-up" class="w-5 h-5"></i> Novo Recebimento</button></div></div></div>
             `;
         }
@@ -412,19 +405,7 @@
         function renderFilterView() {
             const {category, month, year} = state.filterView;
             const catOptions = ['Todas', ...state.categories.map(c => c.name)].map(c => `<option value="${c}" ${c === category ? 'selected' : ''}>${c}</option>`).join(''); let total = 0;
-            const items = getFilteredTransactions().filter(t => t.kind === 'expense' && (category === 'Todas' || t.category === category)).reduce((arr, t) => { 
-                let val = 0; 
-                if(t.type === 'single') { 
-                    const {y, m} = safeGetYearMonth(t.date); 
-                    if(m === month && y === year) val = t.value; 
-                } else if(t.type === 'installment' && t.installments) { 
-                    t.installments.forEach(i => { 
-                        const {y, m} = safeGetYearMonth(i.date); 
-                        if(m === month && y === year) val += i.value; 
-                    }); 
-                } 
-                if(val > 0) { total += val; arr.push({...t, val}); } return arr; 
-            }, []);
+            const items = getFilteredTransactions().filter(t => t.kind === 'expense' && (category === 'Todas' || t.category === category)).reduce((arr, t) => { let val = 0; if(t.type === 'single') { const {y, m} = safeGetYearMonth(t.date); if(m === month && y === year) val = t.value; } else t.installments.forEach(i => { const {y, m} = safeGetYearMonth(i.date); if(m === month && y === year) val += i.value; }); if(val > 0) { total += val; arr.push({...t, val}); } return arr; }, []);
             const rows = items.map(t => `<div class="flex justify-between items-center p-5 border-b border-white/5 hover:bg-white/5 transition-colors"><div><p class="text-white font-medium text-base">${t.name} <span class="text-zinc-500 text-sm ml-2 font-normal">${t.store}</span></p><p class="text-xs text-zinc-500 mt-0.5">${t.category}</p></div><p class="text-rose-400 font-mono text-base font-medium">${formatCurrency(t.val)}</p></div>`).join('');
             document.getElementById('view-filter').innerHTML = `<div class="flex flex-col md:flex-row justify-between mb-10 gap-6"><div><h2 class="text-3xl font-bold text-white tracking-tight">Filtro Avançado</h2><p class="text-zinc-500 mt-2">Detalhamento de gastos por categoria.</p></div><div class="flex gap-3 flex-wrap md:flex-nowrap"><select onchange="updateFilterView('category', this.value)" class="bg-zinc-900 border border-white/10 text-white p-3 rounded-xl text-sm w-full md:w-auto outline-none">${catOptions}</select><select onchange="updateFilterView('month', this.value)" class="bg-zinc-900 border border-white/10 text-white p-3 rounded-xl text-sm w-full md:w-auto outline-none">${MONTHS.map((m,i)=>`<option value="${i}" ${i===month?'selected':''}>${m}</option>`).join('')}</select><select onchange="updateFilterView('year', this.value)" class="bg-zinc-900 border border-white/10 text-white p-3 rounded-xl text-sm w-full md:w-auto outline-none">${YEARS.map(y=>`<option value="${y}" ${y===year?'selected':''}>${y}</option>`).join('')}</select></div></div><div class="bg-zinc-900/50 p-8 rounded-[2rem] border border-white/5 mb-8 flex justify-between items-center shadow-lg"><div><p class="text-zinc-400 text-sm font-medium">Total em <span class="text-white">${category}</span></p><p class="text-xs text-zinc-500 mt-1">${MONTHS[month]} ${year}</p></div><h2 class="text-4xl md:text-5xl font-bold text-rose-400 tracking-tighter">${formatCurrency(total)}</h2></div><div class="bg-zinc-900/40 rounded-[2rem] border border-white/5 overflow-hidden backdrop-blur-md">${rows || '<p class="p-8 text-center text-zinc-500">Nenhum gasto encontrado.</p>'}</div>`;
         }
