@@ -374,17 +374,33 @@
                     <div class="grid grid-cols-2 gap-4"><input id="t-store" type="text" placeholder="${mode==='expense'?'Loja':'Origem'}" class="w-full bg-black border border-white/10 rounded-2xl p-3.5 text-white text-sm focus:border-indigo-500 outline-none"><select id="t-cat" class="w-full bg-black border border-white/10 rounded-2xl p-3.5 text-white text-sm focus:border-indigo-500 outline-none"><option value="Geral">Sem Categoria</option>${catOpts}</select></div>
                     <input id="t-desc" type="text" placeholder="Descrição" class="w-full bg-black border border-white/10 rounded-2xl p-3.5 text-white text-sm focus:border-indigo-500 outline-none">
                     <div class="grid grid-cols-2 gap-4"><input id="t-val" type="text" placeholder="Valor" class="w-full bg-black border border-white/10 rounded-2xl p-3.5 text-white text-sm focus:border-indigo-500 outline-none"><input id="t-date" type="date" class="w-full bg-black border border-white/10 rounded-2xl p-3.5 text-white text-sm focus:border-indigo-500 outline-none [color-scheme:dark]"></div>
-                    <div id="inst-inputs" class="hidden"><input id="t-inst" type="number" placeholder="Qtd Parcelas" class="w-full bg-black border border-white/10 rounded-2xl p-3.5 text-white text-sm mt-4 focus:border-indigo-500 outline-none"></div>
+                    <div id="inst-inputs" style="display: none;"><input id="t-inst" type="number" placeholder="Qtd Parcelas" class="w-full bg-black border border-white/10 rounded-2xl p-3.5 text-white text-sm mt-4 focus:border-indigo-500 outline-none"></div>
                     <button onclick="submitTransaction()" class="w-full bg-white text-black font-bold p-4 rounded-2xl mt-4 hover:bg-zinc-200 transition-colors shadow-lg">Salvar</button>
                 </div>`;
             state.newTransaction.type = 'single'; lucide.createIcons(); document.getElementById('modal-transaction').classList.add('open');
         }
 
         function setTransType(type) { 
-            state.newTransaction.type = type; const btnS = document.getElementById('btn-type-single'); const btnI = document.getElementById('btn-type-inst');
-            const icS = btnS.querySelector('svg, i'); const icI = btnI.querySelector('svg, i');
-            if(type === 'single') { btnS.className = "bg-zinc-800 p-5 rounded-2xl text-center text-white text-sm font-medium hover:bg-zinc-700 transition-colors flex flex-col items-center gap-2 border border-indigo-500/50"; btnI.className = "bg-zinc-900 p-5 rounded-2xl text-center text-zinc-400 text-sm font-medium hover:bg-zinc-800 transition-colors flex flex-col items-center gap-2 border border-white/5"; if(icS) icS.classList.replace('text-zinc-400', 'text-white'); if(icI) icI.classList.replace('text-white', 'text-zinc-400'); document.getElementById('inst-inputs').classList.add('hidden'); } 
-            else { btnI.className = "bg-zinc-800 p-5 rounded-2xl text-center text-white text-sm font-medium hover:bg-zinc-700 transition-colors flex flex-col items-center gap-2 border border-indigo-500/50"; btnS.className = "bg-zinc-900 p-5 rounded-2xl text-center text-zinc-400 text-sm font-medium hover:bg-zinc-800 transition-colors flex flex-col items-center gap-2 border border-white/5"; if(icI) icI.classList.replace('text-zinc-400', 'text-white'); if(icS) icS.classList.replace('text-white', 'text-zinc-400'); document.getElementById('inst-inputs').classList.remove('hidden'); }
+            state.newTransaction.type = type; 
+            const btnS = document.getElementById('btn-type-single'); 
+            const btnI = document.getElementById('btn-type-inst');
+            const icS = btnS ? btnS.querySelector('svg, i') : null; 
+            const icI = btnI ? btnI.querySelector('svg, i') : null;
+            const instDiv = document.getElementById('inst-inputs');
+            
+            if(type === 'single') { 
+                if(btnS) btnS.className = "bg-zinc-800 p-5 rounded-2xl text-center text-white text-sm font-medium hover:bg-zinc-700 transition-colors flex flex-col items-center gap-2 border border-indigo-500/50"; 
+                if(btnI) btnI.className = "bg-zinc-900 p-5 rounded-2xl text-center text-zinc-400 text-sm font-medium hover:bg-zinc-800 transition-colors flex flex-col items-center gap-2 border border-white/5"; 
+                if(icS) { icS.classList.remove('text-zinc-400'); icS.classList.add('text-white'); }
+                if(icI) { icI.classList.remove('text-white'); icI.classList.add('text-zinc-400'); }
+                if(instDiv) instDiv.style.display = 'none'; 
+            } else { 
+                if(btnI) btnI.className = "bg-zinc-800 p-5 rounded-2xl text-center text-white text-sm font-medium hover:bg-zinc-700 transition-colors flex flex-col items-center gap-2 border border-indigo-500/50"; 
+                if(btnS) btnS.className = "bg-zinc-900 p-5 rounded-2xl text-center text-zinc-400 text-sm font-medium hover:bg-zinc-800 transition-colors flex flex-col items-center gap-2 border border-white/5"; 
+                if(icI) { icI.classList.remove('text-zinc-400'); icI.classList.add('text-white'); }
+                if(icS) { icS.classList.remove('text-white'); icS.classList.add('text-zinc-400'); }
+                if(instDiv) instDiv.style.display = 'block'; 
+            }
         }
         
         async function submitTransaction() {
