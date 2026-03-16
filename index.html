@@ -382,15 +382,15 @@
 
         function setTransType(type) { 
             state.newTransaction.type = type; const btnS = document.getElementById('btn-type-single'); const btnI = document.getElementById('btn-type-inst');
-            if(type === 'single') { btnS.className = "bg-zinc-800 p-5 rounded-2xl text-center text-white text-sm font-medium hover:bg-zinc-700 transition-colors flex flex-col items-center gap-2 border border-indigo-500/50"; btnI.className = "bg-zinc-900 p-5 rounded-2xl text-center text-zinc-400 text-sm font-medium hover:bg-zinc-800 transition-colors flex flex-col items-center gap-2 border border-white/5"; btnS.querySelector('i').classList.replace('text-zinc-400', 'text-white'); btnI.querySelector('i').classList.replace('text-white', 'text-zinc-400'); document.getElementById('inst-inputs').classList.add('hidden'); } 
-            else { btnI.className = "bg-zinc-800 p-5 rounded-2xl text-center text-white text-sm font-medium hover:bg-zinc-700 transition-colors flex flex-col items-center gap-2 border border-indigo-500/50"; btnS.className = "bg-zinc-900 p-5 rounded-2xl text-center text-zinc-400 text-sm font-medium hover:bg-zinc-800 transition-colors flex flex-col items-center gap-2 border border-white/5"; btnI.querySelector('i').classList.replace('text-zinc-400', 'text-white'); btnS.querySelector('i').classList.replace('text-white', 'text-zinc-400'); document.getElementById('inst-inputs').classList.remove('hidden'); }
+            const icS = btnS.querySelector('svg, i'); const icI = btnI.querySelector('svg, i');
+            if(type === 'single') { btnS.className = "bg-zinc-800 p-5 rounded-2xl text-center text-white text-sm font-medium hover:bg-zinc-700 transition-colors flex flex-col items-center gap-2 border border-indigo-500/50"; btnI.className = "bg-zinc-900 p-5 rounded-2xl text-center text-zinc-400 text-sm font-medium hover:bg-zinc-800 transition-colors flex flex-col items-center gap-2 border border-white/5"; if(icS) icS.classList.replace('text-zinc-400', 'text-white'); if(icI) icI.classList.replace('text-white', 'text-zinc-400'); document.getElementById('inst-inputs').classList.add('hidden'); } 
+            else { btnI.className = "bg-zinc-800 p-5 rounded-2xl text-center text-white text-sm font-medium hover:bg-zinc-700 transition-colors flex flex-col items-center gap-2 border border-indigo-500/50"; btnS.className = "bg-zinc-900 p-5 rounded-2xl text-center text-zinc-400 text-sm font-medium hover:bg-zinc-800 transition-colors flex flex-col items-center gap-2 border border-white/5"; if(icI) icI.classList.replace('text-zinc-400', 'text-white'); if(icS) icS.classList.replace('text-white', 'text-zinc-400'); document.getElementById('inst-inputs').classList.remove('hidden'); }
         }
         
         async function submitTransaction() {
             const type = state.newTransaction.type;
             const valInput = document.getElementById('t-val').value;
             
-            // Trava de segurança para garantir que o valor seja salvo corretamente
             const val = parseFloat(valInput.toString().replace(',', '.'));
             const date = document.getElementById('t-date').value;
             
@@ -398,7 +398,6 @@
             
             const cat = document.getElementById('t-cat').value;
             
-            // Trava de segurança para as parcelas
             let instCount = 0;
             if (type === 'installment') {
                 instCount = parseInt(document.getElementById('t-inst').value);
