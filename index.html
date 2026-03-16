@@ -200,7 +200,7 @@
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbwQ4JJJ0k5uapS6-bnUdqC4DqOPuWvNJonMoEl1dWhP_nz3WaqcmB-JSVUiHZvZJVG_Uw/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbx3_Mvtn3GZAt6d63Su9czCnOiW4uRBMznkwwqG-YzVEfkx9AtgCpd7MGKLE8qbHzuT-w/exec";
         const MONTHS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
         const YEARS = [2023, 2024, 2025, 2026];
 
@@ -222,14 +222,18 @@
             }, 3000);
         });
 
-        // REQUISIÇÃO ÚNICA PARA VELOCIDADE MÁXIMA
+        // REVERTIDO PARA AS 3 REQUISIÇÕES CONCORRENTES PARA EVITAR ERRO DE CACHE NO APPS SCRIPT
         async function loadData() {
             setLoading(true);
             try {
-                const res = await fetch(`${API_URL}?action=getAllData`).then(r => r.json());
-                state.users = Array.isArray(res.users) ? res.users : [];
-                state.transactions = Array.isArray(res.transactions) ? res.transactions : [];
-                state.categories = Array.isArray(res.categories) ? res.categories : [];
+                const [usersRes, transRes, catsRes] = await Promise.all([
+                    fetch(`${API_URL}?action=getUsers`).then(res => res.json()),
+                    fetch(`${API_URL}?action=getTransactions`).then(res => res.json()),
+                    fetch(`${API_URL}?action=getCategories`).then(res => res.json())
+                ]);
+                state.users = Array.isArray(usersRes) ? usersRes : [];
+                state.transactions = Array.isArray(transRes) ? transRes : [];
+                state.categories = Array.isArray(catsRes) ? catsRes : [];
                 if (state.currentUser) renderApp();
             } catch (e) { console.error(e); }
             setLoading(false);
