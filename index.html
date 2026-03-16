@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>LUISA PRO</title>
+    
+    <link rel="icon" type="image/png" href="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png">
+    <link rel="shortcut icon" href="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png">
+
+    <link rel="apple-touch-icon" href="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png">
+    <link rel="apple-touch-icon" sizes="167x167" href="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png">
+
+    <meta name="theme-color" content="#000000">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="LUISA PRO">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <link rel="manifest" href="./manifest.json">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #000;
+            color: #f4f4f5; /* zinc-100 */
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+            overscroll-behavior-y: none;
+        }
+
+        /* --- LOADING SCREEN STYLES --- */
+        #app-loader {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #000; z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.6s ease-out, visibility 0.6s;
+        }
+        #app-loader.fade-out { opacity: 0; visibility: hidden; pointer-events: none; }
+
+        .loader-ambient-glow {
+            position: absolute; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, rgba(99, 102, 241, 0.15) 0%, rgba(0, 0, 0, 1) 70%);
+            z-index: 1;
+        }
+        .loader-content { z-index: 10; display: flex; flex-direction: column; align-items: center; text-align: center; }
+        
+        .loader-logo {
+            width: 140px; height: 140px; object-fit: contain;
+            filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.4));
+            margin-bottom: 30px; animation: pulse 2.5s infinite ease-in-out;
+        }
+        .loader-bar-container {
+            width: 160px; height: 3px; background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 10px; overflow: hidden; position: relative; margin-top: 40px;
+        }
+        .loader-bar {
+            position: absolute; top: 0; left: 0; height: 100%; width: 50%;
+            background-color: #fff; box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            border-radius: 10px; animation: shimmer 1.5s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.4)); }
+            50% { transform: scale(1.05); filter: drop-shadow(0 0 40px rgba(99, 102, 241, 0.6)); }
+            100% { transform: scale(1); filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.4)); }
+        }
+        @keyframes shimmer { 0% { left: -50%; width: 40%; } 50% { left: 30%; width: 60%; } 100% { left: 100%; width: 20%; } }
+
+        /* --- APP STYLES --- */
+        @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in-up { animation: fade-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 5px; border: 2px solid #000; }
+        ::-webkit-scrollbar-thumb:hover { background: #444; }
+
+        .view-section {
+            display: none; padding-top: 8rem; padding-bottom: 6rem; padding-left: 2rem; padding-right: 2rem;
+            max-width: 90rem; margin-left: auto; margin-right: auto;
+        }
+        @media (max-width: 768px) { .view-section { padding-top: 6rem; padding-left: 1.25rem; padding-right: 1.25rem; } }
+        .view-section.active { display: block; animation: fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; z-index: 60;
+            background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(12px);
+            align-items: center; justify-content: center; padding: 1.5rem;
+        }
+        .modal-overlay.open { display: flex; animation: fade-in-up 0.3s ease-out forwards; }
+
+        .tab-btn.active { background-color: #27272a; color: white; box-shadow: 0 0 20px rgba(255, 255, 255, 0.05); }
+    </style>
+</head>
+<body>
+
+    <div id="app-loader">
+        <div class="loader-ambient-glow"></div>
+        <div class="loader-content">
+            <img src="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png" alt="Logo LUISA PRO" class="loader-logo">
+            <h1 class="text-3xl font-extrabold tracking-tight text-white mb-1">LUISA <span class="font-light text-zinc-500">PRO</span></h1>
+            <p class="text-[11px] text-white/50 uppercase tracking-[2px] font-medium">Sistema Financeiro</p>
+            <div class="loader-bar-container"><div class="loader-bar"></div></div>
+        </div>
+        <div class="absolute bottom-10 text-[10px] text-white/30 font-normal tracking-wide">Desenvolvido por Lucas Rocha</div>
+    </div>
+
+    <div id="login-view" class="hidden min-h-screen flex items-center justify-center p-6 relative overflow-hidden bg-black opacity-0 transition-opacity duration-700">
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none"></div>
+        
+        <div class="w-full max-w-md bg-zinc-900/40 border border-white/10 rounded-3xl p-10 backdrop-blur-2xl relative z-10 shadow-2xl">
+            <div class="text-center mb-10 flex flex-col items-center">
+                <img src="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png" alt="Logo Luisa Pro" class="w-24 h-24 mb-6 object-contain drop-shadow-2xl">
+                <h1 class="text-4xl font-bold text-white mb-2 tracking-tight">LUISA <span class="font-light text-zinc-500">PRO</span></h1>
+                <p class="text-zinc-500 text-sm">Acesse o sistema financeiro.</p>
+            </div>
+            <form id="login-form" class="space-y-5">
+                <div>
+                    <label class="text-xs font-medium text-zinc-500 ml-1 mb-1.5 block uppercase tracking-wider">Usuário</label>
+                    <div class="relative">
+                        <i data-lucide="users" class="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 w-4 h-4"></i>
+                        <input type="text" id="login-username" class="w-full bg-black/40 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-white placeholder-zinc-700 focus:border-indigo-500 focus:outline-none transition-all duration-300" placeholder="Seu identificador" required>
+                    </div>
+                </div>
+                <div>
+                    <label class="text-xs font-medium text-zinc-500 ml-1 mb-1.5 block uppercase tracking-wider">Senha</label>
+                    <div class="relative">
+                        <i data-lucide="lock" class="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 w-4 h-4"></i>
+                        <input type="password" id="login-password" class="w-full bg-black/40 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-white placeholder-zinc-700 focus:border-indigo-500 focus:outline-none transition-all duration-300" placeholder="••••••••" required>
+                    </div>
+                </div>
+                <div id="login-error" class="hidden text-rose-400 text-xs bg-rose-500/10 p-3 rounded-xl border border-rose-500/20 text-center font-medium"></div>
+                <button type="submit" id="login-btn" class="w-full bg-white text-black font-bold py-4 rounded-2xl hover:bg-zinc-200 transition-all transform hover:scale-[1.02] active:scale-95 mt-4 shadow-lg shadow-white/5">
+                    Entrar
+                </button>
+            </form>
+            <p id="login-loading-text" class="text-center text-xs text-zinc-600 mt-6 hidden animate-pulse">Sincronizando com o servidor...</p>
+        </div>
+        <div class="absolute bottom-6 text-zinc-800 text-[10px]">Desenvolvido por Lucas Rocha</div>
+    </div>
+
+    <div id="main-app" class="hidden min-h-screen bg-black text-zinc-100">
+        
+        <nav class="fixed top-0 w-full z-50 transition-all duration-300 bg-black/80 backdrop-blur-xl border-b border-white/10" id="navbar">
+            <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+                <div onclick="switchTab('home')" class="text-xl font-semibold tracking-tight text-white cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-3">
+                    <img src="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png" class="w-8 h-8 object-contain">
+                    <div>LUISA <span class="text-zinc-600 font-light">PRO</span></div>
+                    <span id="sync-indicator" class="hidden"><i data-lucide="refresh-cw" class="w-3 h-3 animate-spin text-zinc-600"></i></span>
+                </div>
+
+                <div class="hidden md:flex items-center space-x-1 bg-zinc-900/80 p-1.5 rounded-full border border-white/5 backdrop-blur-md shadow-lg shadow-black/50">
+                    <button onclick="switchTab('home')" class="tab-btn active px-5 py-2 rounded-full text-xs font-medium transition-all duration-300 flex items-center gap-2 text-zinc-400 hover:text-white" data-tab="home">Início</button>
+                    <button onclick="switchTab('dashboard')" class="tab-btn px-5 py-2 rounded-full text-xs font-medium transition-all duration-300 flex items-center gap-2 text-zinc-400 hover:text-white" data-tab="dashboard">Dashboard</button>
+                    <button onclick="switchTab('bills')" class="tab-btn px-5 py-2 rounded-full text-xs font-medium transition-all duration-300 flex items-center gap-2 text-zinc-400 hover:text-white" data-tab="bills">Contas</button>
+                    <button onclick="switchTab('statement')" class="tab-btn px-5 py-2 rounded-full text-xs font-medium transition-all duration-300 flex items-center gap-2 text-zinc-400 hover:text-white" data-tab="statement">Extrato</button>
+                    <button onclick="switchTab('filter')" class="tab-btn px-5 py-2 rounded-full text-xs font-medium transition-all duration-300 flex items-center gap-2 text-zinc-400 hover:text-white" data-tab="filter">Filtro</button>
+                    <button onclick="switchTab('users')" class="tab-btn px-5 py-2 rounded-full text-xs font-medium transition-all duration-300 flex items-center gap-2 text-zinc-400 hover:text-white" data-tab="users">Config</button>
+                </div>
+
+                <div class="hidden md:flex items-center gap-6">
+                    <div class="relative">
+                        <button onclick="toggleUserFilterDropdown()" class="flex items-center gap-2 bg-zinc-900/80 border border-white/10 px-4 py-2 rounded-full hover:bg-zinc-800 transition-all hover:border-white/20">
+                            <div id="filter-avatars" class="flex -space-x-2"></div>
+                            <span class="text-xs font-medium text-zinc-300" id="filter-label">Todos</span>
+                            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-zinc-500"></i>
+                        </button>
+                        <div id="user-filter-dropdown" class="hidden absolute right-0 top-full mt-3 w-64 bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl p-2 z-50 flex flex-col gap-1 backdrop-blur-xl">
+                            <div class="px-3 py-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider flex justify-between items-center border-b border-white/5 mb-1">
+                                <span>Visualizar</span>
+                                <button onclick="selectAllUsers()" class="text-indigo-400 hover:text-indigo-300 transition-colors">Todos</button>
+                            </div>
+                            <div id="user-filter-list" class="max-h-60 overflow-y-auto"></div>
+                        </div>
+                    </div>
+                    <div class="h-6 w-[1px] bg-white/10"></div>
+                    <div class="flex items-center gap-3">
+                        <div class="text-right">
+                            <p class="text-sm font-semibold text-white leading-none" id="current-user-name">User</p>
+                            <p class="text-[10px] text-zinc-500 leading-tight mt-1" id="current-user-role">Role</p>
+                        </div>
+                        <div id="current-user-avatar" class="w-9 h-9 rounded-full bg-zinc-800 border border-white/10 flex items-center justify-center text-sm font-bold shadow-inner">U</div>
+                        <button onclick="logout()" class="text-zinc-600 hover:text-rose-500 transition-colors ml-2" title="Sair"><i data-lucide="log-out" class="w-5 h-5"></i></button>
+                    </div>
+                </div>
+
+                <div class="md:hidden">
+                    <button onclick="toggleMobileMenu()" class="text-white p-2 rounded-lg hover:bg-white/10">
+                        <i data-lucide="menu" class="w-6 h-6"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div id="mobile-menu" class="hidden md:hidden absolute top-16 left-0 w-full bg-zinc-950 border-b border-white/10 p-4 flex flex-col space-y-2 shadow-2xl z-40">
+                <button onclick="switchTab('home')" class="p-4 rounded-xl text-sm font-medium text-zinc-400 hover:text-white bg-zinc-900/50">Início</button>
+                <button onclick="switchTab('dashboard')" class="p-4 rounded-xl text-sm font-medium text-zinc-400 hover:text-white bg-zinc-900/50">Dashboard</button>
+                <button onclick="switchTab('bills')" class="p-4 rounded-xl text-sm font-medium text-zinc-400 hover:text-white bg-zinc-900/50">Contas</button>
+                <button onclick="switchTab('statement')" class="p-4 rounded-xl text-sm font-medium text-zinc-400 hover:text-white bg-zinc-900/50">Extrato</button>
+                <button onclick="switchTab('filter')" class="p-4 rounded-xl text-sm font-medium text-zinc-400 hover:text-white bg-zinc-900/50">Filtro</button>
+                <button onclick="switchTab('users')" class="p-4 rounded-xl text-sm font-medium text-zinc-400 hover:text-white bg-zinc-900/50">Config</button>
+                <div class="border-t border-white/10 pt-4">
+                    <button onclick="logout()" class="w-full text-left p-4 rounded-xl text-sm font-medium text-rose-400 hover:bg-white/5 flex items-center gap-2"><i data-lucide="log-out" class="w-4 h-4"></i> Sair</button>
+                </div>
+            </div>
+        </nav>
+
+        <section id="view-home" class="view-section active"></section>
+        <section id="view-dashboard" class="view-section"></section>
+        <section id="view-bills" class="view-section"></section>
+        <section id="view-statement" class="view-section"></section>
+        <section id="view-filter" class="view-section"></section>
+        <section id="view-users" class="view-section"></section>
+    </div>
+
+    <div id="modal-transaction" class="modal-overlay">
+        <div class="bg-zinc-900 border border-white/10 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl m-4 animate-fade-in-up max-h-[90vh] flex flex-col">
+            <div class="p-6 border-b border-white/10 flex justify-between items-center bg-zinc-900/50 backdrop-blur">
+                <h3 class="text-xl font-bold text-white" id="modal-title">Nova Transação</h3>
+                <button onclick="closeModal('modal-transaction')" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto" id="modal-content">
+                </div>
+        </div>
+    </div>
+
+    <div id="modal-user" class="modal-overlay">
+        <div class="bg-zinc-900 border border-white/10 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl m-4 animate-fade-in-up">
+            <div class="p-6 border-b border-white/10 flex justify-between items-center"><h3 class="text-xl font-bold text-white">Adicionar Usuário</h3><button onclick="closeModal('modal-user')" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div>
+            <div class="p-6 space-y-4">
+                <input type="text" id="new-user-name" placeholder="Nome Completo" class="w-full bg-black border border-white/10 rounded-2xl py-3 px-4 text-white text-sm focus:border-indigo-500 outline-none">
+                <input type="text" id="new-user-username" placeholder="Usuário (Login)" class="w-full bg-black border border-white/10 rounded-2xl py-3 px-4 text-white text-sm focus:border-indigo-500 outline-none">
+                <input type="password" id="new-user-password" placeholder="Senha" class="w-full bg-black border border-white/10 rounded-2xl py-3 px-4 text-white text-sm focus:border-indigo-500 outline-none">
+                <button onclick="submitAddUser()" id="btn-submit-user" class="w-full bg-white text-black font-bold py-3.5 rounded-2xl mt-2 hover:bg-zinc-200 transition-colors">Cadastrar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-category" class="modal-overlay">
+        <div class="bg-zinc-900 border border-white/10 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl m-4 animate-fade-in-up">
+            <div class="p-6 border-b border-white/10 flex justify-between items-center"><h3 class="text-xl font-bold text-white">Nova Categoria</h3><button onclick="closeModal('modal-category')" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div>
+            <div class="p-6 space-y-4">
+                <input type="text" id="new-cat-name" placeholder="Nome da Categoria" class="w-full bg-black border border-white/10 rounded-2xl py-3 px-4 text-white text-sm focus:border-indigo-500 outline-none">
+                <select id="new-cat-type" class="w-full bg-black border border-white/10 rounded-2xl py-3 px-4 text-white text-sm focus:border-indigo-500 outline-none">
+                    <option value="both">Ambos (Receita/Despesa)</option>
+                    <option value="expense">Apenas Despesa</option>
+                    <option value="income">Apenas Receita</option>
+                </select>
+                <button onclick="submitAddCategory()" id="btn-submit-cat" class="w-full bg-white text-black font-bold py-3.5 rounded-2xl mt-2 hover:bg-zinc-200 transition-colors">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-details" class="modal-overlay">
+        <div class="bg-zinc-900 border border-white/10 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] m-4 animate-fade-in-up">
+            <div class="p-6 border-b border-white/10 flex justify-between items-start bg-zinc-900/50 backdrop-blur-md">
+                <div><div class="flex items-center gap-3 mb-1"><h3 class="text-2xl font-bold text-white tracking-tight" id="detail-title">Titulo</h3><span class="text-[10px] bg-indigo-500/20 text-indigo-300 px-2.5 py-0.5 rounded-full border border-indigo-500/20 font-medium" id="detail-store">Loja</span></div><p class="text-zinc-400 text-sm">Valor Total: <span class="text-white font-mono font-medium" id="detail-value">R$ 0,00</span></p></div>
+                <button onclick="closeModal('modal-details')" class="text-zinc-400 hover:text-white bg-white/5 p-2 rounded-full hover:bg-white/10 transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
+            </div>
+            <div class="p-6 bg-black/40 overflow-y-auto" id="detail-content"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "https://script.google.com/macros/s/AKfycbw0zzO8PJWkT-CF0Ckt5sXcqIUKjqHvLhsL-awNcEF6GRaqgPfMWhBrGNgzpKa13ExKkg/exec";
+        const MONTHS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        const YEARS = [2023, 2024, 2025, 2026];
+
+        let state = {
+            currentUser: null, users: [], transactions: [], categories: [], selectedFilterUsers: [], activeTab: 'home',
+            homeFilter: { month: new Date().getMonth(), year: new Date().getFullYear() },
+            dashboardFilter: { month: new Date().getMonth(), year: new Date().getFullYear() },
+            filterView: { category: 'Todas', month: new Date().getMonth(), year: new Date().getFullYear() },
+            newTransaction: {}, modalMode: 'expense'
+        };
+
+        // --- LOADING SEQUENCE & INIT ---
+        window.addEventListener('load', () => {
+            lucide.createIcons();
+            setTimeout(() => {
+                const loader = document.getElementById('app-loader');
+                const loginView = document.getElementById('login-view');
+                loader.classList.add('fade-out');
+                loginView.classList.remove('hidden');
+                setTimeout(() => {
+                    loginView.classList.remove('opacity-0');
+                    loginView.classList.add('animate-fade-in-up');
+                }, 50);
+                loadData();
+            }, 3000);
+        });
+
+        async function loadData() {
+            setLoading(true);
+            try {
+                const [usersRes, transRes, catsRes] = await Promise.all([
+                    fetch(`${API_URL}?action=getUsers`).then(res => res.json()),
+                    fetch(`${API_URL}?action=getTransactions`).then(res => res.json()),
+                    fetch(`${API_URL}?action=getCategories`).then(res => res.json())
+                ]);
+                state.users = Array.isArray(usersRes) ? usersRes : [];
+                state.transactions = Array.isArray(transRes) ? transRes : [];
+                state.categories = Array.isArray(catsRes) ? catsRes : [];
+                if (state.currentUser) renderApp();
+            } catch (e) { console.error(e); }
+            setLoading(false);
+        }
+
+        async function apiPost(action, payload) {
+            document.getElementById('sync-indicator').classList.remove('hidden');
+            try { await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action, ...payload }) }); } catch(e) { console.error(e); }
+            document.getElementById('sync-indicator').classList.add('hidden');
+        }
+
+        // --- AUTH ---
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const user = document.getElementById('login-username').value;
+            const pass = document.getElementById('login-password').value;
+            if(user === 'lucasrocha' && pass === '2025') {
+                const admin = state.users.find(u => u.username === 'lucasrocha') || { id: 999, username: 'lucasrocha', name: 'Lucas Rocha', role: 'Administrador', avatar: 'LR', color: 'from-blue-500 to-cyan-500' };
+                doLogin(admin);
+                return;
+            }
+            const found = state.users.find(u => u.username === user);
+            if(found && found.password == pass) doLogin(found);
+            else { const err = document.getElementById('login-error'); err.classList.remove('hidden'); err.innerText = "Dados incorretos."; }
+        });
+
+        function doLogin(user) {
+            state.currentUser = user;
+            state.selectedFilterUsers = [user.id];
+            document.getElementById('login-view').classList.add('hidden');
+            document.getElementById('main-app').classList.remove('hidden');
+            renderApp();
+        }
+
+        function logout() {
+            state.currentUser = null;
+            document.getElementById('main-app').classList.add('hidden');
+            document.getElementById('login-view').classList.remove('hidden');
+            document.getElementById('login-form').reset();
+        }
+
+        // --- NAVIGATION ---
+        function switchTab(tab) {
+            state.activeTab = tab;
+            document.querySelectorAll('.tab-btn').forEach(b => {
+                if(b.dataset.tab === tab) b.classList.add('active', 'bg-zinc-800', 'text-white');
+                else b.classList.remove('active', 'bg-zinc-800', 'text-white');
+            });
+            document.getElementById('mobile-menu').classList.add('hidden');
+            document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+            document.getElementById(`view-${tab}`).classList.add('active');
+            renderCurrentView();
+        }
+
+        function renderApp() {
+            document.getElementById('current-user-name').innerText = state.currentUser.name;
+            document.getElementById('current-user-role').innerText = state.currentUser.role;
+            document.getElementById('current-user-avatar').innerText = state.currentUser.avatar;
+            renderUserFilter();
+            renderCurrentView();
+        }
+
+        function renderCurrentView() {
+            const tab = state.activeTab;
+            if(tab === 'home') renderHome();
+            else if(tab === 'dashboard') renderDashboard();
+            else if(tab === 'bills') renderBills();
+            else if(tab === 'statement') renderStatement();
+            else if(tab === 'filter') renderFilterView();
+            else if(tab === 'users') renderUsers();
+            lucide.createIcons();
+        }
+
+        // --- HELPERS ---
+        function getFilteredTransactions() { return state.transactions.filter(t => state.selectedFilterUsers.includes(t.userId)); }
+        function formatCurrency(val) { return new Intl.NumberFormat('pt-BR', {style: 'currency', currency: 'BRL'}).format(val); }
+        function calculateInstallmentDate(base, offset) { const d=new Date(base); d.setMonth(d.getMonth()+offset); return d.toISOString().split('T')[0]; }
+
+        // --- RENDERERS ---
+        function renderHome() {
+            const { month, year } = state.homeFilter;
+            let rev = 0, exp = 0;
+            getFilteredTransactions().forEach(t => {
+                const process = (date, val, kind) => {
+                    const d = new Date(date);
+                    if(d.getUTCMonth() === month && d.getUTCFullYear() === year) kind === 'income' ? rev += val : exp += val;
+                };
+                if(t.type === 'single') process(t.date, t.value, t.kind);
+                else t.installments.forEach(i => process(i.date, i.value, t.kind));
+            });
+            document.getElementById('view-home').innerHTML = `
+                <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6"><div><h1 class="text-4xl md:text-5xl font-bold text-white tracking-tighter mb-2">Resumo</h1><p class="text-zinc-500">Fluxo de <span class="text-white font-medium">${MONTHS[month]} ${year}</span></p></div><div class="flex gap-3 w-full md:w-auto"><select onchange="updateHomeFilter('month', this.value)" class="flex-1 md:flex-none bg-zinc-900/80 border border-white/10 text-white py-3 px-5 rounded-2xl text-sm outline-none cursor-pointer hover:bg-zinc-800 transition-colors">${MONTHS.map((m,i)=>`<option value="${i}" ${i===month?'selected':''}>${m}</option>`).join('')}</select><select onchange="updateHomeFilter('year', this.value)" class="flex-1 md:flex-none bg-zinc-900/80 border border-white/10 text-white py-3 px-5 rounded-2xl text-sm outline-none cursor-pointer hover:bg-zinc-800 transition-colors">${YEARS.map(y=>`<option value="${y}" ${y===year?'selected':''}>${y}</option>`).join('')}</select></div></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-zinc-900/40 border border-white/5 p-8 rounded-[2rem] backdrop-blur-md relative overflow-hidden group hover:border-white/10 transition-all"><div class="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div><div class="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 mb-6"><i data-lucide="trending-up" class="w-6 h-6"></i></div><p class="text-zinc-400 font-medium mb-1">Receitas (Mês)</p><h2 class="text-5xl md:text-6xl font-bold text-white tracking-tighter">${formatCurrency(rev)}</h2></div>
+                    <div class="bg-zinc-900/40 border border-white/5 p-8 rounded-[2rem] backdrop-blur-md relative overflow-hidden group hover:border-white/10 transition-all"><div class="absolute top-0 right-0 w-64 h-64 bg-rose-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div><div class="w-14 h-14 rounded-2xl bg-rose-500/10 flex items-center justify-center text-rose-400 mb-6"><i data-lucide="trending-down" class="w-6 h-6"></i></div><p class="text-zinc-400 font-medium mb-1">Despesas (Mês)</p><h2 class="text-5xl md:text-6xl font-bold text-white tracking-tighter">${formatCurrency(exp)}</h2></div>
+                </div>
+                <div class="bg-gradient-to-r from-zinc-900 to-zinc-900/60 border border-white/5 p-8 rounded-[2rem] flex items-center gap-8 relative overflow-hidden"><div class="absolute inset-0 bg-white/5 opacity-0 hover:opacity-100 transition-opacity"></div><div class="w-16 h-16 rounded-full ${rev-exp>=0?'bg-blue-600':'bg-rose-600'} flex items-center justify-center text-white shadow-xl shadow-black/50 z-10"><i data-lucide="wallet" class="w-7 h-7"></i></div><div class="z-10"><p class="text-zinc-400 uppercase text-xs font-bold tracking-widest mb-1">Saldo Líquido</p><p class="text-3xl md:text-4xl font-bold text-white tracking-tight">${formatCurrency(rev-exp)}</p></div></div>
+            `;
+        }
+
+        function renderDashboard() {
+            const { month, year } = state.dashboardFilter;
+            let rev = 0, exp = 0;
+            getFilteredTransactions().forEach(t => {
+                if(t.type === 'single') { const d = new Date(t.date); if(d.getUTCMonth() === month && d.getUTCFullYear() === year) t.kind === 'income' ? rev += t.value : exp += t.value; }
+                else t.installments.forEach(i => { const d = new Date(i.date); if(d.getUTCMonth() === month && d.getUTCFullYear() === year) t.kind === 'income' ? rev += i.value : exp += i.value; });
+            });
+            const chartData = Array(12).fill(0).map((_, i) => ({ inc: 0, exp: 0 }));
+            getFilteredTransactions().forEach(t => {
+                const process = (date, val, kind) => { const d = new Date(date); if(d.getUTCFullYear() === year) { const m = d.getUTCMonth(); kind === 'income' ? chartData[m].inc += val : chartData[m].exp += val; }};
+                if(t.type === 'single') process(t.date, t.value, t.kind); else t.installments.forEach(i => process(i.date, i.value, t.kind));
+            });
+            const maxVal = Math.max(...chartData.map(d => Math.max(d.inc, d.exp)), 100);
+            const bars = chartData.map((d, i) => `<div class="flex flex-col items-center gap-1 w-full h-full justify-end group relative"><div class="absolute -top-16 bg-zinc-800 border border-white/10 text-white text-[10px] p-2 rounded opacity-0 group-hover:opacity-100 transition-opacity z-20 pointer-events-none w-max"><div class="font-bold mb-1">${MONTHS[i]}</div><div class="text-emerald-400">+${formatCurrency(d.inc)}</div><div class="text-rose-400">-${formatCurrency(d.exp)}</div></div><div class="flex gap-1 items-end h-full justify-center w-full"><div class="w-1.5 md:w-3 bg-emerald-500/80 rounded-t-sm hover:bg-emerald-400 transition-colors" style="height:${(d.inc/maxVal)*100}%"></div><div class="w-1.5 md:w-3 bg-rose-500/80 rounded-t-sm hover:bg-rose-400 transition-colors" style="height:${(d.exp/maxVal)*100}%"></div></div></div>`).join('');
+
+            document.getElementById('view-dashboard').innerHTML = `
+                <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4"><h2 class="text-4xl font-bold text-white tracking-tight">Dashboard</h2><div class="flex gap-2 w-full md:w-auto"><select onchange="updateDashFilter('month', this.value)" class="bg-zinc-900 border border-white/10 text-white p-2.5 rounded-xl text-sm w-full md:w-auto">${MONTHS.map((m,i)=>`<option value="${i}" ${i===month?'selected':''}>${m}</option>`).join('')}</select><select onchange="updateDashFilter('year', this.value)" class="bg-zinc-900 border border-white/10 text-white p-2.5 rounded-xl text-sm w-full md:w-auto">${YEARS.map(y=>`<option value="${y}" ${y===year?'selected':''}>${y}</option>`).join('')}</select></div></div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-zinc-900/50 p-6 rounded-3xl border border-white/5 backdrop-blur-sm"><p class="text-zinc-500 text-sm font-medium mb-1">Saldo</p><h3 class="text-2xl font-bold ${rev-exp>=0?'text-white':'text-rose-400'}">${formatCurrency(rev-exp)}</h3></div>
+                    <div class="bg-zinc-900/50 p-6 rounded-3xl border border-white/5 backdrop-blur-sm"><p class="text-zinc-500 text-sm font-medium mb-1">Receitas</p><h3 class="text-2xl font-bold text-emerald-400">${formatCurrency(rev)}</h3></div>
+                    <div class="bg-zinc-900/50 p-6 rounded-3xl border border-white/5 backdrop-blur-sm"><p class="text-zinc-500 text-sm font-medium mb-1">Despesas</p><h3 class="text-2xl font-bold text-rose-400">${formatCurrency(exp)}</h3></div>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 bg-zinc-900/50 border border-white/5 rounded-3xl p-8 min-h-[400px] flex flex-col backdrop-blur-sm"><h3 class="text-zinc-300 font-semibold mb-6">Fluxo Anual (${year})</h3><div class="flex-1 flex items-end justify-between gap-2 border-b border-white/5 pb-4">${bars}</div><div class="flex justify-between text-zinc-600 text-[10px] mt-3 uppercase tracking-wider">${MONTHS.map(m=>`<span class="w-full text-center">${m.substring(0,3)}</span>`).join('')}</div></div>
+                    <div class="bg-zinc-900/50 border border-white/5 rounded-3xl p-8 backdrop-blur-sm"><h3 class="text-zinc-300 font-semibold mb-6">Ações Rápidas</h3><div class="space-y-4"><button onclick="openTransactionModal('expense')" class="w-full bg-white text-black py-4 rounded-2xl font-bold hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2"><i data-lucide="dollar-sign" class="w-5 h-5"></i> Nova Despesa</button><button onclick="openTransactionModal('income')" class="w-full bg-zinc-800 text-white py-4 rounded-2xl font-bold hover:bg-zinc-700 transition-colors flex items-center justify-center gap-2 border border-white/10"><i data-lucide="trending-up" class="w-5 h-5"></i> Novo Recebimento</button></div></div>
+                </div>
+            `;
+        }
+
+        function renderBills() {
+            const bills = getFilteredTransactions().filter(t => t.kind === 'expense');
+            const rows = bills.map(t => {
+                const u = state.users.find(user => user.id === t.userId);
+                return `<div onclick="openDetails(${t.id})" class="group flex flex-col md:grid md:grid-cols-12 gap-4 p-5 items-center hover:bg-white/5 transition-colors cursor-pointer border-b border-white/5">
+                    <div class="w-full md:col-span-4 text-white font-medium flex items-center gap-4"><div class="w-10 h-10 rounded-xl bg-zinc-800 flex items-center justify-center text-zinc-400 group-hover:text-white transition-colors"><i data-lucide="${t.type==='installment'?'list-checks':'credit-card'}" class="w-5 h-5"></i></div><div><div class="flex items-center gap-2 text-base">${t.name} ${t.type==='installment'?'<span class="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 rounded-full border border-indigo-500/20">Parcelado</span>':''}</div><p class="text-xs text-zinc-500">${t.store||''}</p></div></div>
+                    <div class="w-full md:col-span-3 text-zinc-400 text-sm flex items-center gap-2"><div class="w-5 h-5 rounded-full bg-gradient-to-br ${u?.color||'bg-gray-500'} flex items-center justify-center text-[9px] text-white border border-white/10">${u?.avatar||'?'}</div><span>${t.category}</span></div>
+                    <div class="w-full md:col-span-2 text-zinc-400 text-sm flex justify-between md:block"><span class="md:hidden">Vencimento:</span> ${t.date}</div>
+                    <div class="w-full md:col-span-2 text-right text-white font-mono text-base flex justify-between md:block"><span class="md:hidden text-zinc-500 sans-serif">Valor:</span> ${formatCurrency(t.value)}</div>
+                    <div class="hidden md:block md:col-span-1 text-center"><i data-lucide="chevron-right" class="w-5 h-5 text-zinc-600 group-hover:text-white transition-colors"></i></div>
+                </div>`;
+            }).join('');
+            document.getElementById('view-bills').innerHTML = `<div class="flex justify-between items-center mb-8"><h2 class="text-3xl font-bold text-white tracking-tight">Contas a Pagar</h2><button onclick="openTransactionModal('expense')" class="bg-white text-black px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-zinc-200 transition-colors flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Nova Conta</button></div><div class="bg-zinc-900/40 border border-white/5 rounded-[1.5rem] overflow-hidden backdrop-blur-md"><div class="hidden md:grid grid-cols-12 gap-4 p-5 border-b border-white/5 text-xs font-semibold text-zinc-500 uppercase tracking-wider"><div class="col-span-4">Descrição</div><div class="col-span-3">Responsável / Categoria</div><div class="col-span-2">Vencimento</div><div class="col-span-2 text-right">Valor Total</div><div class="col-span-1"></div></div>${rows || '<p class="p-8 text-center text-zinc-500">Nenhuma conta pendente.</p>'}</div>`;
+        }
+
+        function renderStatement() {
+            const list = getFilteredTransactions().sort((a,b) => new Date(b.date) - new Date(a.date));
+            const rows = list.map(t => {
+                const isInc = t.kind === 'income';
+                return `<div class="flex flex-col md:grid md:grid-cols-12 gap-4 p-5 items-center hover:bg-white/5 transition-colors border-b border-white/5">
+                    <div class="w-full md:col-span-5 flex items-center gap-4"><div class="w-10 h-10 rounded-full flex items-center justify-center ${isInc?'bg-emerald-500/10 text-emerald-500':'bg-rose-500/10 text-rose-500'}"><i data-lucide="${isInc?'arrow-up-circle':'arrow-down-circle'}" class="w-5 h-5"></i></div><div><div class="text-white font-medium text-base">${t.name}</div><p class="text-xs text-zinc-500">${t.store||''}</p></div></div>
+                    <div class="w-full md:col-span-3 text-zinc-400 text-sm hidden md:block">${t.category}</div>
+                    <div class="w-full md:col-span-2 text-zinc-400 text-sm flex justify-between md:block"><span class="md:hidden">Data:</span> ${t.date}</div>
+                    <div class="w-full md:col-span-2 text-right font-mono text-base ${isInc?'text-emerald-400':'text-white'} flex justify-between md:block"><span class="md:hidden text-zinc-500 sans-serif">Valor:</span> ${isInc?'+':'-'} ${formatCurrency(t.value)}</div>
+                </div>`;
+            }).join('');
+            document.getElementById('view-statement').innerHTML = `<h2 class="text-3xl font-bold text-white mb-8 tracking-tight">Extrato</h2><div class="bg-zinc-900/40 border border-white/5 rounded-[1.5rem] overflow-hidden backdrop-blur-md"><div class="hidden md:grid grid-cols-12 gap-4 p-5 border-b border-white/5 text-xs font-semibold text-zinc-500 uppercase tracking-wider"><div class="col-span-5">Descrição</div><div class="col-span-3">Categoria</div><div class="col-span-2">Data</div><div class="col-span-2 text-right">Valor</div></div>${rows || '<p class="p-8 text-center text-zinc-500">Sem movimentações.</p>'}</div>`;
+        }
+
+        function renderFilterView() {
+            const {category, month, year} = state.filterView;
+            const catOptions = ['Todas', ...state.categories.map(c => c.name)].map(c => `<option value="${c}" ${c === category ? 'selected' : ''}>${c}</option>`).join('');
+            let total = 0;
+            const items = getFilteredTransactions().filter(t => t.kind === 'expense' && (category === 'Todas' || t.category === category)).reduce((arr, t) => {
+                let val = 0; if(t.type === 'single') { const d = new Date(t.date); if(d.getUTCMonth() === month && d.getUTCFullYear() === year) val = t.value; } else t.installments.forEach(i => { const d = new Date(i.date); if(d.getUTCMonth() === month && d.getUTCFullYear() === year) val += i.value; });
+                if(val > 0) { total += val; arr.push({...t, val}); } return arr;
+            }, []);
+            const rows = items.map(t => `<div class="flex justify-between items-center p-5 border-b border-white/5 hover:bg-white/5 transition-colors"><div><p class="text-white font-medium text-base">${t.name} <span class="text-zinc-500 text-sm ml-2 font-normal">${t.store}</span></p><p class="text-xs text-zinc-500 mt-0.5">${t.category}</p></div><p class="text-rose-400 font-mono text-base font-medium">${formatCurrency(t.val)}</p></div>`).join('');
+            document.getElementById('view-filter').innerHTML = `<div class="flex flex-col md:flex-row justify-between mb-10 gap-6"><div><h2 class="text-3xl font-bold text-white tracking-tight">Filtro Avançado</h2><p class="text-zinc-500 mt-2">Detalhamento de gastos por categoria.</p></div><div class="flex gap-3 flex-wrap md:flex-nowrap"><select onchange="updateFilterView('category', this.value)" class="bg-zinc-900 border border-white/10 text-white p-3 rounded-xl text-sm w-full md:w-auto outline-none">${catOptions}</select><select onchange="updateFilterView('month', this.value)" class="bg-zinc-900 border border-white/10 text-white p-3 rounded-xl text-sm w-full md:w-auto outline-none">${MONTHS.map((m,i)=>`<option value="${i}" ${i===month?'selected':''}>${m}</option>`).join('')}</select><select onchange="updateFilterView('year', this.value)" class="bg-zinc-900 border border-white/10 text-white p-3 rounded-xl text-sm w-full md:w-auto outline-none">${YEARS.map(y=>`<option value="${y}" ${y===year?'selected':''}>${y}</option>`).join('')}</select></div></div><div class="bg-zinc-900/50 p-8 rounded-[2rem] border border-white/5 mb-8 flex justify-between items-center shadow-lg"><div><p class="text-zinc-400 text-sm font-medium">Total em <span class="text-white">${category}</span></p><p class="text-xs text-zinc-500 mt-1">${MONTHS[month]} ${year}</p></div><h2 class="text-4xl md:text-5xl font-bold text-rose-400 tracking-tighter">${formatCurrency(total)}</h2></div><div class="bg-zinc-900/40 rounded-[2rem] border border-white/5 overflow-hidden backdrop-blur-md">${rows || '<p class="p-8 text-center text-zinc-500">Nenhum gasto encontrado.</p>'}</div>`;
+        }
+
+        function renderUsers() {
+            const isAdmin = state.currentUser.role === 'Administrador';
+            const usersHtml = state.users.map(u => `<div class="bg-zinc-900/50 p-6 rounded-[1.5rem] border border-white/5 flex items-center justify-between group hover:border-white/10 transition-all"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-gradient-to-br ${u.color} flex items-center justify-center text-white font-bold text-lg shadow-lg">${u.avatar}</div><div><p class="text-white font-medium text-base">${u.name}</p><p class="text-xs text-zinc-500 mt-0.5">${u.role}</p></div></div>${isAdmin && u.id !== state.currentUser.id ? `<button onclick="deleteUser(${u.id})" class="text-zinc-600 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all"><i data-lucide="trash-2" class="w-5 h-5"></i></button>` : ''}</div>`).join('');
+            const catsHtml = state.categories.map(c => `<div class="bg-zinc-900/50 p-4 rounded-xl border border-white/5 flex justify-between items-center text-sm hover:bg-zinc-800/50 transition-colors"><span class="text-zinc-300 font-medium">${c.name}</span><button onclick="deleteCategory(${c.id})" class="text-zinc-600 hover:text-rose-500 transition-colors"><i data-lucide="x" class="w-4 h-4"></i></button></div>`).join('');
+            document.getElementById('view-users').innerHTML = `<div class="mb-12"><div class="flex justify-between items-center mb-6"><h2 class="text-3xl font-bold text-white tracking-tight">Usuários</h2>${isAdmin?`<button onclick="openUserModal()" class="bg-white text-black px-4 py-2 rounded-xl text-sm font-bold hover:bg-zinc-200 transition-colors">Novo Usuário</button>`:''}</div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">${usersHtml}</div></div><div><div class="flex justify-between items-center mb-6"><h2 class="text-3xl font-bold text-white tracking-tight">Categorias</h2><button onclick="openCategoryModal()" class="bg-zinc-800 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-zinc-700 transition-colors border border-white/10">Nova Categoria</button></div><div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">${catsHtml}</div></div>`;
+        }
+
+        // --- FILTER HELPERS ---
+        function updateHomeFilter(k,v) { state.homeFilter[k]=Number(v); renderHome(); }
+        function updateDashFilter(k,v) { state.dashboardFilter[k]=Number(v); renderDashboard(); }
+        function updateFilterView(k,v) { state.filterView[k]=isNaN(Number(v))?v:Number(v); renderFilterView(); }
+        function toggleUserFilterDropdown() { document.getElementById('user-filter-dropdown').classList.toggle('hidden'); }
+        function selectAllUsers() { state.selectedFilterUsers = state.users.map(u => u.id); renderApp(); }
+        function toggleUser(id) { state.selectedFilterUsers.includes(id) ? state.selectedFilterUsers = state.selectedFilterUsers.filter(x => x !== id) : state.selectedFilterUsers.push(id); renderApp(); }
+        function renderUserFilter() {
+            const list = state.users.map(u => `<button onclick="toggleUser(${u.id})" class="flex items-center gap-3 w-full p-2.5 rounded-xl text-sm transition-colors ${state.selectedFilterUsers.includes(u.id) ? 'bg-white/10 text-white' : 'text-zinc-400 hover:text-white hover:bg-white/5'}"><div class="w-6 h-6 rounded-full bg-gradient-to-br ${u.color} flex items-center justify-center text-[9px] text-white font-bold border border-white/10">${u.avatar}</div><span class="flex-1 text-left font-medium">${u.name}</span>${state.selectedFilterUsers.includes(u.id) ? '<i data-lucide="check" class="w-4 h-4 text-emerald-400"></i>' : ''}</button>`).join('');
+            document.getElementById('user-filter-list').innerHTML = list;
+            const avatars = state.selectedFilterUsers.slice(0, 3).map(id => { const u = state.users.find(user => user.id === id); return u ? `<div class="w-7 h-7 rounded-full bg-gradient-to-br ${u.color} border-2 border-zinc-900 flex items-center justify-center text-[9px] font-bold text-white">${u.avatar}</div>` : ''; }).join('');
+            document.getElementById('filter-avatars').innerHTML = avatars + (state.selectedFilterUsers.length > 3 ? `<div class="w-7 h-7 rounded-full bg-zinc-800 border-2 border-zinc-900 flex items-center justify-center text-[9px] text-white font-bold">+${state.selectedFilterUsers.length - 3}</div>` : '');
+            document.getElementById('filter-label').innerText = state.selectedFilterUsers.length === state.users.length ? 'Todos' : 'Filtrar';
+            lucide.createIcons();
+        }
+
+        // --- MODALS & TRANS ---
+        function openTransactionModal(mode) {
+            state.modalMode = mode;
+            document.getElementById('modal-title').innerText = mode === 'expense' ? 'Nova Despesa' : 'Novo Recebimento';
+            const catOpts = state.categories.filter(c => c.type === 'both' || c.type === mode).map(c => `<option value="${c.name}">${c.name}</option>`).join('');
+            
+            // AREA DE SCAN/OCR INSERIDA NO MODAL
+            const scanArea = `
+                <div class="mb-6">
+                    <label for="receipt-input" class="group relative flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-zinc-700 rounded-2xl cursor-pointer hover:bg-zinc-800/30 hover:border-indigo-500 transition-all bg-black/20">
+                        <div class="flex flex-col items-center justify-center pt-5 pb-6 text-zinc-400 group-hover:text-indigo-400 transition-colors">
+                            <i data-lucide="scan-line" class="w-8 h-8 mb-3"></i>
+                            <p class="text-xs font-medium uppercase tracking-wide">Scan Nota ou PDF</p>
+                        </div>
+                        <input id="receipt-input" type="file" accept="image/*,application/pdf" capture="environment" class="hidden" onchange="handleReceiptScan(this)" />
+                    </label>
+                    <div id="ocr-loading" class="hidden mt-4 bg-zinc-800/50 p-4 rounded-xl border border-white/5">
+                        <div class="flex items-center justify-between text-indigo-400 text-xs font-medium mb-2">
+                            <span class="flex items-center gap-2"><i data-lucide="loader-2" class="w-3 h-3 animate-spin"></i> <span id="ocr-status">Iniciando IA...</span></span>
+                            <span id="ocr-pct">0%</span>
+                        </div>
+                        <div class="w-full bg-black h-1.5 rounded-full overflow-hidden">
+                            <div id="ocr-progress" class="bg-indigo-500 h-full w-0 transition-all duration-300"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('modal-content').innerHTML = `
+                ${scanArea}
+                <div class="grid grid-cols-2 gap-4 mb-6"><button onclick="setTransType('single')" id="btn-type-single" class="bg-zinc-800 p-5 rounded-2xl text-center text-white text-sm font-medium hover:bg-zinc-700 transition-colors flex flex-col items-center gap-2 border border-indigo-500/50"><i data-lucide="dollar-sign" class="w-6 h-6 text-white"></i>À Vista</button><button onclick="setTransType('installment')" id="btn-type-inst" class="bg-zinc-900 p-5 rounded-2xl text-center text-zinc-400 text-sm font-medium hover:bg-zinc-800 transition-colors flex flex-col items-center gap-2 border border-white/5"><i data-lucide="list-checks" class="w-6 h-6 text-zinc-400"></i>Parcelado</button></div>
+                <div id="trans-form" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4"><input id="t-store" type="text" placeholder="${mode==='expense'?'Loja':'Origem'}" class="w-full bg-black border border-white/10 rounded-2xl p-3.5 text-white text-sm focus:border-indigo-500 outline-none"><select id="t-cat" class="w-full bg-black border border-white/10 rounded-2xl p-3.5 text-white text-sm focus:border-indigo-500 outline-none"><option value="Geral">Sem Categoria</option>${catOpts}</select></div>
+                    <input id="t-desc" type="text" placeholder="Descrição" class="w-full bg-black border border-white/10 rounded-2xl p-3.5 text-white text-sm focus:border-indigo-500 outline-none">
+                    <div class="grid grid-cols-2 gap-4"><input id="t-val" type="number" placeholder="Valor" class="w-full bg-black border border-white/10 rounded-2xl p-3.5 text-white text-sm focus:border-indigo-500 outline-none"><input id="t-date" type="date" class="w-full bg-black border border-white/10 rounded-2xl p-3.5 text-white text-sm focus:border-indigo-500 outline-none [color-scheme:dark]"></div>
+                    <div id="inst-inputs" class="hidden"><input id="t-inst" type="number" placeholder="Qtd Parcelas" class="w-full bg-black border border-white/10 rounded-2xl p-3.5 text-white text-sm mt-4 focus:border-indigo-500 outline-none"></div>
+                    <button onclick="submitTransaction()" class="w-full bg-white text-black font-bold p-4 rounded-2xl mt-4 hover:bg-zinc-200 transition-colors shadow-lg">Salvar</button>
+                </div>`;
+            state.newTransaction.type = 'single';
+            lucide.createIcons();
+            document.getElementById('modal-transaction').classList.add('open');
+        }
+
+        function setTransType(type) { 
+            state.newTransaction.type = type; 
+            const btnS = document.getElementById('btn-type-single');
+            const btnI = document.getElementById('btn-type-inst');
+            
+            if(type === 'single') {
+                btnS.className = "bg-zinc-800 p-5 rounded-2xl text-center text-white text-sm font-medium hover:bg-zinc-700 transition-colors flex flex-col items-center gap-2 border border-indigo-500/50";
+                btnI.className = "bg-zinc-900 p-5 rounded-2xl text-center text-zinc-400 text-sm font-medium hover:bg-zinc-800 transition-colors flex flex-col items-center gap-2 border border-white/5";
+                btnS.querySelector('i').classList.replace('text-zinc-400', 'text-white');
+                btnI.querySelector('i').classList.replace('text-white', 'text-zinc-400');
+                document.getElementById('inst-inputs').classList.add('hidden');
+            } else {
+                btnI.className = "bg-zinc-800 p-5 rounded-2xl text-center text-white text-sm font-medium hover:bg-zinc-700 transition-colors flex flex-col items-center gap-2 border border-indigo-500/50";
+                btnS.className = "bg-zinc-900 p-5 rounded-2xl text-center text-zinc-400 text-sm font-medium hover:bg-zinc-800 transition-colors flex flex-col items-center gap-2 border border-white/5";
+                btnI.querySelector('i').classList.replace('text-zinc-400', 'text-white');
+                btnS.querySelector('i').classList.replace('text-white', 'text-zinc-400');
+                document.getElementById('inst-inputs').classList.remove('hidden');
+            }
+        }
+        
+        async function submitTransaction() {
+            const type = state.newTransaction.type;
+            const val = parseFloat(document.getElementById('t-val').value);
+            const date = document.getElementById('t-date').value;
+            if (!val || !date) return alert("Preencha todos os campos");
+            const cat = document.getElementById('t-cat').value;
+            const instCount = type === 'installment' ? parseInt(document.getElementById('t-inst').value) : 0;
+            
+            // CORREÇÃO DE STATUS: Single = Pago, Installment = Em andamento
+            let status = state.modalMode === 'expense' ? (type === 'single' ? 'Pago' : 'Em andamento') : 'Recebido';
+
+            const payload = { id: Date.now(), userId: state.currentUser.id, kind: state.modalMode, name: document.getElementById('t-desc').value, store: document.getElementById('t-store').value, category: cat, value: type === 'installment' ? val * instCount : val, date, status: status, type, installmentValue: type === 'installment' ? val : 0, totalInstallments: instCount, paidInstallments: 0, installments: [] };
+            if(type === 'installment') for(let i=0; i<instCount; i++) payload.installments.push({number: i+1, value: val, date: calculateInstallmentDate(date, i), status: 'Pendente'});
+            
+            state.transactions.push(payload); closeModal('modal-transaction'); renderCurrentView(); await apiPost('addTransaction', {transaction: payload});
+        }
+
+        // --- CATEGORIES & USERS ---
+        function openCategoryModal() { document.getElementById('modal-category').classList.add('open'); }
+        async function submitAddCategory() { const name = document.getElementById('new-cat-name').value; const type = document.getElementById('new-cat-type').value; if(!name) return; const cat = { id: Date.now(), name, type }; state.categories.push(cat); closeModal('modal-category'); renderCurrentView(); await apiPost('addCategory', { category: cat }); }
+        async function deleteCategory(id) { if(!confirm('Remover categoria?')) return; state.categories = state.categories.filter(c => c.id !== id); renderCurrentView(); await apiPost('deleteCategory', { id }); }
+        
+        function openUserModal() { document.getElementById('modal-user').classList.add('open'); }
+        async function submitAddUser() { const name = document.getElementById('new-user-name').value; const username = document.getElementById('new-user-username').value; const password = document.getElementById('new-user-password').value; if(!name||!username||!password) return alert("Preencha tudo"); const user = { id: Date.now(), name, username, password, role: 'Financeiro', avatar: name.substring(0,2).toUpperCase(), color: 'from-blue-500 to-cyan-500', status: 'Ativo' }; state.users.push(user); closeModal('modal-user'); renderCurrentView(); await apiPost('addUser', { user }); }
+        async function deleteUser(id) { if(confirm('Remover usuário?')) { state.users = state.users.filter(u => u.id !== id); renderCurrentView(); await apiPost('deleteUser', { id }); } }
+
+        // --- INSTALLMENT LOGIC ---
+        function openDetails(id) {
+            const t = state.transactions.find(x => x.id === id);
+            if(!t || t.type !== 'installment') return;
+            document.getElementById('detail-title').innerText = t.name; document.getElementById('detail-store').innerText = t.store; document.getElementById('detail-value').innerText = formatCurrency(t.value);
+            const container = document.getElementById('detail-content');
+            const progress = Math.round((t.paidInstallments / t.totalInstallments) * 100);
+            const list = t.installments.map(inst => `<div class="flex justify-between items-center p-4 border-b border-white/5 rounded-xl bg-zinc-800/20 mb-2"><div><span class="text-white font-medium text-sm">Parcela ${inst.number}</span> <span class="text-xs text-zinc-500 block">${inst.date}</span></div><button onclick="toggleInstallment(${t.id}, ${inst.number})" class="text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${inst.status==='Pago'?'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20':'bg-white text-black hover:bg-zinc-200'}">${inst.status==='Pago'?'Pago':'Pagar'}</button></div>`).join('');
+            container.innerHTML = `<div class="flex justify-between mb-2 text-xs font-medium text-zinc-400"><span>Progresso</span> <span>${progress}%</span></div><div class="h-3 bg-zinc-800 rounded-full overflow-hidden mb-6"><div class="h-full bg-gradient-to-r from-indigo-600 to-blue-500 transition-all duration-500" style="width:${progress}%"></div></div>${list}`;
+            document.getElementById('modal-details').classList.add('open');
+        }
+        async function toggleInstallment(tid, num) {
+            const t = state.transactions.find(x => x.id === tid);
+            t.installments.forEach(i => { if(i.number === num) i.status = i.status === 'Pago' ? 'Pendente' : 'Pago'; });
+            t.paidInstallments = t.installments.filter(i => i.status === 'Pago').length;
+            t.status = t.paidInstallments === t.totalInstallments ? 'Pago' : 'Em andamento';
+            openDetails(tid); renderCurrentView();
+            await apiPost('updateTransaction', { transaction: t });
+        }
+
+        // --- UTILS ---
+        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+        function setLoading(b, id='login-loading-text') { const el=document.getElementById(id); if(el) b?el.classList.remove('hidden'):el.classList.add('hidden'); }
+        function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
+
+        // --- OCR & PDF LOGIC ---
+        async function handleReceiptScan(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const loadingEl = document.getElementById('ocr-loading');
+            const statusEl = document.getElementById('ocr-status');
+            const progressEl = document.getElementById('ocr-progress');
+            loadingEl.classList.remove('hidden');
+            try {
+                let imageUrl;
+                if (file.type === 'application/pdf') {
+                    statusEl.innerText = "Lendo PDF...";
+                    imageUrl = await convertPdfToImage(file);
+                } else {
+                    imageUrl = URL.createObjectURL(file);
+                }
+                const worker = await Tesseract.createWorker('por', 1, {
+                    logger: m => {
+                        if (m.status === 'recognizing text') {
+                            progressEl.style.width = `${Math.round(m.progress * 100)}%`;
+                        }
+                    }
+                });
+                statusEl.innerText = "Analisando...";
+                const ret = await worker.recognize(imageUrl);
+                const text = ret.data.text;
+                await worker.terminate();
+
+                const extractedValue = findValueInText(text);
+                const extractedDate = findDateInText(text);
+                const possibleStore = findStoreInText(text);
+                autoCategorize(text);
+
+                if (extractedValue) pulseField('t-val', extractedValue);
+                if (extractedDate) pulseField('t-date', extractedDate);
+                else pulseField('t-date', new Date().toISOString().split('T')[0]);
+                if (possibleStore) {
+                    pulseField('t-store', possibleStore);
+                    document.getElementById('t-desc').value = "Compra: " + possibleStore;
+                }
+                loadingEl.innerHTML = `<div class="flex items-center gap-2 text-emerald-400 text-xs font-bold justify-center"><i data-lucide="check-circle" class="w-4 h-4"></i> Leitura OK!</div>`;
+                lucide.createIcons();
+                if(imageUrl && !imageUrl.startsWith('data:')) URL.revokeObjectURL(imageUrl);
+            } catch (err) {
+                console.error(err);
+                loadingEl.innerHTML = `<span class="text-rose-400 text-xs">Erro na leitura. Tente outra.</span>`;
+            }
+        }
+
+        async function convertPdfToImage(file) {
+            const fileReader = new FileReader();
+            return new Promise((resolve, reject) => {
+                fileReader.onload = async function() {
+                    try {
+                        const typedarray = new Uint8Array(this.result);
+                        const pdf = await pdfjsLib.getDocument(typedarray).promise;
+                        const page = await pdf.getPage(1);
+                        const viewport = page.getViewport({ scale: 2.0 });
+                        const canvas = document.createElement('canvas');
+                        const context = canvas.getContext('2d');
+                        canvas.height = viewport.height;
+                        canvas.width = viewport.width;
+                        await page.render({ canvasContext: context, viewport: viewport }).promise;
+                        resolve(canvas.toDataURL('image/png'));
+                    } catch (e) { reject(e); }
+                };
+                fileReader.readAsArrayBuffer(file);
+            });
+        }
+
+        function autoCategorize(text) {
+            const textLower = text.toLowerCase();
+            let detectedCategory = null;
+            const rules = [
+                { keywords: ['supermercado', 'mercado', 'atacadão', 'assai', 'carrefour', 'pão de açúcar', 'alimentos', 'hortifruti', 'smarket'], category: 'Mercado' },
+                { keywords: ['posto', 'gasolina', 'combustivel', 'petrobras', 'ipiranga', 'shell', 'etanol', 'diesel'], category: 'Transporte' },
+                { keywords: ['farmacia', 'drogaria', 'drugstore', 'pague menos', 'drogasil', 'raia'], category: 'Saúde' },
+                { keywords: ['restaurante', 'burger', 'pizza', 'ifood', 'delivery', 'bk', 'mcdonalds'], category: 'Alimentação' },
+                { keywords: ['uber', '99', 'taxi'], category: 'Transporte' }
+            ];
+            for (const rule of rules) { if (rule.keywords.some(k => textLower.includes(k))) { detectedCategory = rule.category; break; } }
+            if (detectedCategory) {
+                const select = document.getElementById('t-cat');
+                let found = false;
+                for (let i = 0; i < select.options.length; i++) { if (select.options[i].value === detectedCategory) { select.selectedIndex = i; found = true; break; } }
+                if (!found) {
+                    const newCat = { id: Date.now(), name: detectedCategory, type: 'expense' };
+                    state.categories.push(newCat);
+                    const opt = document.createElement('option'); opt.value = detectedCategory; opt.text = detectedCategory; select.add(opt); select.value = detectedCategory;
+                    apiPost('addCategory', { category: newCat });
+                }
+                pulseField('t-cat');
+            }
+        }
+
+        function pulseField(id, value) {
+            const el = document.getElementById(id);
+            if(value) el.value = value;
+            el.classList.add('border-indigo-500', 'bg-indigo-500/20');
+            setTimeout(() => el.classList.remove('border-indigo-500', 'bg-indigo-500/20'), 1500);
+        }
+
+        function findStoreInText(text) {
+            const lines = text.split('\n');
+            const ignorePatterns = ['cnpj', 'cpf', 'enpj', 'im:', 'ie:', 'extrato', 'fiscal', 'cupom', 'danfe', 'sat', 'caixa', 'notinha', 'rua', 'av.', 'tel', 'item', 'qtd', 'total', 'pago', 'troco', 'crédito', 'débito', 'venda', 'data'];
+            const cnpjRegex = /\d{2}[\.\s]?\d{3}[\.\s]?\d{3}[\/\s]?\d{4}[-\s]?\d{2}/;
+            
+            const candidates = lines.map(l => l.trim()).filter(l => {
+                const lower = l.toLowerCase();
+                if (l.length < 3) return false;
+                if (ignorePatterns.some(w => lower.includes(w))) return false;
+                if (cnpjRegex.test(l)) return false;
+                const digits = l.replace(/[^0-9]/g, '').length;
+                if (digits > 4) return false; 
+                return true;
+            });
+            if (candidates.length > 0) return candidates[0].replace(/^[^a-zA-Z0-9À-ÿ]+/, '').substring(0, 30).trim();
+            return null;
+        }
+
+        function findValueInText(text) {
+            const lines = text.split('\n');
+            let maxVal = 0;
+            const valorRegex = /R?\s?(\d{1,3}(\.?\d{3})*,\d{2})/gi;
+            for (let line of lines) {
+                const lowerLine = line.toLowerCase();
+                if ((lowerLine.includes('total') || lowerLine.includes('valor a pagar')) && !lowerLine.includes('subtotal') && !lowerLine.includes('itens')) {
+                    const match = line.match(valorRegex);
+                    if (match) { const v = parseMoney(match[match.length - 1]); if (v > 0) return v; }
+                }
+                const matches = line.match(valorRegex);
+                if (matches) { matches.forEach(m => { const v = parseMoney(m); if (v > maxVal && v < 50000) maxVal = v; }); }
+            }
+            return maxVal > 0 ? maxVal : null;
+        }
+
+        function parseMoney(str) { return parseFloat(str.replace(/[^\d,]/g, '').replace(',', '.')); }
+        function findDateInText(text) { const match = text.match(/(\d{2})[\/\s\.](\d{2})[\/\s\.](\d{4})/); return match ? `${match[3]}-${match[2]}-${match[1]}` : null; }
+    </script>
+    
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker registrado!', reg))
+                    .catch(err => console.error('Erro no Service Worker', err));
+            });
+        }
+    </script>
+</body>
+</html>
