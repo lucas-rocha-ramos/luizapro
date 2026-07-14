@@ -3,705 +3,965 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>LUISA PRO</title>
+    <title>LUISA PRO - IA Financeira</title>
     
     <link rel="icon" type="image/png" href="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png">
-    <link rel="shortcut icon" href="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png">
-
     <link rel="apple-touch-icon" href="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png">
-    <link rel="apple-touch-icon" sizes="167x167" href="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png">
-
-    <meta name="theme-color" content="#000000">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="LUISA PRO">
-    <meta name="mobile-web-app-capable" content="yes">
-
     <link rel="manifest" href="./manifest.json">
-
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-
     <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-    <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
-
+    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-
-        body { font-family: 'Inter', sans-serif; background-color: #000; color: #f4f4f5; -webkit-font-smoothing: antialiased; overflow-x: hidden; overscroll-behavior-y: none; }
-        #app-loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.6s ease-out, visibility 0.6s; }
-        #app-loader.fade-out { opacity: 0; visibility: hidden; pointer-events: none; }
-        .loader-ambient-glow { position: absolute; width: 100%; height: 100%; background: radial-gradient(circle at center, rgba(99, 102, 241, 0.15) 0%, rgba(0, 0, 0, 1) 70%); z-index: 1; }
-        .loader-content { z-index: 10; display: flex; flex-direction: column; align-items: center; text-align: center; }
-        .loader-logo { width: 140px; height: 140px; object-fit: contain; filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.4)); margin-bottom: 30px; animation: pulse 2.5s infinite ease-in-out; }
-        .loader-bar-container { width: 160px; height: 3px; background-color: rgba(255, 255, 255, 0.1); border-radius: 10px; overflow: hidden; position: relative; margin-top: 40px; }
-        .loader-bar { position: absolute; top: 0; left: 0; height: 100%; width: 50%; background-color: #fff; box-shadow: 0 0 10px rgba(255, 255, 255, 0.5); border-radius: 10px; animation: shimmer 1.5s infinite ease-in-out; }
-
-        @keyframes pulse { 0% { transform: scale(1); filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.4)); } 50% { transform: scale(1.05); filter: drop-shadow(0 0 40px rgba(99, 102, 241, 0.6)); } 100% { transform: scale(1); filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.4)); } }
-        @keyframes shimmer { 0% { left: -50%; width: 40%; } 50% { left: 30%; width: 60%; } 100% { left: 100%; width: 20%; } }
-        @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in-up { animation: fade-in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-
-        ::-webkit-scrollbar { width: 10px; height: 10px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: #000; color: #f4f4f5; -webkit-font-smoothing: antialiased; }
+        
+        #app-loader {
+            position: fixed; inset: 0; background: #000; z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 0.6s;
+        }
+        #app-loader.fade-out { opacity: 0; pointer-events: none; }
+        .loader-logo { width: 140px; height: 140px; object-fit: contain; filter: drop-shadow(0 0 20px rgba(99,102,241,0.4)); animation: pulse 2.5s infinite; }
+        @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        
+        .view-section { display: none; padding: 8rem 2rem 6rem; max-width: 90rem; margin: 0 auto; }
+        .view-section.active { display: block; animation: fadeInUp 0.5s ease; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: #000; }
-        ::-webkit-scrollbar-thumb { background: #333; border-radius: 5px; border: 2px solid #000; }
-        ::-webkit-scrollbar-thumb:hover { background: #444; }
-
-        .view-section { display: none; padding-top: calc(8rem + env(safe-area-inset-top)); padding-bottom: calc(6rem + env(safe-area-inset-bottom)); padding-left: max(2rem, env(safe-area-inset-left)); padding-right: max(2rem, env(safe-area-inset-right)); max-width: 90rem; margin-left: auto; margin-right: auto; }
-        @media (max-width: 768px) { .view-section { padding-top: calc(6rem + env(safe-area-inset-top)); padding-left: max(1.25rem, env(safe-area-inset-left)); padding-right: max(1.25rem, env(safe-area-inset-right)); padding-bottom: calc(8rem + env(safe-area-inset-bottom)); } }
-        .view-section.active { display: block; animation: fade-in-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-
-        .modal-overlay { display: none; position: fixed; inset: 0; z-index: 60; background-color: rgba(0, 0, 0, 0.6); backdrop-filter: blur(12px); align-items: center; justify-content: center; padding: max(1.5rem, env(safe-area-inset-top)); }
-        .modal-overlay.open { display: flex; animation: fade-in-up 0.3s ease-out forwards; }
-        .tab-btn.active { background-color: #27272a; color: white; box-shadow: 0 0 20px rgba(255, 255, 255, 0.05); }
+        ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
         
-        .type-btn { background-color: #18181b; padding: 1.25rem; border-radius: 1rem; text-align: center; font-size: 0.875rem; font-weight: 500; color: #a1a1aa; border: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; cursor: pointer; }
-        .type-btn:hover { background-color: #27272a; }
-        .type-btn.selected { background-color: #27272a; color: #fff; border-color: rgba(99, 102, 241, 0.5); }
-        .type-btn svg { width: 1.5rem; height: 1.5rem; color: #a1a1aa; }
-        .type-btn.selected svg { color: #fff; }
-
-        /* Ajustes de tela e Safe Area para Celulares e Watch */
-        #navbar { padding-top: env(safe-area-inset-top); }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        #navbar {
+            position: fixed; top: 0; width: 100%; z-index: 50;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding: 0 1rem;
+        }
+        .nav-container { max-width: 90rem; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 64px; }
+        .tab-btn {
+            padding: 0.5rem 1rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 500;
+            transition: all 0.3s; color: #a1a1aa; background: transparent; border: none; cursor: pointer;
+        }
+        .tab-btn:hover { color: #fff; background: rgba(255,255,255,0.05); }
+        .tab-btn.active { background: #27272a; color: #fff; box-shadow: 0 0 20px rgba(255,255,255,0.05); }
         
-        @media (max-width: 380px) {
-            .loader-logo { width: 100px; height: 100px; }
-            .grid-cols-2 { grid-template-columns: 1fr !important; }
-            .text-4xl, .text-5xl { font-size: 2rem !important; }
-            .text-3xl { font-size: 1.5rem !important; }
-            .p-8 { padding: 1.25rem !important; }
-            .gap-6 { gap: 1rem !important; }
-            .gap-4 { gap: 0.75rem !important; }
-            .modal-overlay { padding: 0.5rem; }
+        .card {
+            background: rgba(24,24,27,0.4); border: 1px solid rgba(255,255,255,0.05);
+            border-radius: 2rem; padding: 2rem; backdrop-filter: blur(12px);
+            transition: all 0.3s;
+        }
+        .card:hover { border-color: rgba(255,255,255,0.1); }
+        
+        .chat-message { padding: 0.75rem 1rem; border-radius: 1rem; margin-bottom: 0.5rem; max-width: 85%; }
+        .chat-user { background: #27272a; margin-left: auto; }
+        .chat-ai { background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.2); }
+        
+        .score-ring {
+            width: 120px; height: 120px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2rem; font-weight: 800; position: relative;
+            background: conic-gradient(from 0deg, #818cf8 0%, #818cf8 var(--score), #27272a var(--score));
+        }
+        .score-ring::before { content: ''; position: absolute; inset: 4px; border-radius: 50%; background: #000; }
+        .score-ring .score-text { position: relative; z-index: 1; }
+        
+        @media (max-width: 768px) {
+            .view-section { padding: 6rem 1rem 8rem; }
+            .nav-container { height: 56px; }
+            .tab-btn { padding: 0.35rem 0.75rem; font-size: 0.7rem; }
+            .mobile-nav {
+                position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%);
+                width: 95%; max-width: 400px; z-index: 50;
+                background: rgba(24,24,27,0.95); backdrop-filter: blur(20px);
+                border: 1px solid rgba(255,255,255,0.1); border-radius: 9999px;
+                padding: 0.35rem; display: flex; justify-content: space-around; overflow-x: auto;
+            }
+            .mobile-nav .tab-btn { font-size: 0.6rem; padding: 0.35rem 0.5rem; white-space: nowrap; }
+        }
+        
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; z-index: 60;
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(12px);
+            align-items: center; justify-content: center; padding: 1rem;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal-content {
+            background: #18181b; border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 2rem; max-width: 600px; width: 100%;
+            max-height: 90vh; overflow-y: auto; padding: 2rem;
         }
     </style>
 </head>
 <body>
 
-    <div id="app-loader">
-        <div class="loader-ambient-glow"></div>
-        <div class="loader-content">
-            <img src="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png" alt="Logo LUISA PRO" class="loader-logo">
-            <h1 class="text-3xl font-extrabold tracking-tight text-white mb-1">LUISA <span class="font-light text-zinc-500">PRO</span></h1>
-            <p class="text-[11px] text-white/50 uppercase tracking-[2px] font-medium">Sistema Financeiro</p>
-            <div class="loader-bar-container"><div class="loader-bar"></div></div>
-        </div>
-        <div class="absolute bottom-10 text-[10px] text-white/30 font-normal tracking-wide">Desenvolvido por Lucas Rocha</div>
-    </div>
+<!-- LOADER -->
+<div id="app-loader">
+    <img src="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png" class="loader-logo">
+    <h1 class="text-3xl font-bold text-white">LUISA <span class="font-light text-zinc-500">PRO</span></h1>
+    <p class="text-xs text-white/50 uppercase tracking-[2px] mt-1">IA Financeira</p>
+    <div class="loader-bar-container"><div class="loader-bar"></div></div>
+    <p class="absolute bottom-10 text-[10px] text-white/30">Desenvolvido por Lucas Rocha</p>
+</div>
 
-    <div id="login-view" class="hidden min-h-screen flex items-center justify-center p-6 relative overflow-hidden bg-black opacity-0 transition-opacity duration-700">
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-indigo-500/10 rounded-full blur-[120px] pointer-events-none"></div>
-        <div class="w-full max-w-md bg-zinc-900/40 border border-white/10 rounded-3xl p-10 backdrop-blur-2xl relative z-10 shadow-2xl">
-            <div class="text-center mb-10 flex flex-col items-center">
-                <img src="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png" alt="Logo Luisa Pro" class="w-24 h-24 mb-6 object-contain drop-shadow-2xl">
-                <h1 class="text-4xl font-bold text-white mb-2 tracking-tight">LUISA <span class="font-light text-zinc-500">PRO</span></h1>
-                <p class="text-zinc-500 text-sm">Acesse o sistema financeiro.</p>
+<!-- LOGIN -->
+<div id="login-view" class="hidden min-h-screen flex items-center justify-center p-6 bg-black">
+    <div class="w-full max-w-md bg-zinc-900/40 border border-white/10 rounded-3xl p-8 backdrop-blur-2xl">
+        <div class="text-center mb-8">
+            <img src="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png" class="w-20 h-20 mx-auto mb-4 object-contain">
+            <h1 class="text-3xl font-bold text-white">LUISA <span class="font-light text-zinc-500">PRO</span></h1>
+            <p class="text-zinc-500 text-sm">Sistema Financeiro com IA</p>
+        </div>
+        <form id="login-form" class="space-y-4">
+            <input type="text" id="login-username" placeholder="Usuário" class="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-white focus:border-indigo-500 outline-none">
+            <input type="password" id="login-password" placeholder="Senha" class="w-full bg-black/40 border border-white/10 rounded-2xl p-4 text-white focus:border-indigo-500 outline-none">
+            <div id="login-error" class="hidden text-rose-400 text-sm text-center"></div>
+            <button type="submit" class="w-full bg-white text-black font-bold p-4 rounded-2xl hover:bg-zinc-200 transition">Entrar</button>
+        </form>
+    </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="main-app" class="hidden">
+    <!-- NAVBAR -->
+    <nav id="navbar">
+        <div class="nav-container">
+            <div onclick="switchTab('home')" class="flex items-center gap-2 cursor-pointer">
+                <img src="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png" class="w-8 h-8 object-contain">
+                <span class="font-semibold hidden sm:block">LUISA <span class="text-zinc-600 font-light">PRO</span></span>
             </div>
-            <form id="login-form" class="space-y-5">
-                <div>
-                    <label class="text-xs font-medium text-zinc-500 ml-1 mb-1.5 block uppercase tracking-wider">Usuário</label>
-                    <div class="relative"><i data-lucide="users" class="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 w-4 h-4"></i><input type="text" id="login-username" class="w-full bg-black/40 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-white placeholder-zinc-700 focus:border-indigo-500 focus:outline-none transition-all duration-300" placeholder="Seu identificador" required></div>
-                </div>
-                <div>
-                    <label class="text-xs font-medium text-zinc-500 ml-1 mb-1.5 block uppercase tracking-wider">Senha</label>
-                    <div class="relative"><i data-lucide="lock" class="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 w-4 h-4"></i><input type="password" id="login-password" class="w-full bg-black/40 border border-white/10 rounded-2xl py-3.5 pl-12 pr-4 text-white placeholder-zinc-700 focus:border-indigo-500 focus:outline-none transition-all duration-300" placeholder="••••••••" required></div>
-                </div>
-                <div id="login-error" class="hidden text-rose-400 text-xs bg-rose-500/10 p-3 rounded-xl border border-rose-500/20 text-center font-medium"></div>
-                <button type="submit" id="login-btn" class="w-full bg-white text-black font-bold py-4 rounded-2xl hover:bg-zinc-200 transition-all transform hover:scale-[1.02] active:scale-95 mt-4 shadow-lg shadow-white/5">Entrar</button>
-            </form>
-            <p id="login-loading-text" class="text-center text-xs text-zinc-600 mt-6 hidden animate-pulse">Sincronizando com o servidor...</p>
+            <div class="hidden md:flex gap-1">
+                <button onclick="switchTab('home')" class="tab-btn active" data-tab="home">Início</button>
+                <button onclick="switchTab('dashboard')" class="tab-btn" data-tab="dashboard">Dashboard</button>
+                <button onclick="switchTab('bills')" class="tab-btn" data-tab="bills">Contas</button>
+                <button onclick="switchTab('ai')" class="tab-btn" data-tab="ai">🤖 IA</button>
+                <button onclick="switchTab('users')" class="tab-btn" data-tab="users">Config</button>
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="current-user-name" class="text-sm font-semibold hidden md:block"></span>
+                <div id="current-user-avatar" class="w-8 h-8 rounded-full bg-zinc-800 flex items-center justify-center text-sm font-bold">U</div>
+                <button onclick="logout()" class="text-zinc-600 hover:text-rose-500 transition"><i data-lucide="log-out" class="w-5 h-5"></i></button>
+            </div>
         </div>
-        <div class="absolute bottom-6 text-zinc-800 text-[10px]">Desenvolvido por Lucas Rocha</div>
+    </nav>
+
+    <!-- MOBILE NAV -->
+    <div class="mobile-nav md:hidden">
+        <button onclick="switchTab('home')" class="tab-btn active" data-tab="home">Início</button>
+        <button onclick="switchTab('dashboard')" class="tab-btn" data-tab="dashboard">Dash</button>
+        <button onclick="switchTab('bills')" class="tab-btn" data-tab="bills">Contas</button>
+        <button onclick="switchTab('ai')" class="tab-btn" data-tab="ai">🤖</button>
+        <button onclick="switchTab('users')" class="tab-btn" data-tab="users">Config</button>
     </div>
 
-    <div id="main-app" class="hidden min-h-screen bg-black text-zinc-100">
-        <nav class="fixed top-0 w-full z-50 transition-all duration-300 bg-black/80 backdrop-blur-xl border-b border-white/10" id="navbar">
-            <div class="max-w-7xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
+    <!-- VIEWS -->
+    <section id="view-home" class="view-section active"></section>
+    <section id="view-dashboard" class="view-section"></section>
+    <section id="view-bills" class="view-section"></section>
+    <section id="view-ai" class="view-section"></section>
+    <section id="view-users" class="view-section"></section>
+</div>
+
+<!-- MODALS -->
+<div id="modal-transaction" class="modal-overlay"><div class="modal-content" id="modal-content"></div></div>
+<div id="modal-user" class="modal-overlay"><div class="modal-content"></div></div>
+<div id="modal-category" class="modal-overlay"><div class="modal-content"></div></div>
+<div id="modal-details" class="modal-overlay"><div class="modal-content"></div></div>
+
+<script>
+    // ============================================================
+    // CONFIGURAÇÃO
+    // ============================================================
+    const API_URL = "https://script.google.com/macros/s/AKfycbx3_Mvtn3GZAt6d63Su9czCnOiW4uRBMznkwwqG-YzVEfkx9AtgCpd7MGKLE8qbHzuT-w/exec";
+    const MONTHS = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const YEARS = [2023,2024,2025,2026,2027];
+
+    let state = {
+        currentUser: null,
+        users: [],
+        transactions: [],
+        categories: [],
+        activeTab: 'home',
+        homeFilter: { month: new Date().getMonth(), year: new Date().getFullYear() }
+    };
+
+    // ============================================================
+    // LOADER E INICIALIZAÇÃO
+    // ============================================================
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            document.getElementById('app-loader').classList.add('fade-out');
+            document.getElementById('login-view').classList.remove('hidden');
+        }, 2000);
+        loadData();
+        lucide.createIcons();
+    });
+
+    async function loadData() {
+        try {
+            const res = await fetch(`${API_URL}?action=getAllData`).then(r => r.json());
+            state.users = res.users || [];
+            state.transactions = res.transactions || [];
+            state.categories = res.categories || [];
+        } catch(e) { console.error(e); }
+    }
+
+    // ============================================================
+    // LOGIN
+    // ============================================================
+    document.getElementById('login-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const user = document.getElementById('login-username').value;
+        const pass = document.getElementById('login-password').value;
+        
+        if(user === 'lucasrocha' && pass === '2025') {
+            const admin = state.users.find(u => u.username === 'lucasrocha') || 
+                         { id: 999, username: 'lucasrocha', name: 'Lucas Rocha', role: 'Administrador', avatar: 'LR', color: 'from-blue-500 to-cyan-500' };
+            doLogin(admin);
+            return;
+        }
+        
+        const found = state.users.find(u => u.username === user && u.password == pass);
+        if(found) doLogin(found);
+        else {
+            const err = document.getElementById('login-error');
+            err.classList.remove('hidden');
+            err.innerText = "Usuário ou senha incorretos!";
+        }
+    });
+
+    function doLogin(user) {
+        state.currentUser = user;
+        document.getElementById('login-view').classList.add('hidden');
+        document.getElementById('main-app').classList.remove('hidden');
+        document.getElementById('current-user-name').innerText = user.name;
+        document.getElementById('current-user-avatar').innerText = user.avatar || user.name[0];
+        renderApp();
+    }
+
+    function logout() {
+        state.currentUser = null;
+        document.getElementById('main-app').classList.add('hidden');
+        document.getElementById('login-view').classList.remove('hidden');
+    }
+
+    // ============================================================
+    // NAVEGAÇÃO
+    // ============================================================
+    function switchTab(tab) {
+        state.activeTab = tab;
+        document.querySelectorAll('.tab-btn').forEach(b => {
+            b.classList.toggle('active', b.dataset.tab === tab);
+        });
+        document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+        document.getElementById(`view-${tab}`).classList.add('active');
+        renderView(tab);
+    }
+
+    function renderApp() { renderView(state.activeTab); }
+
+    function renderView(tab) {
+        if(tab === 'home') renderHome();
+        else if(tab === 'dashboard') renderDashboard();
+        else if(tab === 'bills') renderBills();
+        else if(tab === 'ai') renderAI();
+        else if(tab === 'users') renderUsers();
+        lucide.createIcons();
+    }
+
+    // ============================================================
+    // HELPERS
+    // ============================================================
+    function getFilteredTransactions() {
+        return state.transactions;
+    }
+
+    function formatCurrency(val) {
+        return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+    }
+
+    function safeGetYearMonth(dateStr) {
+        if(!dateStr) return {y:0, m:0};
+        if(typeof dateStr === 'string' && dateStr.includes('-')) {
+            const p = dateStr.split('-');
+            return {y: parseInt(p[0]), m: parseInt(p[1]) - 1};
+        }
+        const d = new Date(dateStr);
+        return {y: d.getFullYear(), m: d.getMonth()};
+    }
+
+    // ============================================================
+    // VIEW: HOME
+    // ============================================================
+    function renderHome() {
+        const { month, year } = state.homeFilter;
+        let rev = 0, exp = 0, total = 0;
+        
+        getFilteredTransactions().forEach(t => {
+            if(t.type === 'single') {
+                const {y, m} = safeGetYearMonth(t.date);
+                if(m === month && y === year) {
+                    t.kind === 'income' ? rev += t.value : exp += t.value;
+                }
+                if(y < year || (y === year && m <= month)) {
+                    t.kind === 'income' ? total += t.value : total -= t.value;
+                }
+            } else if(t.type === 'installment' && t.installments) {
+                t.installments.forEach(i => {
+                    const {y, m} = safeGetYearMonth(i.date);
+                    if(m === month && y === year) {
+                        t.kind === 'income' ? rev += i.value : exp += i.value;
+                    }
+                    if(y < year || (y === year && m <= month)) {
+                        t.kind === 'income' ? total += i.value : total -= i.value;
+                    }
+                });
+            }
+        });
+
+        document.getElementById('view-home').innerHTML = `
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div>
+                    <h1 class="text-4xl font-bold text-white">Resumo Financeiro</h1>
+                    <p class="text-zinc-500">${MONTHS[month]} ${year}</p>
+                </div>
+                <div class="flex gap-2">
+                    <select onchange="updateHomeFilter('month', this.value)" class="bg-zinc-900 border border-white/10 text-white p-2 rounded-xl text-sm">
+                        ${MONTHS.map((m,i) => `<option value="${i}" ${i===month?'selected':''}>${m}</option>`).join('')}
+                    </select>
+                    <select onchange="updateHomeFilter('year', this.value)" class="bg-zinc-900 border border-white/10 text-white p-2 rounded-xl text-sm">
+                        ${YEARS.map(y => `<option value="${y}" ${y===year?'selected':''}>${y}</option>`).join('')}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div class="card">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                            <i data-lucide="trending-up" class="w-5 h-5 text-emerald-400"></i>
+                        </div>
+                        <span class="text-zinc-400 text-sm">Receitas</span>
+                    </div>
+                    <h2 class="text-4xl font-bold text-emerald-400">${formatCurrency(rev)}</h2>
+                </div>
+                <div class="card">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-10 h-10 rounded-full bg-rose-500/10 flex items-center justify-center">
+                            <i data-lucide="trending-down" class="w-5 h-5 text-rose-400"></i>
+                        </div>
+                        <span class="text-zinc-400 text-sm">Despesas</span>
+                    </div>
+                    <h2 class="text-4xl font-bold text-rose-400">${formatCurrency(exp)}</h2>
+                </div>
+            </div>
+            
+            <div class="card bg-gradient-to-r from-indigo-900/30 to-purple-900/30 border-indigo-500/20">
+                <div class="flex items-center gap-4">
+                    <div class="w-14 h-14 rounded-full bg-indigo-500/20 flex items-center justify-center">
+                        <i data-lucide="wallet" class="w-7 h-7 text-indigo-400"></i>
+                    </div>
+                    <div>
+                        <p class="text-zinc-400 text-sm">Saldo Acumulado</p>
+                        <h2 class="text-3xl font-bold ${total >= 0 ? 'text-white' : 'text-rose-400'}">${formatCurrency(total)}</h2>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function updateHomeFilter(key, value) {
+        state.homeFilter[key] = Number(value);
+        renderHome();
+    }
+
+    // ============================================================
+    // VIEW: DASHBOARD
+    // ============================================================
+    function renderDashboard() {
+        const month = new Date().getMonth();
+        const year = new Date().getFullYear();
+        let rev = 0, exp = 0, total = 0;
+        let categories = {};
+
+        getFilteredTransactions().forEach(t => {
+            if(t.type === 'single') {
+                const {y, m} = safeGetYearMonth(t.date);
+                if(m === month && y === year) {
+                    t.kind === 'income' ? rev += t.value : exp += t.value;
+                    if(t.kind === 'expense') {
+                        categories[t.category] = (categories[t.category] || 0) + t.value;
+                    }
+                }
+                if(y < year || (y === year && m <= month)) {
+                    t.kind === 'income' ? total += t.value : total -= t.value;
+                }
+            } else if(t.type === 'installment' && t.installments) {
+                t.installments.forEach(i => {
+                    const {y, m} = safeGetYearMonth(i.date);
+                    if(m === month && y === year) {
+                        t.kind === 'income' ? rev += i.value : exp += i.value;
+                        if(t.kind === 'expense') {
+                            categories[t.category] = (categories[t.category] || 0) + i.value;
+                        }
+                    }
+                    if(y < year || (y === year && m <= month)) {
+                        t.kind === 'income' ? total += i.value : total -= i.value;
+                    }
+                });
+            }
+        });
+
+        // Top 3 categorias
+        const topCategories = Object.entries(categories)
+            .sort((a,b) => b[1] - a[1])
+            .slice(0, 3);
+
+        document.getElementById('view-dashboard').innerHTML = `
+            <h2 class="text-3xl font-bold text-white mb-8">Dashboard</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="card">
+                    <p class="text-zinc-400 text-sm">Saldo Total</p>
+                    <h3 class="text-2xl font-bold ${total >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${formatCurrency(total)}</h3>
+                </div>
+                <div class="card">
+                    <p class="text-zinc-400 text-sm">Receitas (Mês)</p>
+                    <h3 class="text-2xl font-bold text-emerald-400">${formatCurrency(rev)}</h3>
+                </div>
+                <div class="card">
+                    <p class="text-zinc-400 text-sm">Despesas (Mês)</p>
+                    <h3 class="text-2xl font-bold text-rose-400">${formatCurrency(exp)}</h3>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="card">
+                    <h4 class="text-zinc-300 font-semibold mb-4">Top Categorias de Gastos</h4>
+                    ${topCategories.length > 0 ? topCategories.map(([cat, val]) => `
+                        <div class="flex justify-between items-center py-2 border-b border-white/5">
+                            <span class="text-zinc-300">${cat}</span>
+                            <span class="text-rose-400 font-mono">${formatCurrency(val)}</span>
+                        </div>
+                    `).join('') : '<p class="text-zinc-500 text-sm">Nenhum gasto registrado</p>'}
+                </div>
                 
-                <div onclick="switchTab('home')" class="text-xl font-semibold tracking-tight text-white cursor-pointer hover:opacity-80 transition-opacity flex items-center gap-2 md:gap-3">
-                    <img src="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png" class="w-8 h-8 object-contain">
-                    <div class="hidden sm:block">LUISA <span class="text-zinc-600 font-light">PRO</span></div>
-                    <span id="sync-indicator" class="hidden"><i data-lucide="refresh-cw" class="w-3 h-3 animate-spin text-zinc-600"></i></span>
-                </div>
-
-                <div class="hidden md:flex items-center space-x-1 bg-zinc-900/80 p-1.5 rounded-full border border-white/5 backdrop-blur-md shadow-lg shadow-black/50">
-                    <button onclick="switchTab('home')" class="tab-btn active px-5 py-2 rounded-full text-xs font-medium transition-all duration-300 flex items-center gap-2 text-zinc-400 hover:text-white" data-tab="home">Início</button>
-                    <button onclick="switchTab('dashboard')" class="tab-btn px-5 py-2 rounded-full text-xs font-medium transition-all duration-300 flex items-center gap-2 text-zinc-400 hover:text-white" data-tab="dashboard">Dashboard</button>
-                    <button onclick="switchTab('bills')" class="tab-btn px-5 py-2 rounded-full text-xs font-medium transition-all duration-300 flex items-center gap-2 text-zinc-400 hover:text-white" data-tab="bills">Contas</button>
-                    <button onclick="switchTab('statement')" class="tab-btn px-5 py-2 rounded-full text-xs font-medium transition-all duration-300 flex items-center gap-2 text-zinc-400 hover:text-white" data-tab="statement">Extrato</button>
-                    <button onclick="switchTab('filter')" class="tab-btn px-5 py-2 rounded-full text-xs font-medium transition-all duration-300 flex items-center gap-2 text-zinc-400 hover:text-white" data-tab="filter">Filtro</button>
-                    <button onclick="switchTab('users')" class="tab-btn px-5 py-2 rounded-full text-xs font-medium transition-all duration-300 flex items-center gap-2 text-zinc-400 hover:text-white" data-tab="users">Config</button>
-                </div>
-
-                <div class="flex items-center gap-3 md:gap-6">
-                    <div class="relative">
-                        <button onclick="toggleUserFilterDropdown()" class="flex items-center gap-1.5 md:gap-2 bg-zinc-900/80 border border-white/10 px-3 py-1.5 md:px-4 md:py-2 rounded-full hover:bg-zinc-800 transition-all hover:border-white/20">
-                            <div id="filter-avatars" class="flex -space-x-2"></div><span class="text-[10px] md:text-xs font-medium text-zinc-300" id="filter-label">Todos</span><i data-lucide="chevron-down" class="w-3.5 h-3.5 text-zinc-500"></i>
-                        </button>
-                        <div id="user-filter-dropdown" class="hidden absolute right-0 top-full mt-3 w-64 bg-zinc-900 border border-white/10 rounded-2xl shadow-2xl p-2 z-50 flex flex-col gap-1 backdrop-blur-xl">
-                            <div class="px-3 py-2 text-xs font-semibold text-zinc-500 uppercase tracking-wider flex justify-between items-center border-b border-white/5 mb-1"><span>Visualizar</span><button onclick="selectAllUsers()" class="text-indigo-400 hover:text-indigo-300 transition-colors">Todos</button></div>
-                            <div id="user-filter-list" class="max-h-60 overflow-y-auto"></div>
+                <div class="card">
+                    <h4 class="text-zinc-300 font-semibold mb-4">Saúde Financeira</h4>
+                    <div class="flex items-center gap-6">
+                        <div class="score-ring" style="--score: ${total > 0 ? Math.min((total/(rev||1))*100, 100) : 0}%">
+                            <span class="score-text text-white">${total > 0 ? Math.round((total/(rev||1))*100) : 0}%</span>
+                        </div>
+                        <div>
+                            <p class="text-sm text-zinc-400">Score baseado no</p>
+                            <p class="text-sm text-zinc-400">saldo acumulado</p>
+                            <p class="text-xs text-zinc-500 mt-2">${total > 0 ? '✅ Saúde financeira boa' : '⚠️ Atenção! Saldo negativo'}</p>
                         </div>
                     </div>
-                    <div class="h-6 w-[1px] bg-white/10 hidden md:block"></div>
-                    <div class="flex items-center gap-2 md:gap-3">
-                        <div class="text-right hidden md:block"><p class="text-sm font-semibold text-white leading-none" id="current-user-name">User</p><p class="text-[10px] text-zinc-500 leading-tight mt-1" id="current-user-role">Role</p></div>
-                        <div id="current-user-avatar" class="w-8 h-8 md:w-9 md:h-9 rounded-full bg-zinc-800 border border-white/10 flex items-center justify-center text-xs md:text-sm font-bold shadow-inner">U</div>
-                        <button onclick="logout()" class="text-zinc-600 hover:text-rose-500 transition-colors" title="Sair"><i data-lucide="log-out" class="w-5 h-5"></i></button>
+                </div>
+            </div>
+            
+            <div class="mt-6 card">
+                <h4 class="text-zinc-300 font-semibold mb-4">💡 Dica da IA</h4>
+                <p class="text-zinc-400">${gerarDicaFinanceira(total, rev, exp)}</p>
+            </div>
+        `;
+    }
+
+    // ============================================================
+    // VIEW: CONTAS (BILLS)
+    // ============================================================
+    function renderBills() {
+        const bills = getFilteredTransactions().filter(t => t.kind === 'expense');
+        
+        document.getElementById('view-bills').innerHTML = `
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-bold text-white">Contas a Pagar</h2>
+                <button onclick="openTransactionModal('expense')" class="bg-white text-black px-4 py-2 rounded-xl text-sm font-bold hover:bg-zinc-200 transition">
+                    <i data-lucide="plus" class="w-4 h-4 inline"></i> Nova Conta
+                </button>
+            </div>
+            
+            <div class="card">
+                ${bills.map(t => `
+                    <div onclick="openDetails('${t.id}')" class="flex justify-between items-center p-4 border-b border-white/5 hover:bg-white/5 transition cursor-pointer">
+                        <div>
+                            <p class="text-white font-medium">${t.name}</p>
+                            <p class="text-xs text-zinc-500">${t.store || ''} • ${t.category}</p>
+                        </div>
+                        <div class="text-right">
+                            <p class="text-rose-400 font-mono">${formatCurrency(t.value)}</p>
+                            <p class="text-xs text-zinc-500">${t.date}</p>
+                        </div>
+                    </div>
+                `).join('') || '<p class="text-zinc-500 text-center py-8">Nenhuma conta registrada</p>'}
+            </div>
+        `;
+    }
+
+    // ============================================================
+    // VIEW: IA (INTELIGÊNCIA ARTIFICIAL)
+    // ============================================================
+    function renderAI() {
+        document.getElementById('view-ai').innerHTML = `
+            <div class="flex justify-between items-center mb-8">
+                <div>
+                    <h2 class="text-3xl font-bold text-white">🤖 IA Financeira</h2>
+                    <p class="text-zinc-500 text-sm">Assistente inteligente para suas finanças</p>
+                </div>
+                <button onclick="analisarFinancas()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-500 transition">
+                    <i data-lucide="refresh-cw" class="w-4 h-4 inline"></i> Analisar Agora
+                </button>
+            </div>
+            
+            <div id="ai-results" class="space-y-6">
+                ${gerarAnaliseCompleta()}
+            </div>
+            
+            <div class="mt-8 card">
+                <h4 class="text-zinc-300 font-semibold mb-4">💬 Pergunte à IA</h4>
+                <div id="chat-container" class="space-y-2 max-h-96 overflow-y-auto mb-4">
+                    <div class="chat-message chat-ai">Olá! Sou sua assistente financeira. Pergunte sobre seus gastos, planejamento ou dicas de economia.</div>
+                </div>
+                <div class="flex gap-2">
+                    <input type="text" id="chat-input" placeholder="Digite sua pergunta..." class="flex-1 bg-black border border-white/10 rounded-xl p-3 text-white text-sm focus:border-indigo-500 outline-none">
+                    <button onclick="enviarPerguntaIA()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl hover:bg-indigo-500 transition">
+                        <i data-lucide="send" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        lucide.createIcons();
+        document.getElementById('chat-input')?.addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') enviarPerguntaIA();
+        });
+    }
+
+    // ============================================================
+    // FUNÇÕES DE IA (SISTEMA ESPECIALISTA)
+    // ============================================================
+    
+    function gerarAnaliseCompleta() {
+        const transacoes = getFilteredTransactions();
+        const hoje = new Date();
+        const mesAtual = hoje.getMonth();
+        const anoAtual = hoje.getFullYear();
+        
+        let receitasMes = 0, despesasMes = 0;
+        let totalReceitas = 0, totalDespesas = 0;
+        let contasVencendo = [];
+        let categoriasGastos = {};
+        
+        transacoes.forEach(t => {
+            if(t.type === 'single') {
+                const {y, m} = safeGetYearMonth(t.date);
+                if(m === mesAtual && y === anoAtual) {
+                    t.kind === 'income' ? receitasMes += t.value : despesasMes += t.value;
+                }
+                t.kind === 'income' ? totalReceitas += t.value : totalDespesas += t.value;
+                
+                if(t.kind === 'expense') {
+                    categoriasGastos[t.category] = (categoriasGastos[t.category] || 0) + t.value;
+                }
+                
+                // Verificar vencimentos próximos (1 dia)
+                const dataVenc = new Date(t.date + "T00:00:00");
+                const diffDias = Math.ceil((dataVenc - hoje) / (1000 * 60 * 60 * 24));
+                if(t.kind === 'expense' && diffDias >= 0 && diffDias <= 1 && t.status !== 'Pago') {
+                    contasVencendo.push({ nome: t.name, valor: t.value, data: t.date });
+                }
+            } else if(t.type === 'installment' && t.installments) {
+                t.installments.forEach(i => {
+                    const {y, m} = safeGetYearMonth(i.date);
+                    if(m === mesAtual && y === anoAtual) {
+                        t.kind === 'income' ? receitasMes += i.value : despesasMes += i.value;
+                    }
+                    t.kind === 'income' ? totalReceitas += i.value : totalDespesas += i.value;
+                    
+                    if(t.kind === 'expense') {
+                        categoriasGastos[t.category] = (categoriasGastos[t.category] || 0) + i.value;
+                    }
+                    
+                    const dataVenc = new Date(i.date + "T00:00:00");
+                    const diffDias = Math.ceil((dataVenc - hoje) / (1000 * 60 * 60 * 24));
+                    if(t.kind === 'expense' && diffDias >= 0 && diffDias <= 1 && i.status !== 'Pago') {
+                        contasVencendo.push({ nome: `${t.name} (Parcela ${i.number})`, valor: i.value, data: i.date });
+                    }
+                });
+            }
+        });
+
+        const saldo = totalReceitas - totalDespesas;
+        const mesSaldo = receitasMes - despesasMes;
+        
+        // Análises
+        let alertas = [];
+        let recomendacoes = [];
+        let score = 0;
+        
+        // 1. Análise de vencimentos
+        if(contasVencendo.length > 0) {
+            alertas.push(`⚠️ ${contasVencendo.length} conta(s) vence(m) amanhã!`);
+        }
+        
+        // 2. Análise de gastos excessivos
+        const gastoMedio = despesasMes / 30 || 0;
+        if(gastoMedio > 100) {
+            alertas.push(`📊 Seu gasto médio diário é de ${formatCurrency(gastoMedio)}.`);
+        }
+        
+        const topCategoria = Object.entries(categoriasGastos).sort((a,b) => b[1] - a[1])[0];
+        if(topCategoria && topCategoria[1] > despesasMes * 0.5) {
+            alertas.push(`🔴 ${topCategoria[0]} representa ${Math.round((topCategoria[1]/despesasMes)*100)}% dos seus gastos!`);
+        }
+        
+        // 3. Score financeiro (0-100)
+        if(totalReceitas > 0) {
+            const pctGasto = (totalDespesas / totalReceitas) * 100;
+            if(pctGasto < 60) score = 90;
+            else if(pctGasto < 80) score = 70;
+            else if(pctGasto < 100) score = 50;
+            else score = 30;
+        }
+        
+        // 4. Recomendações personalizadas
+        if(mesSaldo < 0) {
+            recomendacoes.push('💡 Seu mês está negativo. Tente cortar gastos com ' + (topCategoria?.[0] || 'categorias com maior peso'));
+        } else if(mesSaldo > 0 && mesSaldo < totalReceitas * 0.1) {
+            recomendacoes.push('💡 Você está economizando pouco. Tente aumentar a reserva em 10%');
+        }
+        
+        if(saldo < 0) {
+            recomendacoes.push('🚨 Seu saldo total está negativo. Revise urgente seus gastos fixos');
+        }
+        
+        // 5. Sugestão de reserva e lazer
+        const reservaSugerida = totalDespesas * 6; // 6 meses de gastos
+        const lazerSugerido = (totalReceitas * 0.1) / 12; // 10% da renda anual / 12
+        
+        // 6. Anualização
+        const gastoAnual = totalDespesas * 12;
+        const financProjetado = gastoAnual * 1.1; // 10% de inflação
+        
+        // HTML
+        return `
+            <div class="card bg-gradient-to-r ${score >= 70 ? 'from-emerald-900/30 to-emerald-800/30' : 'from-amber-900/30 to-amber-800/30'} border-${score >= 70 ? 'emerald' : 'amber'}-500/20">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-zinc-400 text-sm">Score de Saúde Financeira</p>
+                        <h3 class="text-4xl font-bold text-white">${score}%</h3>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-sm">${score >= 70 ? '✅ Excelente!' : '⚠️ Precisa melhorar'}</p>
+                        <p class="text-xs text-zinc-500">Baseado em ${totalReceitas > 0 ? Math.round((totalDespesas/totalReceitas)*100) : 0}% de gasto da renda</p>
                     </div>
                 </div>
             </div>
-        </nav>
-
-        <div class="md:hidden fixed bottom-[calc(1rem+env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 w-[95%] max-w-[400px] z-50">
-            <div class="flex items-center justify-between space-x-1 bg-zinc-900/95 p-1.5 rounded-full border border-white/10 backdrop-blur-xl shadow-2xl shadow-black/80 overflow-x-auto hide-scrollbar">
-                <button onclick="switchTab('home')" class="tab-btn active shrink-0 px-3.5 py-2.5 rounded-full text-[11px] font-medium transition-all duration-300 text-zinc-400 hover:text-white" data-tab="home">Início</button>
-                <button onclick="switchTab('dashboard')" class="tab-btn shrink-0 px-3.5 py-2.5 rounded-full text-[11px] font-medium transition-all duration-300 text-zinc-400 hover:text-white" data-tab="dashboard">Dash</button>
-                <button onclick="switchTab('bills')" class="tab-btn shrink-0 px-3.5 py-2.5 rounded-full text-[11px] font-medium transition-all duration-300 text-zinc-400 hover:text-white" data-tab="bills">Contas</button>
-                <button onclick="switchTab('statement')" class="tab-btn shrink-0 px-3.5 py-2.5 rounded-full text-[11px] font-medium transition-all duration-300 text-zinc-400 hover:text-white" data-tab="statement">Extrato</button>
-                <button onclick="switchTab('filter')" class="tab-btn shrink-0 px-3.5 py-2.5 rounded-full text-[11px] font-medium transition-all duration-300 text-zinc-400 hover:text-white" data-tab="filter">Filtro</button>
-                <button onclick="switchTab('users')" class="tab-btn shrink-0 px-3.5 py-2.5 rounded-full text-[11px] font-medium transition-all duration-300 text-zinc-400 hover:text-white" data-tab="users">Config</button>
-            </div>
-        </div>
-
-        <section id="view-home" class="view-section active"></section>
-        <section id="view-dashboard" class="view-section"></section>
-        <section id="view-bills" class="view-section"></section>
-        <section id="view-statement" class="view-section"></section>
-        <section id="view-filter" class="view-section"></section>
-        <section id="view-users" class="view-section"></section>
-    </div>
-
-    <div id="modal-transaction" class="modal-overlay">
-        <div class="bg-zinc-900 border border-white/10 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl m-4 animate-fade-in-up max-h-[90vh] flex flex-col">
-            <div class="p-6 border-b border-white/10 flex justify-between items-center bg-zinc-900/50 backdrop-blur">
-                <h3 class="text-xl font-bold text-white" id="modal-title">Nova Transação</h3><button onclick="closeModal('modal-transaction')" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
-            </div>
-            <div class="p-6 overflow-y-auto" id="modal-content"></div>
-        </div>
-    </div>
-
-    <div id="modal-user" class="modal-overlay">
-        <div class="bg-zinc-900 border border-white/10 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl m-4 animate-fade-in-up">
-            <div class="p-6 border-b border-white/10 flex justify-between items-center"><h3 class="text-xl font-bold text-white">Adicionar Usuário</h3><button onclick="closeModal('modal-user')" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div>
-            <div class="p-6 space-y-4">
-                <input type="text" id="new-user-name" placeholder="Nome Completo" class="w-full bg-black border border-white/10 rounded-2xl py-3 px-4 text-white text-sm focus:border-indigo-500 outline-none">
-                <input type="text" id="new-user-username" placeholder="Usuário (Login)" class="w-full bg-black border border-white/10 rounded-2xl py-3 px-4 text-white text-sm focus:border-indigo-500 outline-none">
-                <input type="password" id="new-user-password" placeholder="Senha" class="w-full bg-black border border-white/10 rounded-2xl py-3 px-4 text-white text-sm focus:border-indigo-500 outline-none">
-                <button onclick="submitAddUser()" id="btn-submit-user" class="w-full bg-white text-black font-bold py-3.5 rounded-2xl mt-2 hover:bg-zinc-200 transition-colors">Cadastrar</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="modal-category" class="modal-overlay">
-        <div class="bg-zinc-900 border border-white/10 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl m-4 animate-fade-in-up">
-            <div class="p-6 border-b border-white/10 flex justify-between items-center"><h3 class="text-xl font-bold text-white">Nova Categoria</h3><button onclick="closeModal('modal-category')" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div>
-            <div class="p-6 space-y-4">
-                <input type="text" id="new-cat-name" placeholder="Nome da Categoria" class="w-full bg-black border border-white/10 rounded-2xl py-3 px-4 text-white text-sm focus:border-indigo-500 outline-none">
-                <select id="new-cat-type" class="w-full bg-black border border-white/10 rounded-2xl py-3 px-4 text-white text-sm focus:border-indigo-500 outline-none">
-                    <option value="both">Ambos (Receita/Despesa)</option><option value="expense">Apenas Despesa</option><option value="income">Apenas Receita</option>
-                </select>
-                <button onclick="submitAddCategory()" id="btn-submit-cat" class="w-full bg-white text-black font-bold py-3.5 rounded-2xl mt-2 hover:bg-zinc-200 transition-colors">Salvar</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="modal-details" class="modal-overlay">
-        <div class="bg-zinc-900 border border-white/10 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh] m-4 animate-fade-in-up">
-            <div class="p-6 border-b border-white/10 flex justify-between items-start bg-zinc-900/50 backdrop-blur-md">
-                <div><div class="flex items-center gap-3 mb-1"><h3 class="text-2xl font-bold text-white tracking-tight" id="detail-title">Titulo</h3><span class="text-[10px] bg-indigo-500/20 text-indigo-300 px-2.5 py-0.5 rounded-full border border-indigo-500/20 font-medium" id="detail-store">Loja</span></div><p class="text-zinc-400 text-sm">Valor Total: <span class="text-white font-mono font-medium" id="detail-value">R$ 0,00</span></p></div>
-                <button onclick="closeModal('modal-details')" class="text-zinc-400 hover:text-white bg-white/5 p-2 rounded-full hover:bg-white/10 transition-colors"><i data-lucide="x" class="w-5 h-5"></i></button>
-            </div>
-            <div class="p-6 bg-black/40 overflow-y-auto" id="detail-content"></div>
-        </div>
-    </div>
-
-    <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbx3_Mvtn3GZAt6d63Su9czCnOiW4uRBMznkwwqG-YzVEfkx9AtgCpd7MGKLE8qbHzuT-w/exec";
-        const MONTHS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-        const YEARS = [2023, 2024, 2025, 2026];
-
-        let state = {
-            currentUser: null, users: [], transactions: [], categories: [], selectedFilterUsers: [], activeTab: 'home',
-            homeFilter: { month: new Date().getMonth(), year: new Date().getFullYear() },
-            dashboardFilter: { month: new Date().getMonth(), year: new Date().getFullYear() },
-            filterView: { category: 'Todas', month: new Date().getMonth(), year: new Date().getFullYear() },
-            newTransaction: { type: 'single' }, modalMode: 'expense', editingId: null
-        };
-
-        window.addEventListener('load', () => {
-            lucide.createIcons();
-            setTimeout(() => {
-                document.getElementById('app-loader').classList.add('fade-out');
-                document.getElementById('login-view').classList.remove('hidden');
-                setTimeout(() => { document.getElementById('login-view').classList.remove('opacity-0'); document.getElementById('login-view').classList.add('animate-fade-in-up'); }, 50);
-                loadData();
-            }, 3000);
-        });
-
-        async function loadData() {
-            setLoading(true);
-            try {
-                const res = await fetch(`${API_URL}?action=getAllData`).then(r => r.json());
-                state.users = Array.isArray(res.users) ? res.users : [];
-                state.transactions = Array.isArray(res.transactions) ? res.transactions : [];
-                state.categories = Array.isArray(res.categories) ? res.categories : [];
-                if (state.currentUser) renderApp();
-            } catch (e) { console.error(e); }
-            setLoading(false);
-        }
-
-        async function apiPost(action, payload) {
-            document.getElementById('sync-indicator').classList.remove('hidden');
-            try { await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action, ...payload }) }); } catch(e) { console.error(e); }
-            document.getElementById('sync-indicator').classList.add('hidden');
-        }
-
-        document.getElementById('login-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const user = document.getElementById('login-username').value;
-            const pass = document.getElementById('login-password').value;
-            if(user === 'lucasrocha' && pass === '2025') {
-                const admin = state.users.find(u => u.username === 'lucasrocha') || { id: 999, username: 'lucasrocha', name: 'Lucas Rocha', role: 'Administrador', avatar: 'LR', color: 'from-blue-500 to-cyan-500' };
-                doLogin(admin); return;
-            }
-            const found = state.users.find(u => u.username === user);
-            if(found && found.password == pass) doLogin(found);
-            else { const err = document.getElementById('login-error'); err.classList.remove('hidden'); err.innerText = "Dados incorretos."; }
-        });
-
-        function doLogin(user) { 
-            state.currentUser = user; 
-            state.selectedFilterUsers = [String(user.id)]; 
             
-            document.getElementById('login-view').classList.add('hidden'); 
-            document.getElementById('main-app').classList.remove('hidden'); 
-            renderApp(); 
-        }
-        
-        function logout() { state.currentUser = null; document.getElementById('main-app').classList.add('hidden'); document.getElementById('login-view').classList.remove('hidden'); document.getElementById('login-form').reset(); }
-        
-        function switchTab(tab) {
-            state.activeTab = tab;
-            document.querySelectorAll('.tab-btn').forEach(b => { if(b.dataset.tab === tab) b.classList.add('active', 'bg-zinc-800', 'text-white'); else b.classList.remove('active', 'bg-zinc-800', 'text-white'); });
-            
-            document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
-            document.getElementById(`view-${tab}`).classList.add('active'); renderCurrentView();
-        }
-
-        function renderApp() { document.getElementById('current-user-name').innerText = state.currentUser.name; document.getElementById('current-user-role').innerText = state.currentUser.role; document.getElementById('current-user-avatar').innerText = state.currentUser.avatar; renderUserFilter(); renderCurrentView(); }
-        function renderCurrentView() { const tab = state.activeTab; if(tab === 'home') renderHome(); else if(tab === 'dashboard') renderDashboard(); else if(tab === 'bills') renderBills(); else if(tab === 'statement') renderStatement(); else if(tab === 'filter') renderFilterView(); else if(tab === 'users') renderUsers(); lucide.createIcons(); }
-
-        function getFilteredTransactions() { return state.transactions.filter(t => state.selectedFilterUsers.some(id => String(id) === String(t.userId))); }
-        function formatCurrency(val) { return new Intl.NumberFormat('pt-BR', {style: 'currency', currency: 'BRL'}).format(val); }
-        
-        function safeGetYearMonth(dateStr) { 
-            if(!dateStr) return {y:0, m:0}; 
-            if(typeof dateStr === 'string' && dateStr.includes('-')) { 
-                const p = dateStr.split('-'); 
-                return {y: parseInt(p[0], 10), m: parseInt(p[1], 10) - 1}; 
-            } 
-            const d = new Date(dateStr); 
-            return {y: d.getUTCFullYear(), m: d.getUTCMonth()}; 
-        }
-
-        function calculateInstallmentDate(base, offset) { 
-            if(base && base.includes('-')) { 
-                const p = base.split('-'); 
-                const d = new Date(parseInt(p[0], 10), parseInt(p[1], 10) - 1 + offset, parseInt(p[2], 10)); 
-                const y = d.getFullYear(); const m = String(d.getMonth()+1).padStart(2,'0'); const day = String(d.getDate()).padStart(2,'0'); 
-                return `${y}-${m}-${day}`; 
-            } 
-            const d=new Date(base); d.setMonth(d.getMonth()+offset); return d.toISOString().split('T')[0]; 
-        }
-
-        function parseInputMoney(valStr) {
-            let s = valStr.toString().trim();
-            if (s.includes(',') && s.includes('.')) { s = s.replace(/\./g, '').replace(',', '.'); } else if (s.includes(',')) { s = s.replace(',', '.'); }
-            return parseFloat(s);
-        }
-
-        function renderHome() {
-            const { month, year } = state.homeFilter; 
-            let rev = 0, exp = 0, totalAccumulated = 0;
-            
-            getFilteredTransactions().forEach(t => { 
-                if(t.type === 'single') {
-                    const {y, m} = safeGetYearMonth(t.date); 
-                    if(m === month && y === year) { t.kind === 'income' ? rev += t.value : exp += t.value; }
-                    if(y < year || (y === year && m <= month)) { t.kind === 'income' ? totalAccumulated += t.value : totalAccumulated -= t.value; }
-                } else if(t.type === 'installment' && t.installments) {
-                    t.installments.forEach(i => {
-                        const {y, m} = safeGetYearMonth(i.date); 
-                        if(m === month && y === year) { t.kind === 'income' ? rev += i.value : exp += i.value; }
-                        if(y < year || (y === year && m <= month)) { t.kind === 'income' ? totalAccumulated += i.value : totalAccumulated -= i.value; }
-                    });
-                }
-            });
-            
-            document.getElementById('view-home').innerHTML = `
-                <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6"><div><h1 class="text-4xl md:text-5xl font-bold text-white tracking-tighter mb-2">Resumo</h1><p class="text-zinc-500">Fluxo de <span class="text-white font-medium">${MONTHS[month]} ${year}</span></p></div><div class="flex gap-3 w-full md:w-auto"><select onchange="updateHomeFilter('month', this.value)" class="flex-1 md:flex-none bg-zinc-900/80 border border-white/10 text-white py-3 px-5 rounded-2xl text-sm outline-none cursor-pointer hover:bg-zinc-800 transition-colors">${MONTHS.map((m,i)=>`<option value="${i}" ${i===month?'selected':''}>${m}</option>`).join('')}</select><select onchange="updateHomeFilter('year', this.value)" class="flex-1 md:flex-none bg-zinc-900/80 border border-white/10 text-white py-3 px-5 rounded-2xl text-sm outline-none cursor-pointer hover:bg-zinc-800 transition-colors">${YEARS.map(y=>`<option value="${y}" ${y===year?'selected':''}>${y}</option>`).join('')}</select></div></div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8"><div class="bg-zinc-900/40 border border-white/5 p-8 rounded-[2rem] backdrop-blur-md relative overflow-hidden group hover:border-white/10 transition-all"><div class="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div><div class="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-400 mb-6"><i data-lucide="trending-up" class="w-6 h-6"></i></div><p class="text-zinc-400 font-medium mb-1">Receitas (Mês)</p><h2 class="text-5xl md:text-6xl font-bold text-white tracking-tighter">${formatCurrency(rev)}</h2></div><div class="bg-zinc-900/40 border border-white/5 p-8 rounded-[2rem] backdrop-blur-md relative overflow-hidden group hover:border-white/10 transition-all"><div class="absolute top-0 right-0 w-64 h-64 bg-rose-500/5 rounded-full blur-3xl -mr-16 -mt-16 pointer-events-none"></div><div class="w-14 h-14 rounded-2xl bg-rose-500/10 flex items-center justify-center text-rose-400 mb-6"><i data-lucide="trending-down" class="w-6 h-6"></i></div><p class="text-zinc-400 font-medium mb-1">Despesas (Mês)</p><h2 class="text-5xl md:text-6xl font-bold text-white tracking-tighter">${formatCurrency(exp)}</h2></div></div>
-                <div class="bg-gradient-to-r from-zinc-900 to-zinc-900/60 border border-white/5 p-8 rounded-[2rem] flex items-center gap-8 relative overflow-hidden"><div class="absolute inset-0 bg-white/5 opacity-0 hover:opacity-100 transition-opacity"></div><div class="w-16 h-16 rounded-full ${totalAccumulated>=0?'bg-blue-600':'bg-rose-600'} flex items-center justify-center text-white shadow-xl shadow-black/50 z-10"><i data-lucide="wallet" class="w-7 h-7"></i></div><div class="z-10"><p class="text-zinc-400 uppercase text-xs font-bold tracking-widest mb-1">Saldo em Conta</p><p class="text-3xl md:text-4xl font-bold text-white tracking-tight">${formatCurrency(totalAccumulated)}</p></div></div>
-            `;
-        }
-
-        function renderDashboard() {
-            const { month, year } = state.dashboardFilter; let rev = 0, exp = 0, totalAccumulated = 0;
-            getFilteredTransactions().forEach(t => { 
-                if(t.type === 'single') {
-                    const {y, m} = safeGetYearMonth(t.date); 
-                    if(m === month && y === year) { t.kind === 'income' ? rev += t.value : exp += t.value; }
-                    if(y < year || (y === year && m <= month)) { t.kind === 'income' ? totalAccumulated += t.value : totalAccumulated -= t.value; }
-                } else if(t.type === 'installment' && t.installments) {
-                    t.installments.forEach(i => {
-                        const {y, m} = safeGetYearMonth(i.date); 
-                        if(m === month && y === year) { t.kind === 'income' ? rev += i.value : exp += i.value; }
-                        if(y < year || (y === year && m <= month)) { t.kind === 'income' ? totalAccumulated += i.value : totalAccumulated -= i.value; }
-                    });
-                }
-            });
-            const chartData = Array(12).fill(0).map((_, i) => ({ inc: 0, exp: 0 }));
-            getFilteredTransactions().forEach(t => { 
-                if(t.type === 'single') {
-                    const {y, m} = safeGetYearMonth(t.date); 
-                    if(y === year && m >= 0 && m < 12) { t.kind === 'income' ? chartData[m].inc += t.value : chartData[m].exp += t.value; }
-                } else if(t.type === 'installment' && t.installments) {
-                    t.installments.forEach(i => {
-                        const {y, m} = safeGetYearMonth(i.date); 
-                        if(y === year && m >= 0 && m < 12) { t.kind === 'income' ? chartData[m].inc += i.value : chartData[m].exp += i.value; }
-                    });
-                }
-            });
-            const maxVal = Math.max(...chartData.map(d => Math.max(d.inc, d.exp)), 100);
-            const bars = chartData.map((d, i) => `<div class="flex flex-col items-center gap-1 w-full h-full justify-end group relative"><div class="absolute -top-16 bg-zinc-800 border border-white/10 text-white text-[10px] p-2 rounded opacity-0 group-hover:opacity-100 transition-opacity z-20 pointer-events-none w-max"><div class="font-bold mb-1">${MONTHS[i]}</div><div class="text-emerald-400">+${formatCurrency(d.inc)}</div><div class="text-rose-400">-${formatCurrency(d.exp)}</div></div><div class="flex gap-1 items-end h-full justify-center w-full"><div class="w-1.5 md:w-3 bg-emerald-500/80 rounded-t-sm hover:bg-emerald-400 transition-colors" style="height:${(d.inc/maxVal)*100}%"></div><div class="w-1.5 md:w-3 bg-rose-500/80 rounded-t-sm hover:bg-rose-400 transition-colors" style="height:${(d.exp/maxVal)*100}%"></div></div></div>`).join('');
-
-            document.getElementById('view-dashboard').innerHTML = `
-                <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-4"><h2 class="text-4xl font-bold text-white tracking-tight">Dashboard</h2><div class="flex gap-2 w-full md:w-auto"><select onchange="updateDashFilter('month', this.value)" class="bg-zinc-900 border border-white/10 text-white p-2.5 rounded-xl text-sm w-full md:w-auto">${MONTHS.map((m,i)=>`<option value="${i}" ${i===month?'selected':''}>${m}</option>`).join('')}</select><select onchange="updateDashFilter('year', this.value)" class="bg-zinc-900 border border-white/10 text-white p-2.5 rounded-xl text-sm w-full md:w-auto">${YEARS.map(y=>`<option value="${y}" ${y===year?'selected':''}>${y}</option>`).join('')}</select></div></div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8"><div class="bg-zinc-900/50 p-6 rounded-3xl border border-white/5 backdrop-blur-sm"><p class="text-zinc-500 text-sm font-medium mb-1">Saldo em Conta</p><h3 class="text-2xl font-bold ${totalAccumulated>=0?'text-white':'text-rose-400'}">${formatCurrency(totalAccumulated)}</h3></div><div class="bg-zinc-900/50 p-6 rounded-3xl border border-white/5 backdrop-blur-sm"><p class="text-zinc-500 text-sm font-medium mb-1">Receitas (Mês)</p><h3 class="text-2xl font-bold text-emerald-400">${formatCurrency(rev)}</h3></div><div class="bg-zinc-900/50 p-6 rounded-3xl border border-white/5 backdrop-blur-sm"><p class="text-zinc-500 text-sm font-medium mb-1">Despesas (Mês)</p><h3 class="text-2xl font-bold text-rose-400">${formatCurrency(exp)}</h3></div></div>
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6"><div class="lg:col-span-2 bg-zinc-900/50 border border-white/5 rounded-3xl p-8 min-h-[400px] flex flex-col backdrop-blur-sm"><h3 class="text-zinc-300 font-semibold mb-6">Fluxo Anual (${year})</h3><div class="flex-1 flex items-end justify-between gap-2 border-b border-white/5 pb-4">${bars}</div><div class="flex justify-between text-zinc-600 text-[10px] mt-3 uppercase tracking-wider">${MONTHS.map(m=>`<span class="w-full text-center">${m.substring(0,3)}</span>`).join('')}</div></div><div class="bg-zinc-900/50 border border-white/5 rounded-3xl p-8 backdrop-blur-sm"><h3 class="text-zinc-300 font-semibold mb-6">Ações Rápidas</h3><div class="space-y-4"><button onclick="openTransactionModal('expense')" class="w-full bg-white text-black py-4 rounded-2xl font-bold hover:bg-zinc-200 transition-colors flex items-center justify-center gap-2"><i data-lucide="dollar-sign" class="w-5 h-5"></i> Nova Despesa</button><button onclick="openTransactionModal('income')" class="w-full bg-zinc-800 text-white py-4 rounded-2xl font-bold hover:bg-zinc-700 transition-colors flex items-center justify-center gap-2 border border-white/10"><i data-lucide="trending-up" class="w-5 h-5"></i> Novo Recebimento</button></div></div></div>
-            `;
-        }
-
-        function renderBills() {
-            const bills = getFilteredTransactions().filter(t => t.kind === 'expense');
-            const rows = bills.map(t => {
-                const u = state.users.find(user => String(user.id) === String(t.userId));
-                return `<div onclick="openDetails('${t.id}')" class="group flex flex-col md:grid md:grid-cols-12 gap-4 p-5 items-center hover:bg-white/5 transition-colors cursor-pointer border-b border-white/5">
-                    <div class="w-full md:col-span-4 text-white font-medium flex items-center gap-4"><div class="w-10 h-10 rounded-xl bg-zinc-800 flex items-center justify-center text-zinc-400 group-hover:text-white transition-colors"><i data-lucide="${t.type==='installment'?'list-checks':'credit-card'}" class="w-5 h-5"></i></div><div><div class="flex items-center gap-2 text-base">${t.name} ${t.type==='installment'?'<span class="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 rounded-full border border-indigo-500/20">Parcelado</span>':''}</div><p class="text-xs text-zinc-500">${t.store||''}</p></div></div>
-                    <div class="w-full md:col-span-3 text-zinc-400 text-sm flex items-center gap-2"><div class="w-5 h-5 rounded-full bg-gradient-to-br ${u?.color||'bg-gray-500'} flex items-center justify-center text-[9px] text-white border border-white/10">${u?.avatar||'?'}</div><span>${t.category}</span></div>
-                    <div class="w-full md:col-span-2 text-zinc-400 text-sm flex justify-between md:block"><span class="md:hidden">Vencimento:</span> ${t.date}</div>
-                    <div class="w-full md:col-span-2 text-right text-white font-mono text-base flex justify-between md:block"><span class="md:hidden text-zinc-500 sans-serif">Valor:</span> ${formatCurrency(t.value)}</div>
-                    <div class="hidden md:block md:col-span-1 text-center"><i data-lucide="chevron-right" class="w-5 h-5 text-zinc-600 group-hover:text-white transition-colors"></i></div>
-                </div>`;
-            }).join('');
-            document.getElementById('view-bills').innerHTML = `<div class="flex justify-between items-center mb-8"><h2 class="text-3xl font-bold text-white tracking-tight">Contas a Pagar</h2><button onclick="openTransactionModal('expense')" class="bg-white text-black px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-zinc-200 transition-colors flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Nova Conta</button></div><div class="bg-zinc-900/40 border border-white/5 rounded-[1.5rem] overflow-hidden backdrop-blur-md"><div class="hidden md:grid grid-cols-12 gap-4 p-5 border-b border-white/5 text-xs font-semibold text-zinc-500 uppercase tracking-wider"><div class="col-span-4">Descrição</div><div class="col-span-3">Responsável / Categoria</div><div class="col-span-2">Vencimento</div><div class="col-span-2 text-right">Valor Total</div><div class="col-span-1"></div></div>${rows || '<p class="p-8 text-center text-zinc-500">Nenhuma conta pendente.</p>'}</div>`;
-        }
-
-        function renderStatement() {
-            const list = getFilteredTransactions().sort((a,b) => { const da = a.date || ""; const db = b.date || ""; return db.localeCompare(da); });
-            const rows = list.map(t => {
-                const isInc = t.kind === 'income';
-                return `<div onclick="openDetails('${t.id}')" class="flex flex-col md:grid md:grid-cols-12 gap-4 p-5 items-center hover:bg-white/5 transition-colors border-b border-white/5 cursor-pointer"><div class="w-full md:col-span-5 flex items-center gap-4"><div class="w-10 h-10 rounded-full flex items-center justify-center ${isInc?'bg-emerald-500/10 text-emerald-500':'bg-rose-500/10 text-rose-500'}"><i data-lucide="${isInc?'arrow-up-circle':'arrow-down-circle'}" class="w-5 h-5"></i></div><div><div class="text-white font-medium text-base">${t.name}</div><p class="text-xs text-zinc-500">${t.store||''}</p></div></div><div class="w-full md:col-span-3 text-zinc-400 text-sm hidden md:block">${t.category}</div><div class="w-full md:col-span-2 text-zinc-400 text-sm flex justify-between md:block"><span class="md:hidden">Data:</span> ${t.date}</div><div class="w-full md:col-span-2 text-right font-mono text-base ${isInc?'text-emerald-400':'text-white'} flex justify-between md:block"><span class="md:hidden text-zinc-500 sans-serif">Valor:</span> ${isInc?'+':'-'} ${formatCurrency(t.value)}</div></div>`;
-            }).join('');
-            document.getElementById('view-statement').innerHTML = `<h2 class="text-3xl font-bold text-white mb-8 tracking-tight">Extrato</h2><div class="bg-zinc-900/40 border border-white/5 rounded-[1.5rem] overflow-hidden backdrop-blur-md"><div class="hidden md:grid grid-cols-12 gap-4 p-5 border-b border-white/5 text-xs font-semibold text-zinc-500 uppercase tracking-wider"><div class="col-span-5">Descrição</div><div class="col-span-3">Categoria</div><div class="col-span-2">Data</div><div class="col-span-2 text-right">Valor</div></div>${rows || '<p class="p-8 text-center text-zinc-500">Sem movimentações.</p>'}</div>`;
-        }
-
-        function renderFilterView() {
-            const {category, month, year} = state.filterView;
-            const catOptions = ['Todas', ...state.categories.map(c => c.name)].map(c => `<option value="${c}" ${c === category ? 'selected' : ''}>${c}</option>`).join(''); let total = 0;
-            const items = getFilteredTransactions().filter(t => t.kind === 'expense' && (category === 'Todas' || t.category === category)).reduce((arr, t) => { 
-                let val = 0; 
-                if(t.type === 'single') { 
-                    const {y, m} = safeGetYearMonth(t.date); 
-                    if(m === month && y === year) val = t.value; 
-                } else if(t.type === 'installment' && t.installments) { 
-                    t.installments.forEach(i => { 
-                        const {y, m} = safeGetYearMonth(i.date); 
-                        if(m === month && y === year) val += i.value; 
-                    }); 
-                } 
-                if(val > 0) { total += val; arr.push({...t, val}); } return arr; 
-            }, []);
-            const rows = items.map(t => `<div onclick="openDetails('${t.id}')" class="flex justify-between items-center p-5 border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer"><div><p class="text-white font-medium text-base">${t.name} <span class="text-zinc-500 text-sm ml-2 font-normal">${t.store}</span></p><p class="text-xs text-zinc-500 mt-0.5">${t.category}</p></div><p class="text-rose-400 font-mono text-base font-medium">${formatCurrency(t.val)}</p></div>`).join('');
-            document.getElementById('view-filter').innerHTML = `<div class="flex flex-col md:flex-row justify-between mb-10 gap-6"><div><h2 class="text-3xl font-bold text-white tracking-tight">Filtro Avançado</h2><p class="text-zinc-500 mt-2">Detalhamento de gastos por categoria.</p></div><div class="flex gap-3 flex-wrap md:flex-nowrap"><select onchange="updateFilterView('category', this.value)" class="bg-zinc-900 border border-white/10 text-white p-3 rounded-xl text-sm w-full md:w-auto outline-none">${catOptions}</select><select onchange="updateFilterView('month', this.value)" class="bg-zinc-900 border border-white/10 text-white p-3 rounded-xl text-sm w-full md:w-auto outline-none">${MONTHS.map((m,i)=>`<option value="${i}" ${i===month?'selected':''}>${m}</option>`).join('')}</select><select onchange="updateFilterView('year', this.value)" class="bg-zinc-900 border border-white/10 text-white p-3 rounded-xl text-sm w-full md:w-auto outline-none">${YEARS.map(y=>`<option value="${y}" ${y===year?'selected':''}>${y}</option>`).join('')}</select></div></div><div class="bg-zinc-900/50 p-8 rounded-[2rem] border border-white/5 mb-8 flex justify-between items-center shadow-lg"><div><p class="text-zinc-400 text-sm font-medium">Total em <span class="text-white">${category}</span></p><p class="text-xs text-zinc-500 mt-1">${MONTHS[month]} ${year}</p></div><h2 class="text-4xl md:text-5xl font-bold text-rose-400 tracking-tighter">${formatCurrency(total)}</h2></div><div class="bg-zinc-900/40 rounded-[2rem] border border-white/5 overflow-hidden backdrop-blur-md">${rows || '<p class="p-8 text-center text-zinc-500">Nenhum gasto encontrado.</p>'}</div>`;
-        }
-
-        function renderUsers() {
-            const isAdmin = state.currentUser.role === 'Administrador';
-            const usersHtml = state.users.map(u => `<div class="bg-zinc-900/50 p-6 rounded-[1.5rem] border border-white/5 flex items-center justify-between group hover:border-white/10 transition-all"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-gradient-to-br ${u.color} flex items-center justify-center text-white font-bold text-lg shadow-lg">${u.avatar}</div><div><p class="text-white font-medium text-base">${u.name}</p><p class="text-xs text-zinc-500 mt-0.5">${u.role}</p></div></div>${isAdmin && String(u.id) !== String(state.currentUser.id) ? `<button onclick="deleteUser('${u.id}')" class="text-zinc-600 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all"><i data-lucide="trash-2" class="w-5 h-5"></i></button>` : ''}</div>`).join('');
-            const catsHtml = state.categories.map(c => `<div class="bg-zinc-900/50 p-4 rounded-xl border border-white/5 flex justify-between items-center text-sm hover:bg-zinc-800/50 transition-colors"><span class="text-zinc-300 font-medium">${c.name}</span><button onclick="deleteCategory(${c.id})" class="text-zinc-600 hover:text-rose-500 transition-colors"><i data-lucide="x" class="w-4 h-4"></i></button></div>`).join('');
-            document.getElementById('view-users').innerHTML = `<div class="mb-12"><div class="flex justify-between items-center mb-6"><h2 class="text-3xl font-bold text-white tracking-tight">Usuários</h2>${isAdmin?`<button onclick="openUserModal()" class="bg-white text-black px-4 py-2 rounded-xl text-sm font-bold hover:bg-zinc-200 transition-colors">Novo Usuário</button>`:''}</div><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">${usersHtml}</div></div><div><div class="flex justify-between items-center mb-6"><h2 class="text-3xl font-bold text-white tracking-tight">Categorias</h2><button onclick="openCategoryModal()" class="bg-zinc-800 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-zinc-700 transition-colors border border-white/10">Nova Categoria</button></div><div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">${catsHtml}</div></div>`;
-        }
-
-        function updateHomeFilter(k,v) { state.homeFilter[k]=Number(v); renderHome(); }
-        function updateDashFilter(k,v) { state.dashboardFilter[k]=Number(v); renderDashboard(); }
-        function updateFilterView(k,v) { state.filterView[k]=isNaN(Number(v))?v:Number(v); renderFilterView(); }
-        function toggleUserFilterDropdown() { document.getElementById('user-filter-dropdown').classList.toggle('hidden'); }
-        
-        function selectAllUsers() { 
-            state.selectedFilterUsers = state.users.map(u => String(u.id)); 
-            renderApp(); 
-        }
-        
-        function toggleUser(id) { 
-            const strId = String(id);
-            if(state.selectedFilterUsers.some(x => String(x) === strId)) { 
-                state.selectedFilterUsers = state.selectedFilterUsers.filter(x => String(x) !== strId); 
-            } else { 
-                state.selectedFilterUsers.push(strId); 
-            } 
-            renderApp(); 
-        }
-        
-        function renderUserFilter() {
-            const list = state.users.map(u => {
-                const isSelected = state.selectedFilterUsers.some(x => String(x) === String(u.id));
-                return `<button onclick="toggleUser('${u.id}')" class="flex items-center gap-3 w-full p-2.5 rounded-xl text-sm transition-colors ${isSelected ? 'bg-white/10 text-white' : 'text-zinc-400 hover:text-white hover:bg-white/5'}"><div class="w-6 h-6 rounded-full bg-gradient-to-br ${u.color} flex items-center justify-center text-[9px] text-white font-bold border border-white/10">${u.avatar}</div><span class="flex-1 text-left font-medium">${u.name}</span>${isSelected ? '<i data-lucide="check" class="w-4 h-4 text-emerald-400"></i>' : ''}</button>`;
-            }).join('');
-            document.getElementById('user-filter-list').innerHTML = list;
-            
-            const avatars = state.selectedFilterUsers.slice(0, 3).map(id => { 
-                const u = state.users.find(user => String(user.id) === String(id)); 
-                return u ? `<div class="w-7 h-7 rounded-full bg-gradient-to-br ${u.color} border-2 border-zinc-900 flex items-center justify-center text-[9px] font-bold text-white">${u.avatar}</div>` : ''; 
-            }).join('');
-            
-            document.getElementById('filter-avatars').innerHTML = avatars + (state.selectedFilterUsers.length > 3 ? `<div class="w-7 h-7 rounded-full bg-zinc-800 border-2 border-zinc-900 flex items-center justify-center text-[9px] text-white font-bold">+${state.selectedFilterUsers.length - 3}</div>` : '');
-            document.getElementById('filter-label').innerText = state.selectedFilterUsers.length === state.users.length ? 'Todos' : 'Filtrar'; 
-            lucide.createIcons();
-        }
-
-        function openTransactionModal(mode, editId = null) {
-            state.modalMode = mode; 
-            state.editingId = editId;
-            document.getElementById('modal-title').innerText = editId ? 'Editar Transação' : (mode === 'expense' ? 'Nova Despesa' : 'Novo Recebimento');
-            const catOpts = state.categories.filter(c => c.type === 'both' || c.type === mode).map(c => `<option value="${c.name}">${c.name}</option>`).join('');
-            
-            const scanArea = `
-                <div class="mb-6">
-                    <label for="receipt-input" class="group relative flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-zinc-700 rounded-2xl cursor-pointer hover:bg-zinc-800/30 hover:border-indigo-500 transition-all bg-black/20">
-                        <div class="flex flex-col items-center justify-center pt-5 pb-6 text-zinc-400 group-hover:text-indigo-400 transition-colors"><i data-lucide="scan-line" class="w-8 h-8 mb-3"></i><p class="text-xs font-medium uppercase tracking-wide">Scan Nota ou PDF</p></div>
-                        <input id="receipt-input" type="file" accept="image/*,application/pdf" capture="environment" class="hidden" onchange="handleReceiptScan(this)" />
-                    </label>
-                    <div id="ocr-loading" class="hidden mt-4 bg-zinc-800/50 p-4 rounded-xl border border-white/5"><div class="flex items-center justify-between text-indigo-400 text-xs font-medium mb-2"><span class="flex items-center gap-2"><i data-lucide="loader-2" class="w-3 h-3 animate-spin"></i> <span id="ocr-status">Iniciando IA...</span></span><span id="ocr-pct">0%</span></div><div class="w-full bg-black h-1.5 rounded-full overflow-hidden"><div id="ocr-progress" class="bg-indigo-500 h-full w-0 transition-all duration-300"></div></div></div>
+            ${alertas.length > 0 ? `
+                <div class="card border-rose-500/20 bg-rose-500/5">
+                    <h4 class="text-rose-400 font-semibold mb-2">🔔 Alertas</h4>
+                    ${alertas.map(a => `<p class="text-zinc-300 text-sm">${a}</p>`).join('')}
                 </div>
-            `;
-
-            document.getElementById('modal-content').innerHTML = `
-                ${scanArea}
-                <div class="grid grid-cols-2 gap-4 mb-6">
-                    <div onclick="setTransType('single')" id="btn-type-single" class="type-btn selected"><i data-lucide="dollar-sign"></i>À Vista</div>
-                    <div onclick="setTransType('installment')" id="btn-type-inst" class="type-btn"><i data-lucide="list-checks"></i>Parcelado</div>
+            ` : ''}
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="card">
+                    <p class="text-zinc-400 text-sm">💰 Reserva de Emergência</p>
+                    <p class="text-lg font-bold text-emerald-400">${formatCurrency(reservaSugerida)}</p>
+                    <p class="text-xs text-zinc-500">Equivalente a 6 meses</p>
                 </div>
-                <div id="trans-form" class="space-y-4">
-                    <div class="grid grid-cols-2 gap-4"><input id="t-store" type="text" placeholder="${mode==='expense'?'Loja':'Origem'}" class="w-full bg-black border border-white/10 rounded-2xl p-3.5 text-white text-sm focus:border-indigo-500 outline-none"><select id="t-cat" class="w-full bg-black border border-white/10 rounded-2xl p-3.5 text-white text-sm focus:border-indigo-500 outline-none"><option value="Geral">Sem Categoria</option>${catOpts}</select></div>
-                    <input id="t-desc" type="text" placeholder="Descrição" class="w-full bg-black border border-white/10 rounded-2xl p-3.5 text-white text-sm focus:border-indigo-500 outline-none">
-                    <div class="grid grid-cols-2 gap-4"><input id="t-val" type="text" placeholder="Valor Total" class="w-full bg-black border border-white/10 rounded-2xl p-3.5 text-white text-sm focus:border-indigo-500 outline-none"><input id="t-date" type="date" class="w-full bg-black border border-white/10 rounded-2xl p-3.5 text-white text-sm focus:border-indigo-500 outline-none [color-scheme:dark]"></div>
-                    <div id="inst-inputs" style="display: none;"><input id="t-inst" type="number" placeholder="Qtd Parcelas" class="w-full bg-indigo-500/10 border border-indigo-500/30 rounded-2xl p-3.5 text-white text-sm focus:border-indigo-500 outline-none"></div>
-                    <button onclick="submitTransaction()" class="w-full bg-white text-black font-bold p-4 rounded-2xl mt-4 hover:bg-zinc-200 transition-colors shadow-lg">Salvar</button>
-                </div>`;
+                <div class="card">
+                    <p class="text-zinc-400 text-sm">🎯 Lazer Sugerido</p>
+                    <p class="text-lg font-bold text-purple-400">${formatCurrency(lazerSugerido)}/mês</p>
+                    <p class="text-xs text-zinc-500">10% da renda anual</p>
+                </div>
+                <div class="card">
+                    <p class="text-zinc-400 text-sm">📈 Projeção Anual</p>
+                    <p class="text-lg font-bold ${gastoAnual > totalReceitas ? 'text-rose-400' : 'text-white'}">${formatCurrency(gastoAnual)}</p>
+                    <p class="text-xs text-zinc-500">Com inflação: ${formatCurrency(financProjetado)}</p>
+                </div>
+            </div>
             
-            lucide.createIcons(); 
+            ${recomendacoes.length > 0 ? `
+                <div class="card border-blue-500/20 bg-blue-500/5">
+                    <h4 class="text-blue-400 font-semibold mb-2">💡 Recomendações da IA</h4>
+                    ${recomendacoes.map(r => `<p class="text-zinc-300 text-sm">${r}</p>`).join('')}
+                </div>
+            ` : ''}
             
-            if (editId) {
-                const t = state.transactions.find(x => String(x.id) === String(editId));
-                if (t) {
-                    document.getElementById('t-desc').value = t.name;
-                    document.getElementById('t-store').value = t.store;
-                    document.getElementById('t-cat').value = t.category;
-                    document.getElementById('t-val').value = t.type === 'installment' ? t.installmentValue : t.value;
-                    document.getElementById('t-date').value = t.date;
-                    if (t.type === 'installment') document.getElementById('t-inst').value = t.totalInstallments;
-                    setTransType(t.type);
-                }
-            } else {
-                state.newTransaction.type = 'single'; 
-                setTransType('single');
-            }
-            
-            document.getElementById('modal-transaction').classList.add('open');
-        }
+            <div class="card">
+                <h4 class="text-zinc-300 font-semibold mb-3">📊 Resumo do Mês</h4>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-zinc-500 text-sm">Receitas</p>
+                        <p class="text-emerald-400 font-bold">${formatCurrency(receitasMes)}</p>
+                    </div>
+                    <div>
+                        <p class="text-zinc-500 text-sm">Despesas</p>
+                        <p class="text-rose-400 font-bold">${formatCurrency(despesasMes)}</p>
+                    </div>
+                    <div>
+                        <p class="text-zinc-500 text-sm">Saldo do Mês</p>
+                        <p class="${mesSaldo >= 0 ? 'text-emerald-400' : 'text-rose-400'} font-bold">${formatCurrency(mesSaldo)}</p>
+                    </div>
+                    <div>
+                        <p class="text-zinc-500 text-sm">Gasto Médio Diário</p>
+                        <p class="text-white font-bold">${formatCurrency(despesasMes / 30 || 0)}</p>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
 
-        function setTransType(type) { 
-            state.newTransaction.type = type; 
-            const btnS = document.getElementById('btn-type-single'); 
-            const btnI = document.getElementById('btn-type-inst');
-            const instDiv = document.getElementById('inst-inputs');
-            
-            if(type === 'single') { 
-                if(btnS) btnS.classList.add('selected');
-                if(btnI) btnI.classList.remove('selected');
-                if(instDiv) instDiv.style.display = 'none'; 
-            } else { 
-                if(btnI) btnI.classList.add('selected');
-                if(btnS) btnS.classList.remove('selected');
-                if(instDiv) instDiv.style.display = 'block'; 
-            }
+    function gerarDicaFinanceira(saldo, receitas, despesas) {
+        if(saldo > 0 && receitas > 0) {
+            const pct = Math.round((saldo/receitas)*100);
+            if(pct > 20) return `🎉 Excelente! Você está economizando ${pct}% da sua renda. Considere investir parte desse valor para multiplicar seu patrimônio.`;
+            if(pct > 10) return `👍 Bom trabalho! Você está economizando ${pct}% da renda. Que tal aumentar para 20% aos poucos?`;
+            return `💪 Continue firme! Você está no azul. Analise seus gastos para ver onde pode economizar ainda mais.`;
         }
+        if(saldo < 0) {
+            return `⚠️ Atenção! Seu saldo está negativo. Tente cortar gastos supérfluos e negociar dívidas. Lembre-se: 10% da renda deve ir para lazer, não mais.`;
+        }
+        return `📊 Acompanhe seus gastos de perto. Defina um orçamento mensal e tente não ultrapassá-lo.`;
+    }
+
+    function analisarFinancas() {
+        renderAI();
+        // Scroll para os resultados
+        document.getElementById('ai-results').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    // ============================================================
+    // CHAT DA IA
+    // ============================================================
+    function enviarPerguntaIA() {
+        const input = document.getElementById('chat-input');
+        const pergunta = input.value.trim();
+        if(!pergunta) return;
         
-        async function submitTransaction() {
-            const type = state.newTransaction.type;
-            const valInput = document.getElementById('t-val').value;
-            const val = parseInputMoney(valInput);
-            const date = document.getElementById('t-date').value;
-            
-            if (isNaN(val) || val <= 0 || !date) return alert("Preencha o valor e a data corretamente!");
-            
-            const cat = document.getElementById('t-cat').value;
-            let instCount = 0;
-            let totalValue = val; 
-            let valPerInst = val; 
+        const container = document.getElementById('chat-container');
+        container.innerHTML += `<div class="chat-message chat-user">${pergunta}</div>`;
+        input.value = '';
+        
+        const resposta = processarPerguntaIA(pergunta);
+        setTimeout(() => {
+            container.innerHTML += `<div class="chat-message chat-ai">${resposta}</div>`;
+            container.scrollTop = container.scrollHeight;
+        }, 500);
+    }
 
-            if (type === 'installment') {
-                const instDiv = document.getElementById('inst-inputs');
-                if(instDiv.style.display === 'none') return alert("Erro: Selecione 'Parcelado' e preencha a quantidade de parcelas.");
-                instCount = parseInt(document.getElementById('t-inst').value);
-                if (isNaN(instCount) || instCount <= 0) return alert("Preencha a quantidade de parcelas corretamente.");
-                totalValue = val * instCount; 
-            }
-
-            let status = state.modalMode === 'expense' ? (type === 'single' ? 'Pago' : 'Em andamento') : 'Recebido';
-
-            const newId = state.editingId ? state.editingId : String(Date.now());
-            const userId = state.editingId ? state.transactions.find(x => String(x.id) === String(state.editingId)).userId : String(state.currentUser.id);
-
-            const payload = { id: newId, userId: userId, kind: state.modalMode, name: document.getElementById('t-desc').value, store: document.getElementById('t-store').value, category: cat, value: totalValue, date, status: status, type, installmentValue: type === 'installment' ? valPerInst : 0, totalInstallments: instCount, paidInstallments: 0, installments: [] };
-            
-            if(type === 'installment') {
-                for(let i=0; i<instCount; i++) {
-                    let instStatus = 'Pendente';
-                    if (state.editingId) {
-                        const oldT = state.transactions.find(x => String(x.id) === String(state.editingId));
-                        if (oldT && oldT.type === 'installment' && oldT.installments[i]) instStatus = oldT.installments[i].status;
+    function processarPerguntaIA(pergunta) {
+        const p = pergunta.toLowerCase();
+        const transacoes = getFilteredTransactions();
+        let totalReceitas = 0, totalDespesas = 0;
+        let mesAtual = new Date().getMonth();
+        let anoAtual = new Date().getFullYear();
+        let receitasMes = 0, despesasMes = 0;
+        let categorias = {};
+        
+        transacoes.forEach(t => {
+            if(t.type === 'single') {
+                const {y, m} = safeGetYearMonth(t.date);
+                if(m === mesAtual && y === anoAtual) {
+                    t.kind === 'income' ? receitasMes += t.value : despesasMes += t.value;
+                }
+                t.kind === 'income' ? totalReceitas += t.value : totalDespesas += t.value;
+                if(t.kind === 'expense') {
+                    categorias[t.category] = (categorias[t.category] || 0) + t.value;
+                }
+            } else if(t.type === 'installment' && t.installments) {
+                t.installments.forEach(i => {
+                    const {y, m} = safeGetYearMonth(i.date);
+                    if(m === mesAtual && y === anoAtual) {
+                        t.kind === 'income' ? receitasMes += i.value : despesasMes += i.value;
                     }
-                    payload.installments.push({number: i+1, value: valPerInst, date: calculateInstallmentDate(date, i), status: instStatus});
-                }
-                payload.paidInstallments = payload.installments.filter(i => i.status === 'Pago').length;
-                if(payload.paidInstallments === instCount) payload.status = 'Pago';
-            } else if (state.editingId) {
-                const oldT = state.transactions.find(x => String(x.id) === String(state.editingId));
-                if (oldT && oldT.type === 'single') payload.status = oldT.status;
+                    t.kind === 'income' ? totalReceitas += i.value : totalDespesas += i.value;
+                    if(t.kind === 'expense') {
+                        categorias[t.category] = (categorias[t.category] || 0) + i.value;
+                    }
+                });
             }
-            
-            if (state.editingId) {
-                const idx = state.transactions.findIndex(x => String(x.id) === String(state.editingId));
-                if(idx !== -1) state.transactions[idx] = payload;
-                closeModal('modal-transaction'); 
-                renderCurrentView(); 
-                state.editingId = null;
-                await apiPost('updateTransaction', {transaction: payload});
-            } else {
-                state.transactions.push(payload); 
-                closeModal('modal-transaction'); 
-                renderCurrentView(); 
-                await apiPost('addTransaction', {transaction: payload});
-            }
-        }
+        });
 
-        function openCategoryModal() { document.getElementById('modal-category').classList.add('open'); }
-        async function submitAddCategory() { const name = document.getElementById('new-cat-name').value; const type = document.getElementById('new-cat-type').value; if(!name) return; const cat = { id: String(Date.now()), name, type }; state.categories.push(cat); closeModal('modal-category'); renderCurrentView(); await apiPost('addCategory', { category: cat }); }
-        async function deleteCategory(id) { if(!confirm('Remover categoria?')) return; state.categories = state.categories.filter(c => String(c.id) !== String(id)); renderCurrentView(); await apiPost('deleteCategory', { id }); }
+        const saldo = totalReceitas - totalDespesas;
+        const mesSaldo = receitasMes - despesasMes;
         
-        function openUserModal() { document.getElementById('modal-user').classList.add('open'); }
-        async function submitAddUser() { const name = document.getElementById('new-user-name').value; const username = document.getElementById('new-user-username').value; const password = document.getElementById('new-user-password').value; if(!name||!username||!password) return alert("Preencha tudo"); const user = { id: String(Date.now()), name, username, password, role: 'Financeiro', avatar: name.substring(0,2).toUpperCase(), color: 'from-blue-500 to-cyan-500', status: 'Ativo' }; state.users.push(user); closeModal('modal-user'); renderCurrentView(); await apiPost('addUser', { user }); }
-        async function deleteUser(id) { if(confirm('Remover usuário?')) { state.users = state.users.filter(u => String(u.id) !== String(id)); renderCurrentView(); await apiPost('deleteUser', { id }); } }
-
-        function openDetails(id) {
-            const t = state.transactions.find(x => String(x.id) === String(id)); if(!t) return;
-            document.getElementById('detail-title').innerText = t.name; 
-            document.getElementById('detail-store').innerText = t.store || ''; 
-            document.getElementById('detail-value').innerText = formatCurrency(t.value);
-            const container = document.getElementById('detail-content'); 
-            
-            let list = '';
-            if (t.type === 'installment') {
-                const progress = Math.round((t.paidInstallments / t.totalInstallments) * 100);
-                const instList = t.installments.map(inst => `<div class="flex justify-between items-center p-4 border-b border-white/5 rounded-xl bg-zinc-800/20 mb-2"><div><span class="text-white font-medium text-sm">Parcela ${inst.number}</span> <span class="text-xs text-zinc-500 block">${inst.date}</span></div><button onclick="toggleInstallment('${t.id}', ${inst.number})" class="text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${inst.status==='Pago'?'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20':'bg-white text-black hover:bg-zinc-200'}">${inst.status==='Pago'?'Pago':'Pagar'}</button></div>`).join('');
-                list = `<div class="flex justify-between mb-2 text-xs font-medium text-zinc-400"><span>Progresso</span> <span>${progress}%</span></div><div class="h-3 bg-zinc-800 rounded-full overflow-hidden mb-6"><div class="h-full bg-gradient-to-r from-indigo-600 to-blue-500 transition-all duration-500" style="width:${progress}%"></div></div>${instList}`;
-            } else {
-                list = `<div class="flex justify-between items-center p-4 border-b border-white/5 rounded-xl bg-zinc-800/20 mb-2"><div><span class="text-white font-medium text-sm">Status</span> <span class="text-xs text-zinc-500 block">${t.date}</span></div><button onclick="toggleSingleStatus('${t.id}')" class="text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${t.status==='Pago'||t.status==='Recebido'?'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20':'bg-white text-black hover:bg-zinc-200'}">${t.status==='Pago'||t.status==='Recebido'?'Feito':'Marcar Feito'}</button></div>`;
-            }
-            
-            list += `<div class="grid grid-cols-2 gap-4 mt-6"><button onclick="editTransaction('${t.id}')" class="w-full bg-zinc-800 text-white font-medium py-3 rounded-xl border border-white/10 hover:bg-zinc-700 transition-colors flex items-center justify-center gap-2"><i data-lucide="edit-2" class="w-4 h-4"></i> Editar</button><button onclick="deleteTransaction('${t.id}')" class="w-full bg-rose-500/10 text-rose-500 font-medium py-3 rounded-xl border border-rose-500/20 hover:bg-rose-500/20 transition-colors flex items-center justify-center gap-2"><i data-lucide="trash-2" class="w-4 h-4"></i> Excluir</button></div>`;
-            
-            container.innerHTML = list;
-            document.getElementById('modal-details').classList.add('open');
-            lucide.createIcons();
+        if(p.includes('gasto') || p.includes('despesa') || p.includes('gastando')) {
+            const top = Object.entries(categorias).sort((a,b) => b[1] - a[1])[0];
+            return `📊 Seus maiores gastos são em ${top ? top[0] : 'nenhuma categoria ainda'}.\n\nTotal do mês: ${formatCurrency(despesasMes)}\nMédia diária: ${formatCurrency(despesasMes/30 || 0)}\n\n${gerarDicaFinanceira(saldo, totalReceitas, totalDespesas)}`;
         }
-
-        async function toggleSingleStatus(id) {
-            const t = state.transactions.find(x => String(x.id) === String(id));
-            if(t.kind === 'expense') t.status = t.status === 'Pago' ? 'Pendente' : 'Pago';
-            else t.status = t.status === 'Recebido' ? 'Pendente' : 'Recebido';
-            openDetails(id); renderCurrentView();
-            await apiPost('updateTransaction', { transaction: t });
-        }
-
-        async function toggleInstallment(tid, num) { const t = state.transactions.find(x => String(x.id) === String(tid)); t.installments.forEach(i => { if(i.number === num) i.status = i.status === 'Pago' ? 'Pendente' : 'Pago'; }); t.paidInstallments = t.installments.filter(i => i.status === 'Pago').length; t.status = t.paidInstallments === t.totalInstallments ? 'Pago' : 'Em andamento'; openDetails(tid); renderCurrentView(); await apiPost('updateTransaction', { transaction: t }); }
-
-        function editTransaction(id) {
-            const t = state.transactions.find(x => String(x.id) === String(id));
-            closeModal('modal-details');
-            setTimeout(() => openTransactionModal(t.kind, id), 100);
-        }
-
-        async function deleteTransaction(id) {
-            if(!confirm('Tem certeza que deseja excluir esta transação?')) return;
-            state.transactions = state.transactions.filter(x => String(x.id) !== String(id));
-            closeModal('modal-details');
-            renderCurrentView();
-            await apiPost('deleteTransaction', { id });
-        }
-
-        function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-        function setLoading(b, id='login-loading-text') { const el=document.getElementById(id); if(el) b?el.classList.remove('hidden'):el.classList.add('hidden'); }
         
-        async function handleReceiptScan(input) {
-            const file = input.files[0]; if (!file) return;
-            const loadingEl = document.getElementById('ocr-loading'); const statusEl = document.getElementById('ocr-status'); const progressEl = document.getElementById('ocr-progress');
-            loadingEl.classList.remove('hidden');
-            try {
-                let imageUrl; if (file.type === 'application/pdf') { statusEl.innerText = "Lendo PDF..."; imageUrl = await convertPdfToImage(file); } else { imageUrl = URL.createObjectURL(file); }
-                const worker = await Tesseract.createWorker('por', 1, { logger: m => { if (m.status === 'recognizing text') { progressEl.style.width = `${Math.round(m.progress * 100)}%`; } } });
-                statusEl.innerText = "Analisando..."; const ret = await worker.recognize(imageUrl); const text = ret.data.text; await worker.terminate();
-                const extractedValue = findValueInText(text); const extractedDate = findDateInText(text); const possibleStore = findStoreInText(text);
-                autoCategorize(text);
-                if (extractedValue) pulseField('t-val', extractedValue);
-                if (extractedDate) pulseField('t-date', extractedDate); else pulseField('t-date', new Date().toISOString().split('T')[0]);
-                if (possibleStore) { pulseField('t-store', possibleStore); document.getElementById('t-desc').value = "Compra: " + possibleStore; }
-                loadingEl.innerHTML = `<div class="flex items-center gap-2 text-emerald-400 text-xs font-bold justify-center"><i data-lucide="check-circle" class="w-4 h-4"></i> Leitura OK!</div>`; lucide.createIcons();
-                if(imageUrl && !imageUrl.startsWith('data:')) URL.revokeObjectURL(imageUrl);
-            } catch (err) { console.error(err); loadingEl.innerHTML = `<span class="text-rose-400 text-xs">Erro na leitura. Tente outra.</span>`; }
+        if(p.includes('econom') || p.includes('guard') || p.includes('reserva')) {
+            const reserva = totalDespesas * 6;
+            return `💰 Sua reserva de emergência ideal é ${formatCurrency(reserva)} (6 meses de gastos).\n\nAtualmente você tem ${formatCurrency(saldo)} em saldo acumulado.\n${saldo >= reserva ? '✅ Parabéns! Você já atingiu sua reserva!' : `Faltam ${formatCurrency(reserva - saldo)} para atingir.`}`;
         }
-
-        async function convertPdfToImage(file) { const fileReader = new FileReader(); return new Promise((resolve, reject) => { fileReader.onload = async function() { try { const typedarray = new Uint8Array(this.result); const pdf = await pdfjsLib.getDocument(typedarray).promise; const page = await pdf.getPage(1); const viewport = page.getViewport({ scale: 2.0 }); const canvas = document.createElement('canvas'); const context = canvas.getContext('2d'); canvas.height = viewport.height; canvas.width = viewport.width; await page.render({ canvasContext: context, viewport: viewport }).promise; resolve(canvas.toDataURL('image/png')); } catch (e) { reject(e); } }; fileReader.readAsArrayBuffer(file); }); }
-
-        function autoCategorize(text) {
-            const textLower = text.toLowerCase(); let detectedCategory = null;
-            const rules = [ { keywords: ['supermercado', 'mercado', 'atacadão', 'assai', 'carrefour', 'pão de açúcar', 'alimentos', 'hortifruti', 'smarket'], category: 'Mercado' }, { keywords: ['posto', 'gasolina', 'combustivel', 'petrobras', 'ipiranga', 'shell', 'etanol', 'diesel'], category: 'Transporte' }, { keywords: ['farmacia', 'drogaria', 'drugstore', 'pague menos', 'drogasil', 'raia'], category: 'Saúde' }, { keywords: ['restaurante', 'burger', 'pizza', 'ifood', 'delivery', 'bk', 'mcdonalds'], category: 'Alimentação' }, { keywords: ['uber', '99', 'taxi'], category: 'Transporte' } ];
-            for (const rule of rules) { if (rule.keywords.some(k => textLower.includes(k))) { detectedCategory = rule.category; break; } }
-            if (detectedCategory) {
-                const select = document.getElementById('t-cat'); let found = false;
-                for (let i = 0; i < select.options.length; i++) { if (select.options[i].value === detectedCategory) { select.selectedIndex = i; found = true; break; } }
-                if (!found) { const newCat = { id: String(Date.now()), name: detectedCategory, type: 'expense' }; state.categories.push(newCat); const opt = document.createElement('option'); opt.value = detectedCategory; opt.text = detectedCategory; select.add(opt); select.value = detectedCategory; apiPost('addCategory', { category: newCat }); }
-                pulseField('t-cat');
-            }
-        }
-
-        function pulseField(id, value) { const el = document.getElementById(id); if(value) el.value = value; el.classList.add('border-indigo-500', 'bg-indigo-500/20'); setTimeout(() => el.classList.remove('border-indigo-500', 'bg-indigo-500/20'), 1500); }
-        function findStoreInText(text) { const lines = text.split('\n'); const ignorePatterns = ['cnpj', 'cpf', 'enpj', 'im:', 'ie:', 'extrato', 'fiscal', 'cupom', 'danfe', 'sat', 'caixa', 'notinha', 'rua', 'av.', 'tel', 'item', 'qtd', 'total', 'pago', 'troco', 'crédito', 'débito', 'venda', 'data']; const cnpjRegex = /\d{2}[\.\s]?\d{3}[\.\s]?\d{3}[\/\s]?\d{4}[-\s]?\d{2}/; const candidates = lines.map(l => l.trim()).filter(l => { const lower = l.toLowerCase(); if (l.length < 3) return false; if (ignorePatterns.some(w => lower.includes(w))) return false; if (cnpjRegex.test(l)) return false; const digits = l.replace(/[^0-9]/g, '').length; if (digits > 4) return false; return true; }); if (candidates.length > 0) return candidates[0].replace(/^[^a-zA-Z0-9À-ÿ]+/, '').substring(0, 30).trim(); return null; }
-        function findValueInText(text) { const lines = text.split('\n'); let maxVal = 0; const valorRegex = /R?\s?(\d{1,3}(\.?\d{3})*,\d{2})/gi; for (let line of lines) { const lowerLine = line.toLowerCase(); if ((lowerLine.includes('total') || lowerLine.includes('valor a pagar')) && !lowerLine.includes('subtotal') && !lowerLine.includes('itens')) { const match = line.match(valorRegex); if (match) { const v = parseMoney(match[match.length - 1]); if (v > 0) return v; } } const matches = line.match(valorRegex); if (matches) { matches.forEach(m => { const v = parseMoney(m); if (v > maxVal && v < 50000) maxVal = v; }); } } return maxVal > 0 ? maxVal : null; }
         
-        function findDateInText(text) { const match = text.match(/(\d{2})[\/\s\.](\d{2})[\/\s\.](\d{4})/); return match ? `${match[3]}-${match[2]}-${match[1]}` : null; }
-    </script>
-    
-    <script>
-        if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').then(reg => console.log('Service Worker registrado!', reg)).catch(err => console.error('Erro no Service Worker', err)); }); }
-    </script>
+        if(p.includes('lazer') || p.includes('diversão') || p.includes('viagem')) {
+            const lazer = (totalReceitas * 0.1) / 12;
+            return `🎯 Recomendo separar ${formatCurrency(lazer)} por mês para lazer (10% da sua renda anual).\n\nIsso dá ${formatCurrency(lazer * 12)} por ano para viagens, hobbies e entretenimento.`;
+        }
+        
+        if(p.includes('invest') || p.includes('rentabilidade')) {
+            return `📈 Dica de investimento:\n\n1. Comece com CDB ou Tesouro Selic (renda fixa)\n2. Crie reserva de emergência primeiro\n3. Evite investimentos com taxas altas\n4. Considere Fiis para renda passiva\n\nRecomendo: 60% renda fixa, 20% ações, 20% internacionais.`;
+        }
+        
+        if(p.includes('dívida') || p.includes('parcela') || p.includes('financiamento')) {
+            return `⚠️ Para gerenciar dívidas:\n\n1. Liste todas as dívidas com juros\n2. Pague as com maior juro primeiro\n3. Negocie parcelamentos\n4. Evite novos empréstimos\n\nConsidere usar 30% da sua renda para quitar dívidas.`;
+        }
+        
+        if(p.includes('score') || p.includes('saúde') || p.includes('financeira')) {
+            let score = 0;
+            if(totalReceitas > 0) {
+                const pct = (totalDespesas / totalReceitas) * 100;
+                if(pct < 60) score = 90;
+                else if(pct < 80) score = 70;
+                else if(pct < 100) score = 50;
+                else score = 30;
+            }
+            return `🏥 Seu score de saúde financeira é ${score}%\n\n${score >= 70 ? '✅ Você está com uma boa saúde financeira!' : '⚠️ Recomendo revisar seus gastos.'}\n\nSeu saldo atual: ${formatCurrency(saldo)}`;
+        }
+        
+        return `🤖 Desculpe, não entendi sua pergunta. Posso ajudar sobre:\n\n• Gastos e despesas\n• Economia e reserva\n• Lazer e diversão\n• Investimentos\n• Dívidas e financiamentos\n• Score financeiro\n\nPergunte novamente!`;
+    }
+
+    // ============================================================
+    // VIEW: USERS (CONFIGURAÇÃO)
+    // ============================================================
+    function renderUsers() {
+        document.getElementById('view-users').innerHTML = `
+            <h2 class="text-3xl font-bold text-white mb-8">Configurações</h2>
+            <div class="card">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <p class="text-zinc-300">Usuário</p>
+                        <p class="text-white font-bold">${state.currentUser?.name || 'N/A'}</p>
+                        <p class="text-xs text-zinc-500">${state.currentUser?.role || 'Usuário'}</p>
+                    </div>
+                    <button onclick="logout()" class="bg-rose-500/20 text-rose-400 px-4 py-2 rounded-xl text-sm hover:bg-rose-500/30 transition">
+                        Sair
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    // ============================================================
+    // FUNÇÕES DE TRANSAÇÃO (MODAL)
+    // ============================================================
+    function openTransactionModal(kind) {
+        const modal = document.getElementById('modal-transaction');
+        document.getElementById('modal-content').innerHTML = `
+            <h3 class="text-xl font-bold text-white mb-4">${kind === 'expense' ? 'Nova Despesa' : 'Nova Receita'}</h3>
+            <div class="space-y-4">
+                <input id="t-name" type="text" placeholder="Descrição" class="w-full bg-black border border-white/10 rounded-xl p-3 text-white text-sm focus:border-indigo-500 outline-none">
+                <input id="t-store" type="text" placeholder="Loja/Origem" class="w-full bg-black border border-white/10 rounded-xl p-3 text-white text-sm focus:border-indigo-500 outline-none">
+                <input id="t-value" type="number" placeholder="Valor" class="w-full bg-black border border-white/10 rounded-xl p-3 text-white text-sm focus:border-indigo-500 outline-none">
+                <input id="t-date" type="date" class="w-full bg-black border border-white/10 rounded-xl p-3 text-white text-sm focus:border-indigo-500 outline-none">
+                <select id="t-kind" class="w-full bg-black border border-white/10 rounded-xl p-3 text-white text-sm focus:border-indigo-500 outline-none">
+                    <option value="expense">Despesa</option>
+                    <option value="income">Receita</option>
+                </select>
+                <button onclick="submitTransaction('${kind}')" class="w-full bg-white text-black font-bold p-3 rounded-xl hover:bg-zinc-200 transition">Salvar</button>
+            </div>
+        `;
+        modal.classList.add('open');
+    }
+
+    function submitTransaction(kind) {
+        const name = document.getElementById('t-name').value;
+        const store = document.getElementById('t-store').value;
+        const value = parseFloat(document.getElementById('t-value').value);
+        const date = document.getElementById('t-date').value;
+        
+        if(!name || !value || !date) return alert('Preencha todos os campos!');
+        
+        const transaction = {
+            id: String(Date.now()),
+            userId: String(state.currentUser.id),
+            kind: kind,
+            type: 'single',
+            name,
+            store,
+            category: 'Geral',
+            value,
+            date,
+            status: kind === 'expense' ? 'Pendente' : 'Recebido'
+        };
+        
+        state.transactions.push(transaction);
+        closeModal('modal-transaction');
+        renderApp();
+        apiPost('addTransaction', { transaction });
+    }
+
+    function openDetails(id) {
+        const t = state.transactions.find(x => String(x.id) === String(id));
+        if(!t) return;
+        const modal = document.getElementById('modal-details');
+        document.querySelector('#modal-details .modal-content').innerHTML = `
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-white">${t.name}</h3>
+                <button onclick="closeModal('modal-details')" class="text-zinc-400 hover:text-white">✕</button>
+            </div>
+            <div class="space-y-2 text-sm">
+                <p><span class="text-zinc-500">Valor:</span> <span class="text-white font-bold">${formatCurrency(t.value)}</span></p>
+                <p><span class="text-zinc-500">Data:</span> <span class="text-white">${t.date}</span></p>
+                <p><span class="text-zinc-500">Categoria:</span> <span class="text-white">${t.category}</span></p>
+                <p><span class="text-zinc-500">Status:</span> <span class="${t.status === 'Pago' || t.status === 'Recebido' ? 'text-emerald-400' : 'text-amber-400'}">${t.status}</span></p>
+                ${t.store ? `<p><span class="text-zinc-500">Loja:</span> <span class="text-white">${t.store}</span></p>` : ''}
+            </div>
+            <div class="flex gap-2 mt-6">
+                <button onclick="deleteTransaction('${t.id}')" class="flex-1 bg-rose-500/20 text-rose-400 p-2 rounded-xl text-sm hover:bg-rose-500/30 transition">Excluir</button>
+                <button onclick="closeModal('modal-details')" class="flex-1 bg-zinc-800 text-white p-2 rounded-xl text-sm hover:bg-zinc-700 transition">Fechar</button>
+            </div>
+        `;
+        modal.classList.add('open');
+    }
+
+    function deleteTransaction(id) {
+        if(!confirm('Confirmar exclusão?')) return;
+        state.transactions = state.transactions.filter(x => String(x.id) !== String(id));
+        closeModal('modal-details');
+        renderApp();
+        apiPost('deleteTransaction', { id });
+    }
+
+    // ============================================================
+    // API HELPER
+    // ============================================================
+    async function apiPost(action, payload) {
+        try {
+            await fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action, ...payload })
+            });
+        } catch(e) { console.error(e); }
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('open');
+    }
+
+    // ============================================================
+    // INICIALIZAR
+    // ============================================================
+    switchTab('home');
+
+    // ============================================================
+    // SERVICE WORKER
+    // ============================================================
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./sw.js')
+                .then(reg => console.log('SW registrado'))
+                .catch(err => console.error('Erro SW:', err));
+        });
+    }
+</script>
 </body>
 </html>
