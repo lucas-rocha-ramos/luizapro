@@ -307,7 +307,7 @@
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbxtJdJJ20GhBz6o9JvglNUHj2bqeWcpHYPw9gTC03uLRdktmGQJUU41AVsD7vCfxdmG/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbx3_Mvtn3GZAt6d63Su9czCnOiW4uRBMznkwwqG-YzVEfkx9AtgCpd7MGKLE8qbHzuT-w/exec";
         const MONTHS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
         const YEARS = [2023, 2024, 2025, 2026, 2027];
 
@@ -975,7 +975,9 @@
                 scoreDetails.push('❌ Saldo negativo (+0)');
             }
             
+            // ============================================================
             // CORREÇÃO: Reserva usa o saldo da reserva (localStorage)
+            // ============================================================
             const reservaIdeal = despesasMes * 6;
             const saldoReserva = state.reserva.saldo || 0;
             if (saldoReserva > 0 && saldoReserva >= reservaIdeal) { score += 20; scoreDetails.push('✅ Reserva completa (+20)'); }
@@ -990,6 +992,9 @@
             
             score = Math.min(Math.max(Math.round(score), 0), 100);
             
+            // ============================================================
+            // RECOMENDAÇÕES E INSIGHTS (BASEADO EM ADMINISTRADORES FINANCEIROS)
+            // ============================================================
             if (mesSaldo < 0) {
                 recomendacoes.push('💡 Seu mês está negativo. Tente cortar gastos com <strong>' + (topCategoria?.[0] || 'categorias com maior peso') + '</strong>.');
                 recomendacoes.push('📋 Revise assinaturas e serviços que não usa com frequência.');
@@ -1007,16 +1012,33 @@
                 recomendacoes.push('🏠 Seus gastos fixos são altos. Tente reduzir aluguel, energia ou internet.');
             }
             
-            if (recomendacoes.length === 0) {
+            // ============================================================
+            // ANÁLISE DE PERFIL FINANCEIRO
+            // ============================================================
+            const pctGastoTotal = totalReceitas > 0 ? Math.round((totalDespesas / totalReceitas) * 100) : 0;
+            let perfilFinanceiro = "";
+            if (pctGastoTotal < 50) {
+                perfilFinanceiro = "✅ Perfil <strong>Investidor</strong> - Você gasta menos de 50% da renda. Ótimo para acumular patrimônio!";
+            } else if (pctGastoTotal < 70) {
+                perfilFinanceiro = "⚠️ Perfil <strong>Moderado</strong> - Você gasta entre 50% e 70% da renda. Ainda sobra para investir, mas pode melhorar.";
+            } else if (pctGastoTotal < 90) {
+                perfilFinanceiro = "🔴 Perfil <strong>Consumista</strong> - Você gasta entre 70% e 90% da renda. Risco de não sobrar para emergências.";
+            } else {
+                perfilFinanceiro = "🚨 Perfil <strong>Crítico</strong> - Você gasta mais de 90% da renda. Procure ajuda financeira urgente!";
+            }
+            
+            if (recomendacoes.length === 0 && totalDespesas > 0) {
                 recomendacoes.push('🎉 Parabéns! Suas finanças estão saudáveis. Continue assim!');
-                recomendacoes.push('📈 Que tal começar a investir parte da sua renda?');
+                recomendacoes.push('📈 Que tal começar a investir 20% da sua renda?');
             }
             
             // ============================================================
             // CORREÇÃO: Lazer = 10% da RENDA MENSAL (NÃO dividir por 12)
+            // Investimento = 20% da RENDA MENSAL
             // ============================================================
             const reservaIdealFinal = despesasMes * 6;
-            const lazerSugerido = totalReceitas > 0 ? (totalReceitas * 0.1) : 0;  // ✅ CORRETO
+            const lazerSugerido = totalReceitas > 0 ? (totalReceitas * 0.1) : 0;
+            const investimentoSugerido = totalReceitas > 0 ? (totalReceitas * 0.2) : 0;
             const gastoAnual = totalDespesas * 12;
             const financProjetado = gastoAnual * 1.1;
             
@@ -1031,6 +1053,7 @@
             const progressoReserva = reservaIdealFinal > 0 ? Math.min((saldoReservaAtual / reservaIdealFinal) * 100, 100) : 0;
             
             return `
+                <!-- SCORE CARD -->
                 <div class="bg-gradient-to-r ${statusColor} border border-white/10 rounded-2xl p-6">
                     <div class="flex flex-col md:flex-row items-center justify-between gap-6">
                         <div class="flex items-center gap-6">
@@ -1050,6 +1073,7 @@
                     </div>
                 </div>
                 
+                <!-- ALERTAS -->
                 ${alertas.length > 0 ? `
                     <div class="bg-rose-500/5 border border-rose-500/20 rounded-2xl p-6">
                         <h4 class="text-rose-400 font-semibold mb-3 flex items-center gap-2">
@@ -1066,6 +1090,7 @@
                     </div>
                 `}
                 
+                <!-- MÉTRICAS - RESERVA, LAZER, INVESTIMENTO -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="bg-zinc-900/40 border border-white/5 rounded-2xl p-5">
                         <p class="text-zinc-500 text-xs uppercase tracking-wider font-medium">💰 Reserva de Emergência</p>
@@ -1087,19 +1112,73 @@
                         <p class="text-xs text-zinc-500">10% da sua renda mensal</p>
                     </div>
                     <div class="bg-zinc-900/40 border border-white/5 rounded-2xl p-5">
-                        <p class="text-zinc-500 text-xs uppercase tracking-wider font-medium">📈 Projeção Anual</p>
-                        <p class="text-lg font-bold ${gastoAnual > totalReceitas ? 'text-rose-400' : 'text-white'}">${formatCurrency(gastoAnual)}</p>
-                        <p class="text-xs text-zinc-500">Com inflação: ${formatCurrency(financProjetado)}</p>
+                        <p class="text-zinc-500 text-xs uppercase tracking-wider font-medium">📈 Investimento/Reserva</p>
+                        <p class="text-lg font-bold text-indigo-400">${formatCurrency(investimentoSugerido)}/mês</p>
+                        <p class="text-xs text-zinc-500">20% da sua renda mensal</p>
                     </div>
                 </div>
                 
+                <!-- PERFIL FINANCEIRO -->
+                <div class="bg-zinc-900/40 border border-white/5 rounded-2xl p-6">
+                    <h4 class="text-zinc-300 font-semibold mb-2 flex items-center gap-2">
+                        <i data-lucide="user" class="w-5 h-5 text-indigo-400"></i>
+                        Perfil Financeiro
+                    </h4>
+                    <p class="text-zinc-300 text-sm">${perfilFinanceiro}</p>
+                    <div class="mt-3 grid grid-cols-3 gap-2 text-xs">
+                        <div class="bg-zinc-800/50 p-2 rounded-lg text-center">
+                            <p class="text-zinc-500">Gastos Essenciais</p>
+                            <p class="text-white font-bold">${Math.round((totalGastosFixos / (totalDespesas || 1)) * 100)}%</p>
+                            <p class="text-zinc-600">Meta: 50%</p>
+                        </div>
+                        <div class="bg-zinc-800/50 p-2 rounded-lg text-center">
+                            <p class="text-zinc-500">Estilo de Vida</p>
+                            <p class="text-white font-bold">${Math.round((totalGastosVariaveis / (totalDespesas || 1)) * 100)}%</p>
+                            <p class="text-zinc-600">Meta: 30%</p>
+                        </div>
+                        <div class="bg-zinc-800/50 p-2 rounded-lg text-center">
+                            <p class="text-zinc-500">Investimento</p>
+                            <p class="text-white font-bold">${Math.max(0, 100 - Math.round((totalDespesas / (totalReceitas || 1)) * 100))}%</p>
+                            <p class="text-zinc-600">Meta: 20%</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- PLANEJAMENTO RECOMENDADO -->
                 <div class="bg-blue-500/5 border border-blue-500/20 rounded-2xl p-6">
                     <h4 class="text-blue-400 font-semibold mb-3 flex items-center gap-2">
-                        <i data-lucide="lightbulb" class="w-5 h-5"></i> Recomendações da IA
+                        <i data-lucide="target" class="w-5 h-5"></i>
+                        Planejamento Recomendado (Especialistas)
+                    </h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                        <div class="bg-zinc-800/30 p-3 rounded-lg border border-white/5">
+                            <span class="text-emerald-400 font-bold">50%</span>
+                            <p class="text-zinc-300">Gastos Essenciais</p>
+                            <p class="text-xs text-zinc-500">Moradia, alimentação, transporte, saúde</p>
+                        </div>
+                        <div class="bg-zinc-800/30 p-3 rounded-lg border border-white/5">
+                            <span class="text-purple-400 font-bold">30%</span>
+                            <p class="text-zinc-300">Estilo de Vida</p>
+                            <p class="text-xs text-zinc-500">Lazer, compras, restaurantes</p>
+                        </div>
+                        <div class="bg-zinc-800/30 p-3 rounded-lg border border-white/5">
+                            <span class="text-indigo-400 font-bold">20%</span>
+                            <p class="text-zinc-300">Investimento/Reserva</p>
+                            <p class="text-xs text-zinc-500">Poupança, investimentos, emergência</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- RECOMENDAÇÕES -->
+                <div class="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-6">
+                    <h4 class="text-amber-400 font-semibold mb-3 flex items-center gap-2">
+                        <i data-lucide="lightbulb" class="w-5 h-5"></i>
+                        Recomendações da IA
                     </h4>
                     ${recomendacoes.map(r => `<p class="text-zinc-300 text-sm py-1">${r}</p>`).join('')}
                 </div>
                 
+                <!-- RESUMO DO MÊS -->
                 <div class="bg-zinc-900/40 border border-white/5 rounded-2xl p-6">
                     <h4 class="text-zinc-300 font-semibold mb-4 flex items-center gap-2">
                         <i data-lucide="bar-chart-2" class="w-5 h-5 text-indigo-400"></i>
@@ -1137,6 +1216,7 @@
                     ` : ''}
                 </div>
                 
+                <!-- SCORE DETALHADO -->
                 <details class="bg-zinc-900/20 border border-white/5 rounded-2xl p-4">
                     <summary class="text-zinc-400 text-sm cursor-pointer hover:text-white transition">📊 Ver detalhes do Score</summary>
                     <div class="mt-3 space-y-1">
@@ -1224,7 +1304,6 @@
             }
             
             if (p.includes('lazer') || p.includes('diversão') || p.includes('viagem')) {
-                // CORREÇÃO: 10% da renda MENSAL (não dividir por 12)
                 const lazer = totalReceitas > 0 ? (totalReceitas * 0.1) : 0;
                 return `🎯 <strong>Planejamento de Lazer</strong><br><br>
                 Sugestão: <strong>${formatCurrency(lazer)}/mês</strong> (10% da sua renda mensal)<br>
@@ -1233,10 +1312,10 @@
             }
             
             if (p.includes('invest') || p.includes('rentabilidade')) {
-                const metaInv = totalReceitas * 0.15;
+                const metaInv = totalReceitas * 0.2;
                 return `📈 <strong>Dicas de Investimento</strong><br><br>
                 🏦 <strong>Comece com renda fixa:</strong> CDB, Tesouro Selic<br>
-                📊 <strong>Meta sugerida:</strong> ${formatCurrency(metaInv)} por mês (15% da renda)<br><br>
+                📊 <strong>Meta sugerida:</strong> ${formatCurrency(metaInv)} por mês (20% da renda)<br><br>
                 🎯 <strong>Distribuição sugerida:</strong><br>
                 • 60% Renda Fixa (segurança)<br>
                 • 20% Ações (crescimento)<br>
@@ -1289,7 +1368,7 @@
             • <strong>Gastos</strong> - análise detalhada<br>
             • <strong>Economia</strong> - reserva de emergência<br>
             • <strong>Lazer</strong> - quanto separar (10% da renda mensal)<br>
-            • <strong>Investimentos</strong> - dicas de onde começar<br>
+            • <strong>Investimentos</strong> - dicas de onde começar (20% da renda)<br>
             • <strong>Dívidas</strong> - como quitar<br>
             • <strong>Score</strong> - saúde financeira<br>
             • <strong>Gastos fixos</strong> vs variáveis<br><br>
@@ -1299,7 +1378,7 @@
         function gerarDicaFinanceiraIA(saldo, receitas, despesas) {
             if (saldo > 0 && receitas > 0) {
                 const pct = Math.round((saldo/receitas)*100);
-                if (pct > 20) return `🎉 Excelente! Você está economizando ${pct}% da sua renda. Considere investir parte desse valor para multiplicar seu patrimônio.`;
+                if (pct > 20) return `🎉 Excelente! Você está economizando ${pct}% da sua renda. Considere investir 20% e usar o restante para lazer.`;
                 if (pct > 10) return `👍 Bom trabalho! Você está economizando ${pct}% da renda. Que tal aumentar para 20% aos poucos?`;
                 return `💪 Continue firme! Você está no azul. Analise seus gastos para ver onde pode economizar ainda mais.`;
             }
