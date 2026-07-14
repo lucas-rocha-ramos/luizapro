@@ -139,6 +139,19 @@
             background: linear-gradient(90deg, #818cf8, #6366f1);
             transition: width 0.5s ease;
         }
+        
+        .lazer-progress {
+            height: 8px;
+            border-radius: 4px;
+            background: #27272a;
+            overflow: hidden;
+        }
+        .lazer-progress-bar {
+            height: 100%;
+            border-radius: 4px;
+            background: linear-gradient(90deg, #a78bfa, #8b5cf6);
+            transition: width 0.5s ease;
+        }
     </style>
 </head>
 <body>
@@ -197,6 +210,7 @@
                     <button onclick="switchTab('filter')" class="tab-btn px-5 py-2 rounded-full text-xs font-medium transition-all duration-300 flex items-center gap-2 text-zinc-400 hover:text-white" data-tab="filter">Filtro</button>
                     <button onclick="switchTab('ai')" class="tab-btn px-5 py-2 rounded-full text-xs font-medium transition-all duration-300 flex items-center gap-2 text-zinc-400 hover:text-white" data-tab="ai">🤖 IA</button>
                     <button onclick="switchTab('reserva')" class="tab-btn px-5 py-2 rounded-full text-xs font-medium transition-all duration-300 flex items-center gap-2 text-zinc-400 hover:text-white" data-tab="reserva">💰 Reserva</button>
+                    <button onclick="switchTab('lazer')" class="tab-btn px-5 py-2 rounded-full text-xs font-medium transition-all duration-300 flex items-center gap-2 text-zinc-400 hover:text-white" data-tab="lazer">🎯 Lazer</button>
                     <button onclick="switchTab('users')" class="tab-btn px-5 py-2 rounded-full text-xs font-medium transition-all duration-300 flex items-center gap-2 text-zinc-400 hover:text-white" data-tab="users">Config</button>
                 </div>
 
@@ -229,6 +243,7 @@
                 <button onclick="switchTab('filter')" class="tab-btn shrink-0 px-3.5 py-2.5 rounded-full text-[11px] font-medium transition-all duration-300 text-zinc-400 hover:text-white" data-tab="filter">Filtro</button>
                 <button onclick="switchTab('ai')" class="tab-btn shrink-0 px-3.5 py-2.5 rounded-full text-[11px] font-medium transition-all duration-300 text-zinc-400 hover:text-white" data-tab="ai">🤖</button>
                 <button onclick="switchTab('reserva')" class="tab-btn shrink-0 px-3.5 py-2.5 rounded-full text-[11px] font-medium transition-all duration-300 text-zinc-400 hover:text-white" data-tab="reserva">💰</button>
+                <button onclick="switchTab('lazer')" class="tab-btn shrink-0 px-3.5 py-2.5 rounded-full text-[11px] font-medium transition-all duration-300 text-zinc-400 hover:text-white" data-tab="lazer">🎯</button>
                 <button onclick="switchTab('users')" class="tab-btn shrink-0 px-3.5 py-2.5 rounded-full text-[11px] font-medium transition-all duration-300 text-zinc-400 hover:text-white" data-tab="users">Config</button>
             </div>
         </div>
@@ -240,6 +255,7 @@
         <section id="view-filter" class="view-section"></section>
         <section id="view-ai" class="view-section"></section>
         <section id="view-reserva" class="view-section"></section>
+        <section id="view-lazer" class="view-section"></section>
         <section id="view-users" class="view-section"></section>
     </div>
 
@@ -287,6 +303,7 @@
         </div>
     </div>
 
+    <!-- MODAL RESERVA -->
     <div id="modal-reserva" class="modal-overlay">
         <div class="bg-zinc-900 border border-white/10 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl m-4 animate-fade-in-up">
             <div class="p-6 border-b border-white/10 flex justify-between items-center"><h3 class="text-xl font-bold text-white">Gerenciar Reserva</h3><button onclick="closeModal('modal-reserva')" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div>
@@ -306,6 +323,26 @@
         </div>
     </div>
 
+    <!-- MODAL LAZER -->
+    <div id="modal-lazer" class="modal-overlay">
+        <div class="bg-zinc-900 border border-white/10 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl m-4 animate-fade-in-up">
+            <div class="p-6 border-b border-white/10 flex justify-between items-center"><h3 class="text-xl font-bold text-white">Gerenciar Lazer</h3><button onclick="closeModal('modal-lazer')" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div>
+            <div class="p-6 space-y-4">
+                <p class="text-zinc-400 text-sm">Saldo atual para lazer: <span class="text-white font-bold" id="lazer-valor-atual">R$ 0,00</span></p>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="adicionarLazer()" class="bg-emerald-500/20 text-emerald-400 p-3 rounded-xl border border-emerald-500/20 hover:bg-emerald-500/30 transition">+ Adicionar</button>
+                    <button onclick="gastarLazer()" class="bg-rose-500/20 text-rose-400 p-3 rounded-xl border border-rose-500/20 hover:bg-rose-500/30 transition">- Gastar</button>
+                </div>
+                <div id="lazer-input-area" class="hidden">
+                    <input type="number" id="lazer-valor-input" placeholder="Valor" class="w-full bg-black border border-white/10 rounded-xl p-3 text-white text-sm focus:border-indigo-500 outline-none mb-2">
+                    <input type="text" id="lazer-desc-input" placeholder="Descrição (ex: Cinema, Viagem...)" class="w-full bg-black border border-white/10 rounded-xl p-3 text-white text-sm focus:border-indigo-500 outline-none mb-2">
+                    <button onclick="confirmarLazer()" id="btn-confirmar-lazer" class="w-full bg-white text-black font-bold p-3 rounded-xl hover:bg-zinc-200 transition">Confirmar</button>
+                </div>
+                <div id="historico-lazer" class="mt-4 max-h-48 overflow-y-auto space-y-1"></div>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API_URL = "https://script.google.com/macros/s/AKfycbxtJdJJ20GhBz6o9JvglNUHj2bqeWcpHYPw9gTC03uLRdktmGQJUU41AVsD7vCfxdmG/exec";
         const MONTHS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -318,7 +355,8 @@
             filterView: { category: 'Todas', month: new Date().getMonth(), year: new Date().getFullYear() },
             aiFilter: { month: new Date().getMonth(), year: new Date().getFullYear() },
             newTransaction: { type: 'single' }, modalMode: 'expense', editingId: null,
-            reserva: { saldo: 0, historico: [] }
+            reserva: { saldo: 0, historico: [] },
+            lazer: { saldo: 0, historico: [] }
         };
 
         function carregarReserva() {
@@ -337,8 +375,25 @@
             } catch(e) {}
         }
 
+        function carregarLazer() {
+            try {
+                const data = localStorage.getItem('luisa_lazer');
+                if (data) {
+                    const parsed = JSON.parse(data);
+                    state.lazer = parsed;
+                }
+            } catch(e) {}
+        }
+
+        function salvarLazer() {
+            try {
+                localStorage.setItem('luisa_lazer', JSON.stringify(state.lazer));
+            } catch(e) {}
+        }
+
         window.addEventListener('load', () => {
             carregarReserva();
+            carregarLazer();
             lucide.createIcons();
             setTimeout(() => {
                 document.getElementById('app-loader').classList.add('fade-out');
@@ -399,7 +454,7 @@
         }
 
         function renderApp() { document.getElementById('current-user-name').innerText = state.currentUser.name; document.getElementById('current-user-role').innerText = state.currentUser.role; document.getElementById('current-user-avatar').innerText = state.currentUser.avatar; renderUserFilter(); renderCurrentView(); }
-        function renderCurrentView() { const tab = state.activeTab; if(tab === 'home') renderHome(); else if(tab === 'dashboard') renderDashboard(); else if(tab === 'bills') renderBills(); else if(tab === 'statement') renderStatement(); else if(tab === 'filter') renderFilterView(); else if(tab === 'ai') renderAI(); else if(tab === 'reserva') renderReserva(); else if(tab === 'users') renderUsers(); lucide.createIcons(); }
+        function renderCurrentView() { const tab = state.activeTab; if(tab === 'home') renderHome(); else if(tab === 'dashboard') renderDashboard(); else if(tab === 'bills') renderBills(); else if(tab === 'statement') renderStatement(); else if(tab === 'filter') renderFilterView(); else if(tab === 'ai') renderAI(); else if(tab === 'reserva') renderReserva(); else if(tab === 'lazer') renderLazer(); else if(tab === 'users') renderUsers(); lucide.createIcons(); }
 
         function getFilteredTransactions() { return state.transactions.filter(t => state.selectedFilterUsers.some(id => String(id) === String(t.userId))); }
         function formatCurrency(val) { return new Intl.NumberFormat('pt-BR', {style: 'currency', currency: 'BRL'}).format(val); }
@@ -805,7 +860,7 @@
 
         // ============================================================
         // ═══════════════════════════════════════════════════════════════
-        // 🚀 FUNÇÕES DE IA - SISTEMA ESPECIALISTA FINANCEIRO (CORRIGIDO)
+        // 🚀 FUNÇÕES DE IA - SISTEMA ESPECIALISTA FINANCEIRO
         // ═══════════════════════════════════════════════════════════════
         // ============================================================
 
@@ -975,9 +1030,6 @@
                 scoreDetails.push('❌ Saldo negativo (+0)');
             }
             
-            // ============================================================
-            // CORREÇÃO: Reserva usa o saldo da reserva (localStorage)
-            // ============================================================
             const reservaIdeal = despesasMes * 6;
             const saldoReserva = state.reserva.saldo || 0;
             if (saldoReserva > 0 && saldoReserva >= reservaIdeal) { score += 20; scoreDetails.push('✅ Reserva completa (+20)'); }
@@ -992,9 +1044,6 @@
             
             score = Math.min(Math.max(Math.round(score), 0), 100);
             
-            // ============================================================
-            // RECOMENDAÇÕES E INSIGHTS (BASEADO EM ADMINISTRADORES FINANCEIROS)
-            // ============================================================
             if (mesSaldo < 0) {
                 recomendacoes.push('💡 Seu mês está negativo. Tente cortar gastos com <strong>' + (topCategoria?.[0] || 'categorias com maior peso') + '</strong>.');
                 recomendacoes.push('📋 Revise assinaturas e serviços que não usa com frequência.');
@@ -1012,9 +1061,6 @@
                 recomendacoes.push('🏠 Seus gastos fixos são altos. Tente reduzir aluguel, energia ou internet.');
             }
             
-            // ============================================================
-            // ANÁLISE DE PERFIL FINANCEIRO
-            // ============================================================
             const pctGastoTotal = totalReceitas > 0 ? Math.round((totalDespesas / totalReceitas) * 100) : 0;
             let perfilFinanceiro = "";
             if (pctGastoTotal < 50) {
@@ -1032,10 +1078,6 @@
                 recomendacoes.push('📈 Que tal começar a investir 20% da sua renda?');
             }
             
-            // ============================================================
-            // CORREÇÃO: Lazer = 10% da RENDA MENSAL (NÃO dividir por 12)
-            // Investimento = 20% da RENDA MENSAL
-            // ============================================================
             const reservaIdealFinal = despesasMes * 6;
             const lazerSugerido = totalReceitas > 0 ? (totalReceitas * 0.1) : 0;
             const investimentoSugerido = totalReceitas > 0 ? (totalReceitas * 0.2) : 0;
@@ -1052,8 +1094,9 @@
             const saldoReservaAtual = state.reserva.saldo || 0;
             const progressoReserva = reservaIdealFinal > 0 ? Math.min((saldoReservaAtual / reservaIdealFinal) * 100, 100) : 0;
             
+            const saldoLazer = state.lazer.saldo || 0;
+            
             return `
-                <!-- SCORE CARD -->
                 <div class="bg-gradient-to-r ${statusColor} border border-white/10 rounded-2xl p-6">
                     <div class="flex flex-col md:flex-row items-center justify-between gap-6">
                         <div class="flex items-center gap-6">
@@ -1073,7 +1116,6 @@
                     </div>
                 </div>
                 
-                <!-- ALERTAS -->
                 ${alertas.length > 0 ? `
                     <div class="bg-rose-500/5 border border-rose-500/20 rounded-2xl p-6">
                         <h4 class="text-rose-400 font-semibold mb-3 flex items-center gap-2">
@@ -1090,7 +1132,6 @@
                     </div>
                 `}
                 
-                <!-- MÉTRICAS - RESERVA, LAZER, INVESTIMENTO -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="bg-zinc-900/40 border border-white/5 rounded-2xl p-5">
                         <p class="text-zinc-500 text-xs uppercase tracking-wider font-medium">💰 Reserva de Emergência</p>
@@ -1110,6 +1151,7 @@
                         <p class="text-zinc-500 text-xs uppercase tracking-wider font-medium">🎯 Lazer Sugerido</p>
                         <p class="text-lg font-bold text-purple-400">${formatCurrency(lazerSugerido)}/mês</p>
                         <p class="text-xs text-zinc-500">10% da sua renda mensal</p>
+                        <p class="text-xs text-zinc-500 mt-1">Saldo atual: ${formatCurrency(saldoLazer)}</p>
                     </div>
                     <div class="bg-zinc-900/40 border border-white/5 rounded-2xl p-5">
                         <p class="text-zinc-500 text-xs uppercase tracking-wider font-medium">📈 Investimento/Reserva</p>
@@ -1118,7 +1160,6 @@
                     </div>
                 </div>
                 
-                <!-- PERFIL FINANCEIRO -->
                 <div class="bg-zinc-900/40 border border-white/5 rounded-2xl p-6">
                     <h4 class="text-zinc-300 font-semibold mb-2 flex items-center gap-2">
                         <i data-lucide="user" class="w-5 h-5 text-indigo-400"></i>
@@ -1144,7 +1185,6 @@
                     </div>
                 </div>
                 
-                <!-- PLANEJAMENTO RECOMENDADO -->
                 <div class="bg-blue-500/5 border border-blue-500/20 rounded-2xl p-6">
                     <h4 class="text-blue-400 font-semibold mb-3 flex items-center gap-2">
                         <i data-lucide="target" class="w-5 h-5"></i>
@@ -1169,7 +1209,6 @@
                     </div>
                 </div>
                 
-                <!-- RECOMENDAÇÕES -->
                 <div class="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-6">
                     <h4 class="text-amber-400 font-semibold mb-3 flex items-center gap-2">
                         <i data-lucide="lightbulb" class="w-5 h-5"></i>
@@ -1178,7 +1217,6 @@
                     ${recomendacoes.map(r => `<p class="text-zinc-300 text-sm py-1">${r}</p>`).join('')}
                 </div>
                 
-                <!-- RESUMO DO MÊS -->
                 <div class="bg-zinc-900/40 border border-white/5 rounded-2xl p-6">
                     <h4 class="text-zinc-300 font-semibold mb-4 flex items-center gap-2">
                         <i data-lucide="bar-chart-2" class="w-5 h-5 text-indigo-400"></i>
@@ -1216,7 +1254,6 @@
                     ` : ''}
                 </div>
                 
-                <!-- SCORE DETALHADO -->
                 <details class="bg-zinc-900/20 border border-white/5 rounded-2xl p-4">
                     <summary class="text-zinc-400 text-sm cursor-pointer hover:text-white transition">📊 Ver detalhes do Score</summary>
                     <div class="mt-3 space-y-1">
@@ -1281,6 +1318,7 @@
 
             const saldo = totalReceitas - totalDespesas;
             const saldoReserva = state.reserva.saldo || 0;
+            const saldoLazer = state.lazer.saldo || 0;
             
             if (p.includes('gasto') || p.includes('despesa') || p.includes('gastando')) {
                 const top = Object.entries(categorias).sort((a,b) => b[1] - a[1])[0];
@@ -1303,10 +1341,11 @@
                   Tente economizar ${formatCurrency((reserva - saldoReserva) / 6)} por mês.`}`;
             }
             
-            if (p.includes('lazer') || p.includes('diversão') || p.includes('viagem')) {
+            if (p.includes('lazer') || p.includes('diversão') || p.includes('viagem') || p.includes('gastei')) {
                 const lazer = totalReceitas > 0 ? (totalReceitas * 0.1) : 0;
                 return `🎯 <strong>Planejamento de Lazer</strong><br><br>
                 Sugestão: <strong>${formatCurrency(lazer)}/mês</strong> (10% da sua renda mensal)<br>
+                Saldo atual: <strong>${formatCurrency(saldoLazer)}</strong><br>
                 Total anual: <strong>${formatCurrency(lazer * 12)}</strong><br><br>
                 💡 Dica: Separe esse valor em uma conta separada para viagens e hobbies.`;
             }
@@ -1351,7 +1390,8 @@
                 Saldo: ${formatCurrency(saldo)}<br>
                 Gastos: ${formatCurrency(totalDespesas)}<br>
                 Renda: ${formatCurrency(totalReceitas)}<br>
-                Reserva: ${formatCurrency(saldoReserva)}`;
+                Reserva: ${formatCurrency(saldoReserva)}<br>
+                Lazer: ${formatCurrency(saldoLazer)}`;
             }
             
             if (p.includes('fixo') || p.includes('variável')) {
@@ -1571,6 +1611,174 @@
             renderReserva();
             renderHistoricoReserva();
             document.getElementById('reserva-valor-atual').innerText = formatCurrency(state.reserva.saldo);
+        }
+
+        // ============================================================
+        // VIEW: LAZER
+        // ============================================================
+        function renderLazer() {
+            const saldoLazer = state.lazer.saldo || 0;
+            const historico = state.lazer.historico || [];
+            
+            // Calcular lazer sugerido
+            let totalReceitas = 0;
+            getFilteredTransactions().forEach(t => {
+                if(t.type === 'single' && t.kind === 'income') {
+                    totalReceitas += t.value;
+                } else if(t.type === 'installment' && t.installments) {
+                    t.installments.forEach(i => {
+                        if(t.kind === 'income') totalReceitas += i.value;
+                    });
+                }
+            });
+            
+            const lazerSugerido = totalReceitas * 0.1;
+            
+            const historicoHtml = historico.slice().reverse().map(item => `
+                <div class="flex justify-between items-center p-2 border-b border-white/5 text-sm">
+                    <div>
+                        <span class="${item.tipo === 'adicao' ? 'text-emerald-400' : 'text-rose-400'} font-medium">
+                            ${item.tipo === 'adicao' ? '+' : '-'}
+                        </span>
+                        <span class="text-zinc-300">${item.descricao || item.tipo}</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="${item.tipo === 'adicao' ? 'text-emerald-400' : 'text-rose-400'} font-mono">
+                            ${item.tipo === 'adicao' ? '+' : '-'} ${formatCurrency(item.valor)}
+                        </span>
+                        <p class="text-[10px] text-zinc-500">${item.data || ''}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('view-lazer').innerHTML = `
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                    <div>
+                        <h2 class="text-3xl font-bold text-white">🎯 Lazer</h2>
+                        <p class="text-zinc-500 text-sm">Gerencie seu saldo para lazer</p>
+                    </div>
+                    <button onclick="abrirModalLazer()" class="bg-purple-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-purple-500 transition flex items-center gap-2">
+                        <i data-lucide="edit-2" class="w-4 h-4"></i> Gerenciar
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-zinc-900/40 border border-white/5 rounded-2xl p-6">
+                        <p class="text-zinc-500 text-sm">Saldo para Lazer</p>
+                        <h3 class="text-3xl font-bold text-white">${formatCurrency(saldoLazer)}</h3>
+                    </div>
+                    <div class="bg-zinc-900/40 border border-white/5 rounded-2xl p-6">
+                        <p class="text-zinc-500 text-sm">Sugestão Mensal</p>
+                        <h3 class="text-3xl font-bold text-purple-400">${formatCurrency(lazerSugerido)}</h3>
+                        <p class="text-xs text-zinc-500 mt-1">10% da sua renda mensal</p>
+                    </div>
+                    <div class="bg-zinc-900/40 border border-white/5 rounded-2xl p-6">
+                        <p class="text-zinc-500 text-sm">Status</p>
+                        <h3 class="text-3xl font-bold ${saldoLazer >= lazerSugerido ? 'text-emerald-400' : 'text-amber-400'}">
+                            ${saldoLazer >= lazerSugerido ? '✅ OK' : '⚠️ Abaixo da meta'}
+                        </h3>
+                        <p class="text-xs text-zinc-500 mt-1">${saldoLazer >= lazerSugerido ? 'Saldo suficiente para lazer' : `Faltam ${formatCurrency(lazerSugerido - saldoLazer)}`}</p>
+                    </div>
+                </div>
+
+                <div class="bg-zinc-900/40 border border-white/5 rounded-2xl p-6">
+                    <h4 class="text-zinc-300 font-semibold mb-4 flex items-center gap-2">
+                        <i data-lucide="clock" class="w-5 h-5 text-purple-400"></i>
+                        Histórico de Lazer
+                    </h4>
+                    ${historicoHtml || '<p class="text-zinc-500 text-sm">Nenhum movimento registrado.</p>'}
+                </div>
+
+                <div class="mt-6 bg-purple-500/5 border border-purple-500/20 rounded-2xl p-6">
+                    <h4 class="text-purple-400 font-semibold mb-2 flex items-center gap-2">
+                        <i data-lucide="lightbulb" class="w-5 h-5"></i>
+                        Dica da IA
+                    </h4>
+                    <p class="text-zinc-300 text-sm">
+                        ${saldoLazer >= lazerSugerido ?
+                            '🎉 Excelente! Você tem saldo suficiente para lazer. Aproveite com responsabilidade!' :
+                            `💪 Continue separando ${formatCurrency(lazerSugerido - saldoLazer)} para atingir sua meta de lazer.`
+                        }
+                    </p>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        function abrirModalLazer() {
+            document.getElementById('lazer-valor-atual').innerText = formatCurrency(state.lazer.saldo || 0);
+            document.getElementById('modal-lazer').classList.add('open');
+            document.getElementById('lazer-input-area').classList.add('hidden');
+            renderHistoricoLazer();
+        }
+
+        function renderHistoricoLazer() {
+            const container = document.getElementById('historico-lazer');
+            const historico = state.lazer.historico || [];
+            container.innerHTML = historico.slice().reverse().map(item => `
+                <div class="flex justify-between items-center p-2 border-b border-white/5 text-sm">
+                    <div>
+                        <span class="${item.tipo === 'adicao' ? 'text-emerald-400' : 'text-rose-400'} font-medium">
+                            ${item.tipo === 'adicao' ? '+' : '-'}
+                        </span>
+                        <span class="text-zinc-300">${item.descricao || item.tipo}</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="${item.tipo === 'adicao' ? 'text-emerald-400' : 'text-rose-400'} font-mono">
+                            ${item.tipo === 'adicao' ? '+' : '-'} ${formatCurrency(item.valor)}
+                        </span>
+                    </div>
+                </div>
+            `).join('') || '<p class="text-zinc-500 text-sm">Nenhum movimento.</p>';
+        }
+
+        function adicionarLazer() {
+            const area = document.getElementById('lazer-input-area');
+            area.classList.remove('hidden');
+            document.getElementById('btn-confirmar-lazer').dataset.tipo = 'adicao';
+            document.getElementById('lazer-valor-input').value = '';
+            document.getElementById('lazer-desc-input').value = '';
+            document.getElementById('lazer-valor-input').focus();
+        }
+
+        function gastarLazer() {
+            const area = document.getElementById('lazer-input-area');
+            area.classList.remove('hidden');
+            document.getElementById('btn-confirmar-lazer').dataset.tipo = 'gasto';
+            document.getElementById('lazer-valor-input').value = '';
+            document.getElementById('lazer-desc-input').value = '';
+            document.getElementById('lazer-valor-input').focus();
+        }
+
+        function confirmarLazer() {
+            const valor = parseFloat(document.getElementById('lazer-valor-input').value);
+            const descricao = document.getElementById('lazer-desc-input').value || 'Movimento';
+            const tipo = document.getElementById('btn-confirmar-lazer').dataset.tipo;
+            
+            if (!valor || valor <= 0) return alert('Digite um valor válido!');
+            if (tipo === 'gasto' && valor > state.lazer.saldo) return alert('Saldo insuficiente para lazer!');
+            
+            const movimento = {
+                tipo: tipo,
+                valor: valor,
+                descricao: descricao,
+                data: new Date().toLocaleDateString('pt-BR')
+            };
+            
+            if (tipo === 'adicao') {
+                state.lazer.saldo += valor;
+            } else {
+                state.lazer.saldo -= valor;
+            }
+            
+            if (!state.lazer.historico) state.lazer.historico = [];
+            state.lazer.historico.push(movimento);
+            
+            salvarLazer();
+            document.getElementById('lazer-input-area').classList.add('hidden');
+            renderLazer();
+            renderHistoricoLazer();
+            document.getElementById('lazer-valor-atual').innerText = formatCurrency(state.lazer.saldo);
         }
 
         // ============================================================
