@@ -79,7 +79,6 @@
             .modal-overlay { padding: 0.5rem; }
         }
 
-        /* Estilos IA */
         .chat-message {
             padding: 0.75rem 1rem;
             border-radius: 1rem;
@@ -288,7 +287,6 @@
         </div>
     </div>
 
-    <!-- MODAL RESERVA -->
     <div id="modal-reserva" class="modal-overlay">
         <div class="bg-zinc-900 border border-white/10 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl m-4 animate-fade-in-up">
             <div class="p-6 border-b border-white/10 flex justify-between items-center"><h3 class="text-xl font-bold text-white">Gerenciar Reserva</h3><button onclick="closeModal('modal-reserva')" class="text-zinc-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button></div>
@@ -309,7 +307,7 @@
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbx3_Mvtn3GZAt6d63Su9czCnOiW4uRBMznkwwqG-YzVEfkx9AtgCpd7MGKLE8qbHzuT-w/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbxtJdJJ20GhBz6o9JvglNUHj2bqeWcpHYPw9gTC03uLRdktmGQJUU41AVsD7vCfxdmG/exec";
         const MONTHS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
         const YEARS = [2023, 2024, 2025, 2026, 2027];
 
@@ -323,7 +321,6 @@
             reserva: { saldo: 0, historico: [] }
         };
 
-        // Carregar reserva do localStorage
         function carregarReserva() {
             try {
                 const data = localStorage.getItem('luisa_reserva');
@@ -441,7 +438,6 @@
                 if(t.type === 'single') {
                     const {y, m} = safeGetYearMonth(t.date); 
                     if(m === month && y === year) { t.kind === 'income' ? rev += t.value : exp += t.value; }
-                    // ACUMULADO: soma todas as transações até o mês selecionado
                     if(y < year || (y === year && m <= month)) { t.kind === 'income' ? totalAccumulated += t.value : totalAccumulated -= t.value; }
                 } else if(t.type === 'installment' && t.installments) {
                     t.installments.forEach(i => {
@@ -538,185 +534,6 @@
             }, []);
             const rows = items.map(t => `<div onclick="openDetails('${t.id}')" class="flex justify-between items-center p-5 border-b border-white/5 hover:bg-white/5 transition-colors cursor-pointer"><div><p class="text-white font-medium text-base">${t.name} <span class="text-zinc-500 text-sm ml-2 font-normal">${t.store}</span></p><p class="text-xs text-zinc-500 mt-0.5">${t.category}</p></div><p class="text-rose-400 font-mono text-base font-medium">${formatCurrency(t.val)}</p></div>`).join('');
             document.getElementById('view-filter').innerHTML = `<div class="flex flex-col md:flex-row justify-between mb-10 gap-6"><div><h2 class="text-3xl font-bold text-white tracking-tight">Filtro Avançado</h2><p class="text-zinc-500 mt-2">Detalhamento de gastos por categoria.</p></div><div class="flex gap-3 flex-wrap md:flex-nowrap"><select onchange="updateFilterView('category', this.value)" class="bg-zinc-900 border border-white/10 text-white p-3 rounded-xl text-sm w-full md:w-auto outline-none">${catOptions}</select><select onchange="updateFilterView('month', this.value)" class="bg-zinc-900 border border-white/10 text-white p-3 rounded-xl text-sm w-full md:w-auto outline-none">${MONTHS.map((m,i)=>`<option value="${i}" ${i===month?'selected':''}>${m}</option>`).join('')}</select><select onchange="updateFilterView('year', this.value)" class="bg-zinc-900 border border-white/10 text-white p-3 rounded-xl text-sm w-full md:w-auto outline-none">${YEARS.map(y=>`<option value="${y}" ${y===year?'selected':''}>${y}</option>`).join('')}</select></div></div><div class="bg-zinc-900/50 p-8 rounded-[2rem] border border-white/5 mb-8 flex justify-between items-center shadow-lg"><div><p class="text-zinc-400 text-sm font-medium">Total em <span class="text-white">${category}</span></p><p class="text-xs text-zinc-500 mt-1">${MONTHS[month]} ${year}</p></div><h2 class="text-4xl md:text-5xl font-bold text-rose-400 tracking-tighter">${formatCurrency(total)}</h2></div><div class="bg-zinc-900/40 rounded-[2rem] border border-white/5 overflow-hidden backdrop-blur-md">${rows || '<p class="p-8 text-center text-zinc-500">Nenhum gasto encontrado.</p>'}</div>`;
-        }
-
-        // ============================================================
-        // FUNÇÕES DA ABA RESERVA
-        // ============================================================
-        function renderReserva() {
-            const saldoReserva = state.reserva.saldo || 0;
-            const historico = state.reserva.historico || [];
-            
-            // Calcular despesas mensais para sugerir reserva ideal
-            let despesasMensais = 0;
-            const hoje = new Date();
-            const mesAtual = hoje.getMonth();
-            const anoAtual = hoje.getFullYear();
-            
-            getFilteredTransactions().forEach(t => {
-                if(t.type === 'single' && t.kind === 'expense') {
-                    const {y, m} = safeGetYearMonth(t.date);
-                    if(m === mesAtual && y === anoAtual) {
-                        despesasMensais += t.value;
-                    }
-                } else if(t.type === 'installment' && t.installments) {
-                    t.installments.forEach(i => {
-                        const {y, m} = safeGetYearMonth(i.date);
-                        if(m === mesAtual && y === anoAtual && t.kind === 'expense') {
-                            despesasMensais += i.value;
-                        }
-                    });
-                }
-            });
-            
-            const reservaIdeal = despesasMensais * 6;
-            const progresso = reservaIdeal > 0 ? Math.min((saldoReserva / reservaIdeal) * 100, 100) : 0;
-            
-            const historicoHtml = historico.slice().reverse().map(item => `
-                <div class="flex justify-between items-center p-2 border-b border-white/5 text-sm">
-                    <div>
-                        <span class="${item.tipo === 'adicao' ? 'text-emerald-400' : 'text-rose-400'} font-medium">
-                            ${item.tipo === 'adicao' ? '+' : '-'}
-                        </span>
-                        <span class="text-zinc-300">${item.descricao || item.tipo}</span>
-                    </div>
-                    <div class="text-right">
-                        <span class="${item.tipo === 'adicao' ? 'text-emerald-400' : 'text-rose-400'} font-mono">
-                            ${item.tipo === 'adicao' ? '+' : '-'} ${formatCurrency(item.valor)}
-                        </span>
-                        <p class="text-[10px] text-zinc-500">${item.data || ''}</p>
-                    </div>
-                </div>
-            `).join('');
-
-            document.getElementById('view-reserva').innerHTML = `
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                    <div>
-                        <h2 class="text-3xl font-bold text-white">💰 Reserva de Emergência</h2>
-                        <p class="text-zinc-500 text-sm">Gerencie sua reserva financeira</p>
-                    </div>
-                    <button onclick="abrirModalReserva()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-500 transition flex items-center gap-2">
-                        <i data-lucide="edit-2" class="w-4 h-4"></i> Gerenciar
-                    </button>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div class="bg-zinc-900/40 border border-white/5 rounded-2xl p-6">
-                        <p class="text-zinc-500 text-sm">Saldo da Reserva</p>
-                        <h3 class="text-3xl font-bold text-white">${formatCurrency(saldoReserva)}</h3>
-                    </div>
-                    <div class="bg-zinc-900/40 border border-white/5 rounded-2xl p-6">
-                        <p class="text-zinc-500 text-sm">Meta Recomendada</p>
-                        <h3 class="text-3xl font-bold text-emerald-400">${formatCurrency(reservaIdeal)}</h3>
-                        <p class="text-xs text-zinc-500 mt-1">6 meses de gastos</p>
-                    </div>
-                    <div class="bg-zinc-900/40 border border-white/5 rounded-2xl p-6">
-                        <p class="text-zinc-500 text-sm">Progresso</p>
-                        <h3 class="text-3xl font-bold ${progresso >= 100 ? 'text-emerald-400' : 'text-white'}">${Math.round(progresso)}%</h3>
-                        <div class="reserva-progress mt-2">
-                            <div class="reserva-progress-bar" style="width: ${progresso}%"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-zinc-900/40 border border-white/5 rounded-2xl p-6">
-                    <h4 class="text-zinc-300 font-semibold mb-4 flex items-center gap-2">
-                        <i data-lucide="clock" class="w-5 h-5 text-indigo-400"></i>
-                        Histórico da Reserva
-                    </h4>
-                    ${historicoHtml || '<p class="text-zinc-500 text-sm">Nenhum movimento registrado.</p>'}
-                </div>
-
-                <div class="mt-6 bg-blue-500/5 border border-blue-500/20 rounded-2xl p-6">
-                    <h4 class="text-blue-400 font-semibold mb-2 flex items-center gap-2">
-                        <i data-lucide="lightbulb" class="w-5 h-5"></i>
-                        Dica da IA
-                    </h4>
-                    <p class="text-zinc-300 text-sm">
-                        ${saldoReserva >= reservaIdeal ? 
-                            '✅ Parabéns! Você já atingiu sua reserva de emergência. Considere investir o excedente.' :
-                            `💪 Continue guardando! Faltam ${formatCurrency(reservaIdeal - saldoReserva)} para atingir sua meta de 6 meses.`
-                        }
-                    </p>
-                </div>
-            `;
-            lucide.createIcons();
-        }
-
-        function abrirModalReserva() {
-            document.getElementById('reserva-valor-atual').innerText = formatCurrency(state.reserva.saldo || 0);
-            document.getElementById('modal-reserva').classList.add('open');
-            document.getElementById('reserva-input-area').classList.add('hidden');
-            renderHistoricoReserva();
-        }
-
-        function renderHistoricoReserva() {
-            const container = document.getElementById('historico-reserva');
-            const historico = state.reserva.historico || [];
-            container.innerHTML = historico.slice().reverse().map(item => `
-                <div class="flex justify-between items-center p-2 border-b border-white/5 text-sm">
-                    <div>
-                        <span class="${item.tipo === 'adicao' ? 'text-emerald-400' : 'text-rose-400'} font-medium">
-                            ${item.tipo === 'adicao' ? '+' : '-'}
-                        </span>
-                        <span class="text-zinc-300">${item.descricao || item.tipo}</span>
-                    </div>
-                    <div class="text-right">
-                        <span class="${item.tipo === 'adicao' ? 'text-emerald-400' : 'text-rose-400'} font-mono">
-                            ${item.tipo === 'adicao' ? '+' : '-'} ${formatCurrency(item.valor)}
-                        </span>
-                    </div>
-                </div>
-            `).join('') || '<p class="text-zinc-500 text-sm">Nenhum movimento.</p>';
-        }
-
-        function adicionarReserva() {
-            const area = document.getElementById('reserva-input-area');
-            area.classList.remove('hidden');
-            document.getElementById('btn-confirmar-reserva').dataset.tipo = 'adicao';
-            document.getElementById('reserva-valor-input').value = '';
-            document.getElementById('reserva-desc-input').value = '';
-            document.getElementById('reserva-valor-input').focus();
-        }
-
-        function gastarReserva() {
-            const area = document.getElementById('reserva-input-area');
-            area.classList.remove('hidden');
-            document.getElementById('btn-confirmar-reserva').dataset.tipo = 'gasto';
-            document.getElementById('reserva-valor-input').value = '';
-            document.getElementById('reserva-desc-input').value = '';
-            document.getElementById('reserva-valor-input').focus();
-        }
-
-        function confirmarReserva() {
-            const valor = parseFloat(document.getElementById('reserva-valor-input').value);
-            const descricao = document.getElementById('reserva-desc-input').value || 'Movimento';
-            const tipo = document.getElementById('btn-confirmar-reserva').dataset.tipo;
-            
-            if (!valor || valor <= 0) return alert('Digite um valor válido!');
-            if (tipo === 'gasto' && valor > state.reserva.saldo) return alert('Saldo insuficiente na reserva!');
-            
-            const movimento = {
-                tipo: tipo,
-                valor: valor,
-                descricao: descricao,
-                data: new Date().toLocaleDateString('pt-BR')
-            };
-            
-            if (tipo === 'adicao') {
-                state.reserva.saldo += valor;
-            } else {
-                state.reserva.saldo -= valor;
-            }
-            
-            if (!state.reserva.historico) state.reserva.historico = [];
-            state.reserva.historico.push(movimento);
-            
-            salvarReserva();
-            document.getElementById('reserva-input-area').classList.add('hidden');
-            renderReserva();
-            renderHistoricoReserva();
-            document.getElementById('reserva-valor-atual').innerText = formatCurrency(state.reserva.saldo);
         }
 
         function renderUsers() {
@@ -1026,8 +843,7 @@
                     <div class="flex gap-2">
                         <input type="text" id="chat-input" placeholder="Digite sua pergunta..." class="flex-1 bg-black border border-white/10 rounded-xl p-3 text-white text-sm focus:border-indigo-500 outline-none">
                         <button onclick="enviarPerguntaIA()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl hover:bg-indigo-500 transition flex items-center gap-2">
-                            <i data-lucide="send" class="w-4 h-4"></i>
-                            Enviar
+                            <i data-lucide="send" class="w-4 h-4"></i> Enviar
                         </button>
                     </div>
                 </div>
@@ -1059,11 +875,9 @@
             let totalGastosFixos = 0;
             let totalGastosVariaveis = 0;
             
-            // Processar transações
             transacoes.forEach(t => {
                 const processarValor = (valor, data, kind, category, name, store, status) => {
                     const {y, m} = safeGetYearMonth(data);
-                    // Para o mês selecionado no filtro
                     if (m === month && y === year) {
                         kind === 'income' ? receitasMes += valor : despesasMes += valor;
                     }
@@ -1078,13 +892,12 @@
                         }
                     }
                     
-                    // Verificar vencimentos (1 dia antes) - apenas se for o mês atual
                     if (m === hoje.getMonth() && y === hoje.getFullYear()) {
                         const diffDias = calcularDiferencaDias(data, hoje);
                         if (kind === 'expense' && diffDias >= 0 && diffDias <= 1 && status !== 'Pago') {
-                            contasVencendo.push({ 
-                                nome: name, 
-                                valor: valor, 
+                            contasVencendo.push({
+                                nome: name,
+                                valor: valor,
                                 data: data,
                                 store: store || ''
                             });
@@ -1101,7 +914,6 @@
                 }
             });
 
-            // Saldo TOTAL (acumulado de todas as transações)
             let saldoTotal = 0;
             transacoes.forEach(t => {
                 if (t.type === 'single') {
@@ -1116,14 +928,10 @@
             const saldo = saldoTotal;
             const mesSaldo = receitasMes - despesasMes;
             
-            // ============================================================
-            // ANÁLISES E SCORE
-            // ============================================================
             let alertas = [];
             let recomendacoes = [];
             let score = 0;
             
-            // 1. Alertas de vencimento
             if (contasVencendo.length > 0) {
                 alertas.push(`⚠️ <strong>${contasVencendo.length}</strong> conta(s) vence(m) amanhã!`);
                 contasVencendo.slice(0, 3).forEach(c => {
@@ -1134,31 +942,24 @@
                 }
             }
             
-            // 2. Gasto médio diário
             const diasNoMes = new Date(year, month + 1, 0).getDate();
             const gastoMedioDiario = despesasMes / diasNoMes || 0;
             if (gastoMedioDiario > 100) {
                 alertas.push(`📊 Seu gasto médio diário é de <strong>${formatCurrency(gastoMedioDiario)}</strong>.`);
             }
             
-            // 3. Categoria com maior gasto
             const topCategoria = Object.entries(categoriasGastos).sort((a,b) => b[1] - a[1])[0];
             if (topCategoria && topCategoria[1] > despesasMes * 0.3) {
                 const pct = Math.round((topCategoria[1]/despesasMes)*100);
                 alertas.push(`🔴 <strong>${topCategoria[0]}</strong> representa ${pct}% dos seus gastos!`);
             }
             
-            // 4. Alerta de gastos excessivos
             if (totalReceitas > 0 && totalDespesas > totalReceitas * 0.8) {
                 alertas.push(`🚨 Você está gastando ${Math.round((totalDespesas/totalReceitas)*100)}% da sua renda total!`);
             }
             
-            // ============================================================
-            // CÁLCULO DO SCORE FINANCEIRO
-            // ============================================================
             let scoreDetails = [];
             
-            // Critério 1: Proporção gasto/renda (40% do score)
             if (totalReceitas > 0) {
                 const pctGasto = (totalDespesas / totalReceitas) * 100;
                 if (pctGasto < 50) { score += 35; scoreDetails.push('✅ Gasta menos de 50% da renda (+35)'); }
@@ -1167,7 +968,6 @@
                 else { score += 5; scoreDetails.push('❌ Gasta mais de 90% da renda (+5)'); }
             }
             
-            // Critério 2: Saldo positivo (30% do score)
             if (saldo > 0) {
                 if (saldo > totalReceitas * 0.3) { score += 25; scoreDetails.push('✅ Saldo > 30% da renda (+25)'); }
                 else if (saldo > 0) { score += 15; scoreDetails.push('✅ Saldo positivo (+15)'); }
@@ -1175,14 +975,13 @@
                 scoreDetails.push('❌ Saldo negativo (+0)');
             }
             
-            // Critério 3: Reserva de emergência (20% do score)
+            // CORREÇÃO: Reserva usa o saldo da reserva (localStorage)
             const reservaIdeal = despesasMes * 6;
             const saldoReserva = state.reserva.saldo || 0;
             if (saldoReserva > 0 && saldoReserva >= reservaIdeal) { score += 20; scoreDetails.push('✅ Reserva completa (+20)'); }
             else if (saldoReserva > 0 && saldoReserva >= reservaIdeal * 0.5) { score += 10; scoreDetails.push('⚠️ Reserva parcial (+10)'); }
             else { scoreDetails.push('⚠️ Sem reserva adequada (+0)'); }
             
-            // Critério 4: Gastos fixos vs variáveis (10% do score)
             const totalGastos = totalDespesas || 1;
             const pctFixo = (totalGastosFixos / totalGastos) * 100;
             if (pctFixo < 40) { score += 10; scoreDetails.push('✅ Poucos gastos fixos (+10)'); }
@@ -1191,9 +990,6 @@
             
             score = Math.min(Math.max(Math.round(score), 0), 100);
             
-            // ============================================================
-            // RECOMENDAÇÕES PERSONALIZADAS
-            // ============================================================
             if (mesSaldo < 0) {
                 recomendacoes.push('💡 Seu mês está negativo. Tente cortar gastos com <strong>' + (topCategoria?.[0] || 'categorias com maior peso') + '</strong>.');
                 recomendacoes.push('📋 Revise assinaturas e serviços que não usa com frequência.');
@@ -1217,29 +1013,24 @@
             }
             
             // ============================================================
-            // PROJEÇÕES E PLANEJAMENTO (CORRIGIDO)
+            // CORREÇÃO: Lazer = 10% da RENDA MENSAL (NÃO dividir por 12)
             // ============================================================
-            const reservaIdeal = despesasMes * 6;
-            // LAZER: 10% da renda MENSAL (corrigido)
-            const lazerSugerido = totalReceitas > 0 ? (totalReceitas * 0.1) / 12 : 0;
+            const reservaIdealFinal = despesasMes * 6;
+            const lazerSugerido = totalReceitas > 0 ? (totalReceitas * 0.1) : 0;  // ✅ CORRETO
             const gastoAnual = totalDespesas * 12;
             const financProjetado = gastoAnual * 1.1;
             
-            // ============================================================
-            // HTML DA ANÁLISE
-            // ============================================================
-            const statusColor = score >= 70 ? 'from-emerald-900/30 to-emerald-800/30' : 
-                                score >= 40 ? 'from-amber-900/30 to-amber-800/30' : 
+            const statusColor = score >= 70 ? 'from-emerald-900/30 to-emerald-800/30' :
+                                score >= 40 ? 'from-amber-900/30 to-amber-800/30' :
                                 'from-rose-900/30 to-rose-800/30';
-            const statusIcon = score >= 70 ? '✅ Excelente!' : 
-                               score >= 40 ? '⚠️ Atenção!' : 
+            const statusIcon = score >= 70 ? '✅ Excelente!' :
+                               score >= 40 ? '⚠️ Atenção!' :
                                '🔴 Crítico!';
             
-            const saldoReserva = state.reserva.saldo || 0;
-            const progressoReserva = reservaIdeal > 0 ? Math.min((saldoReserva / reservaIdeal) * 100, 100) : 0;
+            const saldoReservaAtual = state.reserva.saldo || 0;
+            const progressoReserva = reservaIdealFinal > 0 ? Math.min((saldoReservaAtual / reservaIdealFinal) * 100, 100) : 0;
             
             return `
-                <!-- SCORE CARD -->
                 <div class="bg-gradient-to-r ${statusColor} border border-white/10 rounded-2xl p-6">
                     <div class="flex flex-col md:flex-row items-center justify-between gap-6">
                         <div class="flex items-center gap-6">
@@ -1259,7 +1050,6 @@
                     </div>
                 </div>
                 
-                <!-- ALERTAS -->
                 ${alertas.length > 0 ? `
                     <div class="bg-rose-500/5 border border-rose-500/20 rounded-2xl p-6">
                         <h4 class="text-rose-400 font-semibold mb-3 flex items-center gap-2">
@@ -1276,15 +1066,14 @@
                     </div>
                 `}
                 
-                <!-- MÉTRICAS -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="bg-zinc-900/40 border border-white/5 rounded-2xl p-5">
                         <p class="text-zinc-500 text-xs uppercase tracking-wider font-medium">💰 Reserva de Emergência</p>
-                        <p class="text-lg font-bold text-emerald-400">${formatCurrency(reservaIdeal)}</p>
+                        <p class="text-lg font-bold text-emerald-400">${formatCurrency(reservaIdealFinal)}</p>
                         <p class="text-xs text-zinc-500">Equivalente a 6 meses de gastos</p>
                         <div class="mt-2">
                             <div class="flex justify-between text-xs text-zinc-500">
-                                <span>Salvo: ${formatCurrency(saldoReserva)}</span>
+                                <span>Salvo: ${formatCurrency(saldoReservaAtual)}</span>
                                 <span>${Math.round(progressoReserva)}%</span>
                             </div>
                             <div class="reserva-progress mt-1">
@@ -1304,7 +1093,6 @@
                     </div>
                 </div>
                 
-                <!-- RECOMENDAÇÕES -->
                 <div class="bg-blue-500/5 border border-blue-500/20 rounded-2xl p-6">
                     <h4 class="text-blue-400 font-semibold mb-3 flex items-center gap-2">
                         <i data-lucide="lightbulb" class="w-5 h-5"></i> Recomendações da IA
@@ -1312,7 +1100,6 @@
                     ${recomendacoes.map(r => `<p class="text-zinc-300 text-sm py-1">${r}</p>`).join('')}
                 </div>
                 
-                <!-- RESUMO DO MÊS -->
                 <div class="bg-zinc-900/40 border border-white/5 rounded-2xl p-6">
                     <h4 class="text-zinc-300 font-semibold mb-4 flex items-center gap-2">
                         <i data-lucide="bar-chart-2" class="w-5 h-5 text-indigo-400"></i>
@@ -1350,7 +1137,6 @@
                     ` : ''}
                 </div>
                 
-                <!-- SCORE DETALHADO -->
                 <details class="bg-zinc-900/20 border border-white/5 rounded-2xl p-4">
                     <summary class="text-zinc-400 text-sm cursor-pointer hover:text-white transition">📊 Ver detalhes do Score</summary>
                     <div class="mt-3 space-y-1">
@@ -1360,9 +1146,6 @@
             `;
         }
 
-        // ============================================================
-        // CHAT DA IA
-        // ============================================================
         function enviarPerguntaIA() {
             const input = document.getElementById('chat-input');
             const pergunta = input.value.trim();
@@ -1417,7 +1200,6 @@
             });
 
             const saldo = totalReceitas - totalDespesas;
-            const mesSaldo = receitasMes - despesasMes;
             const saldoReserva = state.reserva.saldo || 0;
             
             if (p.includes('gasto') || p.includes('despesa') || p.includes('gastando')) {
@@ -1436,13 +1218,14 @@
                 return `💰 <strong>Reserva de Emergência</strong><br><br>
                 Ideal: <strong>${formatCurrency(reserva)}</strong> (6 meses de gastos)<br>
                 Atual: <strong>${formatCurrency(saldoReserva)}</strong><br><br>
-                ${saldoReserva >= reserva ? '✅ <strong>Parabéns!</strong> Você já atingiu sua reserva de emergência!' : 
+                ${saldoReserva >= reserva ? '✅ <strong>Parabéns!</strong> Você já atingiu sua reserva de emergência!' :
                   `⚠️ <strong>Faltam ${formatCurrency(reserva - saldoReserva)}</strong> para atingir a meta.<br>
                   Tente economizar ${formatCurrency((reserva - saldoReserva) / 6)} por mês.`}`;
             }
             
             if (p.includes('lazer') || p.includes('diversão') || p.includes('viagem')) {
-                const lazer = totalReceitas > 0 ? (totalReceitas * 0.1) / 12 : 0;
+                // CORREÇÃO: 10% da renda MENSAL (não dividir por 12)
+                const lazer = totalReceitas > 0 ? (totalReceitas * 0.1) : 0;
                 return `🎯 <strong>Planejamento de Lazer</strong><br><br>
                 Sugestão: <strong>${formatCurrency(lazer)}/mês</strong> (10% da sua renda mensal)<br>
                 Total anual: <strong>${formatCurrency(lazer * 12)}</strong><br><br>
@@ -1483,8 +1266,8 @@
                 }
                 return `🏥 <strong>Saúde Financeira</strong><br><br>
                 Score: <strong>${score}%</strong><br>
-                ${score >= 70 ? '✅ Excelente! Suas finanças estão saudáveis.' : 
-                  score >= 50 ? '⚠️ Atenção! Alguns pontos precisam de ajuste.' : 
+                ${score >= 70 ? '✅ Excelente! Suas finanças estão saudáveis.' :
+                  score >= 50 ? '⚠️ Atenção! Alguns pontos precisam de ajuste.' :
                   '🔴 Crítico! É hora de rever urgentemente seus gastos.'}<br><br>
                 Saldo: ${formatCurrency(saldo)}<br>
                 Gastos: ${formatCurrency(totalDespesas)}<br>
@@ -1532,10 +1315,195 @@
             const diff = Math.ceil((data - hoje) / (1000 * 60 * 60 * 24));
             return diff;
         }
-    </script>
-    
-    <script>
-        if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js').then(reg => console.log('Service Worker registrado!', reg)).catch(err => console.error('Erro no Service Worker', err)); }); }
+
+        // ============================================================
+        // VIEW: RESERVA
+        // ============================================================
+        function renderReserva() {
+            const saldoReserva = state.reserva.saldo || 0;
+            const historico = state.reserva.historico || [];
+            
+            let despesasMensais = 0;
+            const hoje = new Date();
+            const mesAtual = hoje.getMonth();
+            const anoAtual = hoje.getFullYear();
+            
+            getFilteredTransactions().forEach(t => {
+                if(t.type === 'single' && t.kind === 'expense') {
+                    const {y, m} = safeGetYearMonth(t.date);
+                    if(m === mesAtual && y === anoAtual) {
+                        despesasMensais += t.value;
+                    }
+                } else if(t.type === 'installment' && t.installments) {
+                    t.installments.forEach(i => {
+                        const {y, m} = safeGetYearMonth(i.date);
+                        if(m === mesAtual && y === anoAtual && t.kind === 'expense') {
+                            despesasMensais += i.value;
+                        }
+                    });
+                }
+            });
+            
+            const reservaIdeal = despesasMensais * 6;
+            const progresso = reservaIdeal > 0 ? Math.min((saldoReserva / reservaIdeal) * 100, 100) : 0;
+            
+            const historicoHtml = historico.slice().reverse().map(item => `
+                <div class="flex justify-between items-center p-2 border-b border-white/5 text-sm">
+                    <div>
+                        <span class="${item.tipo === 'adicao' ? 'text-emerald-400' : 'text-rose-400'} font-medium">
+                            ${item.tipo === 'adicao' ? '+' : '-'}
+                        </span>
+                        <span class="text-zinc-300">${item.descricao || item.tipo}</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="${item.tipo === 'adicao' ? 'text-emerald-400' : 'text-rose-400'} font-mono">
+                            ${item.tipo === 'adicao' ? '+' : '-'} ${formatCurrency(item.valor)}
+                        </span>
+                        <p class="text-[10px] text-zinc-500">${item.data || ''}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('view-reserva').innerHTML = `
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                    <div>
+                        <h2 class="text-3xl font-bold text-white">💰 Reserva de Emergência</h2>
+                        <p class="text-zinc-500 text-sm">Gerencie sua reserva financeira</p>
+                    </div>
+                    <button onclick="abrirModalReserva()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-500 transition flex items-center gap-2">
+                        <i data-lucide="edit-2" class="w-4 h-4"></i> Gerenciar
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="bg-zinc-900/40 border border-white/5 rounded-2xl p-6">
+                        <p class="text-zinc-500 text-sm">Saldo da Reserva</p>
+                        <h3 class="text-3xl font-bold text-white">${formatCurrency(saldoReserva)}</h3>
+                    </div>
+                    <div class="bg-zinc-900/40 border border-white/5 rounded-2xl p-6">
+                        <p class="text-zinc-500 text-sm">Meta Recomendada</p>
+                        <h3 class="text-3xl font-bold text-emerald-400">${formatCurrency(reservaIdeal)}</h3>
+                        <p class="text-xs text-zinc-500 mt-1">6 meses de gastos</p>
+                    </div>
+                    <div class="bg-zinc-900/40 border border-white/5 rounded-2xl p-6">
+                        <p class="text-zinc-500 text-sm">Progresso</p>
+                        <h3 class="text-3xl font-bold ${progresso >= 100 ? 'text-emerald-400' : 'text-white'}">${Math.round(progresso)}%</h3>
+                        <div class="reserva-progress mt-2">
+                            <div class="reserva-progress-bar" style="width: ${progresso}%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-zinc-900/40 border border-white/5 rounded-2xl p-6">
+                    <h4 class="text-zinc-300 font-semibold mb-4 flex items-center gap-2">
+                        <i data-lucide="clock" class="w-5 h-5 text-indigo-400"></i>
+                        Histórico da Reserva
+                    </h4>
+                    ${historicoHtml || '<p class="text-zinc-500 text-sm">Nenhum movimento registrado.</p>'}
+                </div>
+
+                <div class="mt-6 bg-blue-500/5 border border-blue-500/20 rounded-2xl p-6">
+                    <h4 class="text-blue-400 font-semibold mb-2 flex items-center gap-2">
+                        <i data-lucide="lightbulb" class="w-5 h-5"></i>
+                        Dica da IA
+                    </h4>
+                    <p class="text-zinc-300 text-sm">
+                        ${saldoReserva >= reservaIdeal ?
+                            '✅ Parabéns! Você já atingiu sua reserva de emergência. Considere investir o excedente.' :
+                            `💪 Continue guardando! Faltam ${formatCurrency(reservaIdeal - saldoReserva)} para atingir sua meta de 6 meses.`
+                        }
+                    </p>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        function abrirModalReserva() {
+            document.getElementById('reserva-valor-atual').innerText = formatCurrency(state.reserva.saldo || 0);
+            document.getElementById('modal-reserva').classList.add('open');
+            document.getElementById('reserva-input-area').classList.add('hidden');
+            renderHistoricoReserva();
+        }
+
+        function renderHistoricoReserva() {
+            const container = document.getElementById('historico-reserva');
+            const historico = state.reserva.historico || [];
+            container.innerHTML = historico.slice().reverse().map(item => `
+                <div class="flex justify-between items-center p-2 border-b border-white/5 text-sm">
+                    <div>
+                        <span class="${item.tipo === 'adicao' ? 'text-emerald-400' : 'text-rose-400'} font-medium">
+                            ${item.tipo === 'adicao' ? '+' : '-'}
+                        </span>
+                        <span class="text-zinc-300">${item.descricao || item.tipo}</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="${item.tipo === 'adicao' ? 'text-emerald-400' : 'text-rose-400'} font-mono">
+                            ${item.tipo === 'adicao' ? '+' : '-'} ${formatCurrency(item.valor)}
+                        </span>
+                    </div>
+                </div>
+            `).join('') || '<p class="text-zinc-500 text-sm">Nenhum movimento.</p>';
+        }
+
+        function adicionarReserva() {
+            const area = document.getElementById('reserva-input-area');
+            area.classList.remove('hidden');
+            document.getElementById('btn-confirmar-reserva').dataset.tipo = 'adicao';
+            document.getElementById('reserva-valor-input').value = '';
+            document.getElementById('reserva-desc-input').value = '';
+            document.getElementById('reserva-valor-input').focus();
+        }
+
+        function gastarReserva() {
+            const area = document.getElementById('reserva-input-area');
+            area.classList.remove('hidden');
+            document.getElementById('btn-confirmar-reserva').dataset.tipo = 'gasto';
+            document.getElementById('reserva-valor-input').value = '';
+            document.getElementById('reserva-desc-input').value = '';
+            document.getElementById('reserva-valor-input').focus();
+        }
+
+        function confirmarReserva() {
+            const valor = parseFloat(document.getElementById('reserva-valor-input').value);
+            const descricao = document.getElementById('reserva-desc-input').value || 'Movimento';
+            const tipo = document.getElementById('btn-confirmar-reserva').dataset.tipo;
+            
+            if (!valor || valor <= 0) return alert('Digite um valor válido!');
+            if (tipo === 'gasto' && valor > state.reserva.saldo) return alert('Saldo insuficiente na reserva!');
+            
+            const movimento = {
+                tipo: tipo,
+                valor: valor,
+                descricao: descricao,
+                data: new Date().toLocaleDateString('pt-BR')
+            };
+            
+            if (tipo === 'adicao') {
+                state.reserva.saldo += valor;
+            } else {
+                state.reserva.saldo -= valor;
+            }
+            
+            if (!state.reserva.historico) state.reserva.historico = [];
+            state.reserva.historico.push(movimento);
+            
+            salvarReserva();
+            document.getElementById('reserva-input-area').classList.add('hidden');
+            renderReserva();
+            renderHistoricoReserva();
+            document.getElementById('reserva-valor-atual').innerText = formatCurrency(state.reserva.saldo);
+        }
+
+        // ============================================================
+        // SERVICE WORKER
+        // ============================================================
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker registrado!', reg))
+                    .catch(err => console.error('Erro no Service Worker', err));
+            });
+        }
     </script>
 </body>
 </html>
