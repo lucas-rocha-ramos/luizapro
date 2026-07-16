@@ -152,16 +152,6 @@
             background: linear-gradient(90deg, #a78bfa, #8b5cf6);
             transition: width 0.5s ease;
         }
-
-        /* Bank Connection */
-        .bank-connected {
-            border-color: #10b981 !important;
-            background: rgba(16, 185, 129, 0.05) !important;
-        }
-        .bank-disconnected {
-            border-color: #ef4444 !important;
-            background: rgba(239, 68, 68, 0.05) !important;
-        }
     </style>
 </head>
 <body>
@@ -364,8 +354,7 @@
             aiFilter: { month: new Date().getMonth(), year: new Date().getFullYear() },
             newTransaction: { type: 'single' }, modalMode: 'expense', editingId: null,
             reserva: { saldo: 0, historico: [] },
-            lazer: { saldo: 0, historico: [] },
-            bankStatus: { connected: false, bankName: '' }
+            lazer: { saldo: 0, historico: [] }
         };
 
         // ============================================================
@@ -404,64 +393,6 @@
         }
 
         // ============================================================
-        // BANK CONNECTION FUNCTIONS
-        // ============================================================
-        async function verificarStatusBanco() {
-            try {
-                const res = await fetch(`${API_URL}?action=getBankStatus`).then(r => r.json());
-                state.bankStatus = res;
-                return res;
-            } catch(e) {
-                console.error('Erro ao verificar banco:', e);
-                return { connected: false };
-            }
-        }
-
-        async function conectarBanco() {
-            try {
-                const res = await fetch(`${API_URL}?action=getAuthUrl`).then(r => r.json());
-                if (res.authUrl) {
-                    window.open(res.authUrl, '_blank', 'width=600,height=700');
-                } else {
-                    alert('Erro ao obter URL de autorização: ' + (res.error || 'Tente novamente'));
-                }
-            } catch(e) {
-                console.error('Erro ao conectar banco:', e);
-                alert('Erro ao conectar ao banco. Verifique o console.');
-            }
-        }
-
-        async function sincronizarBanco() {
-            const btn = document.getElementById('btn-sync-bank');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i data-lucide="loader-2" class="w-4 h-4 animate-spin"></i> Sincronizando...';
-            btn.disabled = true;
-            
-            try {
-                const res = await fetch(`${API_URL}?action=syncBank`).then(r => r.json());
-                
-                if (res.success) {
-                    alert('✅ ' + res.message || res.saved + ' transações sincronizadas!');
-                    await loadData();
-                    renderCurrentView();
-                } else if (res.authUrl) {
-                    if (confirm('🔑 Banco não conectado. Deseja autorizar o acesso agora?')) {
-                        window.open(res.authUrl, '_blank', 'width=600,height=700');
-                    }
-                } else {
-                    alert('❌ Erro: ' + (res.error || 'Tente novamente'));
-                }
-            } catch(e) {
-                console.error('Erro ao sincronizar:', e);
-                alert('Erro ao sincronizar. Tente novamente.');
-            }
-            
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-            lucide.createIcons();
-        }
-
-        // ============================================================
         // LOADER E INICIALIZAÇÃO
         // ============================================================
         window.addEventListener('load', () => {
@@ -473,7 +404,6 @@
                 document.getElementById('login-view').classList.remove('hidden');
                 setTimeout(() => { document.getElementById('login-view').classList.remove('opacity-0'); document.getElementById('login-view').classList.add('animate-fade-in-up'); }, 50);
                 loadData();
-                verificarStatusBanco();
             }, 3000);
         });
 
@@ -669,38 +599,10 @@
         }
 
         // ============================================================
-        // VIEW: USERS (COM CONEXÃO BANCÁRIA)
+        // VIEW: USERS (SEM CONEXÃO BANCÁRIA)
         // ============================================================
         function renderUsers() {
             const isAdmin = state.currentUser.role === 'Administrador';
-            
-            // Verificar status do banco
-            verificarStatusBanco().then(status => {
-                const bankStatus = document.getElementById('bank-status');
-                if (bankStatus) {
-                    if (status.connected) {
-                        bankStatus.innerHTML = `
-                            <div class="flex items-center gap-2 text-emerald-400">
-                                <i data-lucide="check-circle" class="w-4 h-4"></i>
-                                Conectado: ${status.bankName || 'Banco'}
-                            </div>
-                        `;
-                        document.getElementById('btn-conectar-banco').classList.add('hidden');
-                        document.getElementById('btn-sync-bank').classList.remove('hidden');
-                    } else {
-                        bankStatus.innerHTML = `
-                            <div class="flex items-center gap-2 text-rose-400">
-                                <i data-lucide="x-circle" class="w-4 h-4"></i>
-                                Desconectado
-                            </div>
-                        `;
-                        document.getElementById('btn-conectar-banco').classList.remove('hidden');
-                        document.getElementById('btn-sync-bank').classList.add('hidden');
-                    }
-                    lucide.createIcons();
-                }
-            });
-            
             const usersHtml = state.users.map(u => `<div class="bg-zinc-900/50 p-6 rounded-[1.5rem] border border-white/5 flex items-center justify-between group hover:border-white/10 transition-all"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-gradient-to-br ${u.color} flex items-center justify-center text-white font-bold text-lg shadow-lg">${u.avatar}</div><div><p class="text-white font-medium text-base">${u.name}</p><p class="text-xs text-zinc-500 mt-0.5">${u.role}</p></div></div>${isAdmin && String(u.id) !== String(state.currentUser.id) ? `<button onclick="deleteUser('${u.id}')" class="text-zinc-600 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all"><i data-lucide="trash-2" class="w-5 h-5"></i></button>` : ''}</div>`).join('');
             const catsHtml = state.categories.map(c => `<div class="bg-zinc-900/50 p-4 rounded-xl border border-white/5 flex justify-between items-center text-sm hover:bg-zinc-800/50 transition-colors"><span class="text-zinc-300 font-medium">${c.name}</span><button onclick="deleteCategory(${c.id})" class="text-zinc-600 hover:text-rose-500 transition-colors"><i data-lucide="x" class="w-4 h-4"></i></button></div>`).join('');
             
@@ -712,35 +614,6 @@
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">${usersHtml}</div>
                 </div>
-                
-                <!-- CONEXÃO BANCÁRIA -->
-                <div class="mb-12">
-                    <div class="flex justify-between items-center mb-6">
-                        <h2 class="text-3xl font-bold text-white tracking-tight">🏦 Conexão Bancária</h2>
-                        <div id="bank-status" class="text-sm">Carregando...</div>
-                    </div>
-                    <div class="bg-zinc-900/40 border border-white/5 rounded-2xl p-6">
-                        <p class="text-zinc-400 text-sm mb-4">
-                            Conecte sua conta bancária para importar automaticamente suas transações.
-                            <br><span class="text-zinc-500 text-xs">Suporta OAuth2 com bancos parceiros.</span>
-                        </p>
-                        <div class="flex flex-wrap gap-3">
-                            <button id="btn-conectar-banco" onclick="conectarBanco()" class="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-blue-500 transition flex items-center gap-2">
-                                <i data-lucide="link" class="w-4 h-4"></i> Conectar Banco
-                            </button>
-                            <button id="btn-sync-bank" onclick="sincronizarBanco()" class="hidden bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-emerald-500 transition flex items-center gap-2">
-                                <i data-lucide="refresh-cw" class="w-4 h-4"></i> Sincronizar Transações
-                            </button>
-                            <button onclick="verificarStatusBanco()" class="bg-zinc-800 text-zinc-300 px-4 py-2 rounded-xl text-sm font-bold hover:bg-zinc-700 transition flex items-center gap-2">
-                                <i data-lucide="eye" class="w-4 h-4"></i> Verificar Status
-                            </button>
-                        </div>
-                        <div class="mt-4 text-xs text-zinc-500 border-t border-white/5 pt-4">
-                            <p>⚠️ A conexão bancária requer configuração no backend. Consulte a documentação para mais detalhes.</p>
-                        </div>
-                    </div>
-                </div>
-                
                 <div>
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-3xl font-bold text-white tracking-tight">Categorias</h2>
@@ -749,36 +622,6 @@
                     <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">${catsHtml}</div>
                 </div>
             `;
-            
-            // Atualizar status do banco após renderizar
-            setTimeout(() => {
-                verificarStatusBanco().then(status => {
-                    const bankStatus = document.getElementById('bank-status');
-                    if (bankStatus) {
-                        if (status.connected) {
-                            bankStatus.innerHTML = `
-                                <div class="flex items-center gap-2 text-emerald-400">
-                                    <i data-lucide="check-circle" class="w-4 h-4"></i>
-                                    Conectado: ${status.bankName || 'Banco'}
-                                </div>
-                            `;
-                            document.getElementById('btn-conectar-banco').classList.add('hidden');
-                            document.getElementById('btn-sync-bank').classList.remove('hidden');
-                        } else {
-                            bankStatus.innerHTML = `
-                                <div class="flex items-center gap-2 text-rose-400">
-                                    <i data-lucide="x-circle" class="w-4 h-4"></i>
-                                    Desconectado
-                                </div>
-                            `;
-                            document.getElementById('btn-conectar-banco').classList.remove('hidden');
-                            document.getElementById('btn-sync-bank').classList.add('hidden');
-                        }
-                        lucide.createIcons();
-                    }
-                });
-            }, 100);
-            
             lucide.createIcons();
         }
 
