@@ -64,7 +64,6 @@
         .type-btn svg { width: 1.5rem; height: 1.5rem; color: #a1a1aa; }
         .type-btn.selected svg { color: #fff; }
 
-        /* Ajustes de tela e Safe Area para Celulares e Watch */
         #navbar { padding-top: env(safe-area-inset-top); }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -80,7 +79,6 @@
             .modal-overlay { padding: 0.5rem; }
         }
 
-        /* === NOVOS ESTILOS IA === */
         .chat-message {
             padding: 0.75rem 1rem;
             border-radius: 1rem;
@@ -488,15 +486,19 @@
             const d=new Date(base); d.setMonth(d.getMonth()+offset); return d.toISOString().split('T')[0]; 
         }
 
+        // ============================================================
+        // CORREÇÃO: parseInputMoney - Remove pontos e trata vírgula como decimal
+        // ============================================================
         function parseInputMoney(valStr) {
+            if (!valStr) return 0;
             let s = valStr.toString().trim();
-            if (s.includes(',') && s.includes('.')) { s = s.replace(/\./g, '').replace(',', '.'); } else if (s.includes(',')) { s = s.replace(',', '.'); }
-            return parseFloat(s);
+            // Remove todos os pontos (separadores de milhar)
+            s = s.replace(/\./g, '');
+            // Substitui vírgula por ponto (separador decimal)
+            s = s.replace(',', '.');
+            return parseFloat(s) || 0;
         }
 
-        // ============================================================
-        // VIEW: HOME (CORRIGIDO - PARCELAS PAGAS NÃO ENTRAM NO SALDO)
-        // ============================================================
         function renderHome() {
             const { month, year } = state.homeFilter; 
             let rev = 0, exp = 0, totalAccumulated = 0;
@@ -507,7 +509,6 @@
                     if(m === month && y === year) { 
                         t.kind === 'income' ? rev += t.value : exp += t.value; 
                     }
-                    // SÓ INCLUI NO SALDO SE NÃO ESTIVER PAGO
                     if(t.status !== 'Pago' && t.status !== 'Recebido') {
                         if(y < year || (y === year && m <= month)) { 
                             t.kind === 'income' ? totalAccumulated += t.value : totalAccumulated -= t.value; 
@@ -519,7 +520,6 @@
                         if(m === month && y === year) { 
                             t.kind === 'income' ? rev += i.value : exp += i.value; 
                         }
-                        // SÓ INCLUI NO SALDO SE A PARCELA NÃO ESTIVER PAGA
                         if(i.status !== 'Pago') {
                             if(y < year || (y === year && m <= month)) { 
                                 t.kind === 'income' ? totalAccumulated += i.value : totalAccumulated -= i.value; 
@@ -546,7 +546,6 @@
                     if(m === month && y === year) { 
                         t.kind === 'income' ? rev += t.value : exp += t.value; 
                     }
-                    // SÓ INCLUI NO SALDO SE NÃO ESTIVER PAGO
                     if(t.status !== 'Pago' && t.status !== 'Recebido') {
                         if(y < year || (y === year && m <= month)) { 
                             t.kind === 'income' ? totalAccumulated += t.value : totalAccumulated -= t.value; 
@@ -558,7 +557,6 @@
                         if(m === month && y === year) { 
                             t.kind === 'income' ? rev += i.value : exp += i.value; 
                         }
-                        // SÓ INCLUI NO SALDO SE A PARCELA NÃO ESTIVER PAGA
                         if(i.status !== 'Pago') {
                             if(y < year || (y === year && m <= month)) { 
                                 t.kind === 'income' ? totalAccumulated += i.value : totalAccumulated -= i.value; 
