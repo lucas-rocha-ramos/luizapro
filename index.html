@@ -7,7 +7,6 @@
     
     <link rel="icon" type="image/png" href="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png">
     <link rel="shortcut icon" href="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png">
-
     <link rel="apple-touch-icon" href="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png">
     <link rel="apple-touch-icon" sizes="152x152" href="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png">
     <link rel="apple-touch-icon" sizes="180x180" href="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png">
@@ -23,7 +22,6 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-
     <script src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js'></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
     <script>pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';</script>
@@ -259,6 +257,7 @@
         <section id="view-users" class="view-section"></section>
     </div>
 
+    <!-- MODALS -->
     <div id="modal-transaction" class="modal-overlay">
         <div class="bg-zinc-900 border border-white/10 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl m-4 animate-fade-in-up max-h-[90vh] flex flex-col">
             <div class="p-6 border-b border-white/10 flex justify-between items-center bg-zinc-900/50 backdrop-blur">
@@ -275,6 +274,7 @@
                 <input type="text" id="new-user-name" placeholder="Nome Completo" class="w-full bg-black border border-white/10 rounded-2xl py-3 px-4 text-white text-sm focus:border-indigo-500 outline-none">
                 <input type="text" id="new-user-username" placeholder="Usuário (Login)" class="w-full bg-black border border-white/10 rounded-2xl py-3 px-4 text-white text-sm focus:border-indigo-500 outline-none">
                 <input type="password" id="new-user-password" placeholder="Senha" class="w-full bg-black border border-white/10 rounded-2xl py-3 px-4 text-white text-sm focus:border-indigo-500 outline-none">
+                <input type="email" id="new-user-email" placeholder="E-mail" class="w-full bg-black border border-white/10 rounded-2xl py-3 px-4 text-white text-sm focus:border-indigo-500 outline-none">
                 <button onclick="submitAddUser()" id="btn-submit-user" class="w-full bg-white text-black font-bold py-3.5 rounded-2xl mt-2 hover:bg-zinc-200 transition-colors">Cadastrar</button>
             </div>
         </div>
@@ -461,7 +461,20 @@
         }
 
         function renderApp() { document.getElementById('current-user-name').innerText = state.currentUser.name; document.getElementById('current-user-role').innerText = state.currentUser.role; document.getElementById('current-user-avatar').innerText = state.currentUser.avatar; renderUserFilter(); renderCurrentView(); }
-        function renderCurrentView() { const tab = state.activeTab; if(tab === 'home') renderHome(); else if(tab === 'dashboard') renderDashboard(); else if(tab === 'bills') renderBills(); else if(tab === 'statement') renderStatement(); else if(tab === 'filter') renderFilterView(); else if(tab === 'ai') renderAI(); else if(tab === 'reserva') renderReserva(); else if(tab === 'lazer') renderLazer(); else if(tab === 'users') renderUsers(); lucide.createIcons(); }
+        
+        function renderCurrentView() { 
+            const tab = state.activeTab; 
+            if(tab === 'home') renderHome(); 
+            else if(tab === 'dashboard') renderDashboard(); 
+            else if(tab === 'bills') renderBills(); 
+            else if(tab === 'statement') renderStatement(); 
+            else if(tab === 'filter') renderFilterView(); 
+            else if(tab === 'ai') renderAI(); 
+            else if(tab === 'reserva') renderReserva(); 
+            else if(tab === 'lazer') renderLazer(); 
+            else if(tab === 'users') renderUsers(); 
+            lucide.createIcons(); 
+        }
 
         function getFilteredTransactions() { return state.transactions.filter(t => state.selectedFilterUsers.some(id => String(id) === String(t.userId))); }
         function formatCurrency(val) { return new Intl.NumberFormat('pt-BR', {style: 'currency', currency: 'BRL'}).format(val); }
@@ -486,19 +499,17 @@
             const d=new Date(base); d.setMonth(d.getMonth()+offset); return d.toISOString().split('T')[0]; 
         }
 
-        // ============================================================
-        // CORREÇÃO: parseInputMoney - Remove pontos e trata vírgula como decimal
-        // ============================================================
         function parseInputMoney(valStr) {
             if (!valStr) return 0;
             let s = valStr.toString().trim();
-            // Remove todos os pontos (separadores de milhar)
             s = s.replace(/\./g, '');
-            // Substitui vírgula por ponto (separador decimal)
             s = s.replace(',', '.');
             return parseFloat(s) || 0;
         }
 
+        // ============================================================
+        // VIEW: HOME
+        // ============================================================
         function renderHome() {
             const { month, year } = state.homeFilter; 
             let rev = 0, exp = 0, totalAccumulated = 0;
@@ -536,6 +547,9 @@
             `;
         }
 
+        // ============================================================
+        // VIEW: DASHBOARD
+        // ============================================================
         function renderDashboard() {
             const { month, year } = state.dashboardFilter; 
             let rev = 0, exp = 0, totalAccumulated = 0;
@@ -593,6 +607,9 @@
             `;
         }
 
+        // ============================================================
+        // VIEW: BILLS
+        // ============================================================
         function renderBills() {
             const bills = getFilteredTransactions().filter(t => t.kind === 'expense');
             const rows = bills.map(t => {
@@ -608,6 +625,9 @@
             document.getElementById('view-bills').innerHTML = `<div class="flex justify-between items-center mb-8"><h2 class="text-3xl font-bold text-white tracking-tight">Contas a Pagar</h2><button onclick="openTransactionModal('expense')" class="bg-white text-black px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-zinc-200 transition-colors flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Nova Conta</button></div><div class="bg-zinc-900/40 border border-white/5 rounded-[1.5rem] overflow-hidden backdrop-blur-md"><div class="hidden md:grid grid-cols-12 gap-4 p-5 border-b border-white/5 text-xs font-semibold text-zinc-500 uppercase tracking-wider"><div class="col-span-4">Descrição</div><div class="col-span-3">Responsável / Categoria</div><div class="col-span-2">Vencimento</div><div class="col-span-2 text-right">Valor Total</div><div class="col-span-1"></div></div>${rows || '<p class="p-8 text-center text-zinc-500">Nenhuma conta pendente.</p>'}</div>`;
         }
 
+        // ============================================================
+        // VIEW: STATEMENT
+        // ============================================================
         function renderStatement() {
             const list = getFilteredTransactions().sort((a,b) => { const da = a.date || ""; const db = b.date || ""; return db.localeCompare(da); });
             const rows = list.map(t => {
@@ -617,6 +637,9 @@
             document.getElementById('view-statement').innerHTML = `<h2 class="text-3xl font-bold text-white mb-8 tracking-tight">Extrato</h2><div class="bg-zinc-900/40 border border-white/5 rounded-[1.5rem] overflow-hidden backdrop-blur-md"><div class="hidden md:grid grid-cols-12 gap-4 p-5 border-b border-white/5 text-xs font-semibold text-zinc-500 uppercase tracking-wider"><div class="col-span-5">Descrição</div><div class="col-span-3">Categoria</div><div class="col-span-2">Data</div><div class="col-span-2 text-right">Valor</div></div>${rows || '<p class="p-8 text-center text-zinc-500">Sem movimentações.</p>'}</div>`;
         }
 
+        // ============================================================
+        // VIEW: FILTER
+        // ============================================================
         function renderFilterView() {
             const {category, month, year} = state.filterView;
             const catOptions = ['Todas', ...state.categories.map(c => c.name)].map(c => `<option value="${c}" ${c === category ? 'selected' : ''}>${c}</option>`).join(''); let total = 0;
@@ -638,11 +661,11 @@
         }
 
         // ============================================================
-        // VIEW: USERS (SEM CONEXÃO BANCÁRIA)
+        // VIEW: USERS (COM CAMPO E-MAIL)
         // ============================================================
         function renderUsers() {
             const isAdmin = state.currentUser.role === 'Administrador';
-            const usersHtml = state.users.map(u => `<div class="bg-zinc-900/50 p-6 rounded-[1.5rem] border border-white/5 flex items-center justify-between group hover:border-white/10 transition-all"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-gradient-to-br ${u.color} flex items-center justify-center text-white font-bold text-lg shadow-lg">${u.avatar}</div><div><p class="text-white font-medium text-base">${u.name}</p><p class="text-xs text-zinc-500 mt-0.5">${u.role}</p></div></div>${isAdmin && String(u.id) !== String(state.currentUser.id) ? `<button onclick="deleteUser('${u.id}')" class="text-zinc-600 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all"><i data-lucide="trash-2" class="w-5 h-5"></i></button>` : ''}</div>`).join('');
+            const usersHtml = state.users.map(u => `<div class="bg-zinc-900/50 p-6 rounded-[1.5rem] border border-white/5 flex items-center justify-between group hover:border-white/10 transition-all"><div class="flex items-center gap-4"><div class="w-12 h-12 rounded-full bg-gradient-to-br ${u.color} flex items-center justify-center text-white font-bold text-lg shadow-lg">${u.avatar}</div><div><p class="text-white font-medium text-base">${u.name}</p><p class="text-xs text-zinc-500 mt-0.5">${u.role}</p><p class="text-xs text-zinc-600 mt-0.5">${u.email || 'Sem e-mail'}</p></div></div>${isAdmin && String(u.id) !== String(state.currentUser.id) ? `<button onclick="deleteUser('${u.id}')" class="text-zinc-600 hover:text-rose-500 opacity-0 group-hover:opacity-100 transition-all"><i data-lucide="trash-2" class="w-5 h-5"></i></button>` : ''}</div>`).join('');
             const catsHtml = state.categories.map(c => `<div class="bg-zinc-900/50 p-4 rounded-xl border border-white/5 flex justify-between items-center text-sm hover:bg-zinc-800/50 transition-colors"><span class="text-zinc-300 font-medium">${c.name}</span><button onclick="deleteCategory(${c.id})" class="text-zinc-600 hover:text-rose-500 transition-colors"><i data-lucide="x" class="w-4 h-4"></i></button></div>`).join('');
             
             document.getElementById('view-users').innerHTML = `
@@ -664,6 +687,9 @@
             lucide.createIcons();
         }
 
+        // ============================================================
+        // FUNÇÕES AUXILIARES
+        // ============================================================
         function updateHomeFilter(k,v) { state.homeFilter[k]=Number(v); renderHome(); }
         function updateDashFilter(k,v) { state.dashboardFilter[k]=Number(v); renderDashboard(); }
         function updateFilterView(k,v) { state.filterView[k]=isNaN(Number(v))?v:Number(v); renderFilterView(); }
@@ -701,6 +727,51 @@
             lucide.createIcons();
         }
 
+        // ============================================================
+        // MODAL DE USUÁRIO (COM E-MAIL)
+        // ============================================================
+        function openUserModal() { 
+            document.getElementById('modal-user').classList.add('open'); 
+            document.getElementById('new-user-name').value = '';
+            document.getElementById('new-user-username').value = '';
+            document.getElementById('new-user-password').value = '';
+            document.getElementById('new-user-email').value = '';
+        }
+        
+        async function submitAddUser() { 
+            const name = document.getElementById('new-user-name').value; 
+            const username = document.getElementById('new-user-username').value; 
+            const password = document.getElementById('new-user-password').value; 
+            const email = document.getElementById('new-user-email').value;
+            if(!name||!username||!password) return alert("Preencha todos os campos!"); 
+            const user = { 
+                id: String(Date.now()), 
+                name, 
+                username, 
+                password, 
+                role: 'Financeiro', 
+                email: email || '',
+                avatar: name.substring(0,2).toUpperCase(), 
+                color: 'from-blue-500 to-cyan-500', 
+                status: 'Ativo' 
+            }; 
+            state.users.push(user); 
+            closeModal('modal-user'); 
+            renderCurrentView(); 
+            await apiPost('addUser', { user }); 
+        }
+        
+        async function deleteUser(id) { 
+            if(confirm('Remover usuário?')) { 
+                state.users = state.users.filter(u => String(u.id) !== String(id)); 
+                renderCurrentView(); 
+                await apiPost('deleteUser', { id }); 
+            } 
+        }
+
+        // ============================================================
+        // TRANSACTION MODAL
+        // ============================================================
         function openTransactionModal(mode, editId = null) {
             state.modalMode = mode; 
             state.editingId = editId;
@@ -828,14 +899,16 @@
             }
         }
 
+        // ============================================================
+        // CATEGORY MODAL
+        // ============================================================
         function openCategoryModal() { document.getElementById('modal-category').classList.add('open'); }
         async function submitAddCategory() { const name = document.getElementById('new-cat-name').value; const type = document.getElementById('new-cat-type').value; if(!name) return; const cat = { id: String(Date.now()), name, type }; state.categories.push(cat); closeModal('modal-category'); renderCurrentView(); await apiPost('addCategory', { category: cat }); }
         async function deleteCategory(id) { if(!confirm('Remover categoria?')) return; state.categories = state.categories.filter(c => String(c.id) !== String(id)); renderCurrentView(); await apiPost('deleteCategory', { id }); }
-        
-        function openUserModal() { document.getElementById('modal-user').classList.add('open'); }
-        async function submitAddUser() { const name = document.getElementById('new-user-name').value; const username = document.getElementById('new-user-username').value; const password = document.getElementById('new-user-password').value; if(!name||!username||!password) return alert("Preencha tudo"); const user = { id: String(Date.now()), name, username, password, role: 'Financeiro', avatar: name.substring(0,2).toUpperCase(), color: 'from-blue-500 to-cyan-500', status: 'Ativo' }; state.users.push(user); closeModal('modal-user'); renderCurrentView(); await apiPost('addUser', { user }); }
-        async function deleteUser(id) { if(confirm('Remover usuário?')) { state.users = state.users.filter(u => String(u.id) !== String(id)); renderCurrentView(); await apiPost('deleteUser', { id }); } }
 
+        // ============================================================
+        // DETAILS MODAL
+        // ============================================================
         function openDetails(id) {
             const t = state.transactions.find(x => String(x.id) === String(id)); if(!t) return;
             document.getElementById('detail-title').innerText = t.name; 
@@ -886,6 +959,9 @@
         function closeModal(id) { document.getElementById(id).classList.remove('open'); }
         function setLoading(b, id='login-loading-text') { const el=document.getElementById(id); if(el) b?el.classList.remove('hidden'):el.classList.add('hidden'); }
         
+        // ============================================================
+        // OCR FUNCTIONS
+        // ============================================================
         async function handleReceiptScan(input) {
             const file = input.files[0]; if (!file) return;
             const loadingEl = document.getElementById('ocr-loading'); const statusEl = document.getElementById('ocr-status'); const progressEl = document.getElementById('ocr-progress');
