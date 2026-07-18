@@ -7,6 +7,7 @@
     
     <link rel="icon" type="image/png" href="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png">
     <link rel="shortcut icon" href="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png">
+
     <link rel="apple-touch-icon" href="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png">
     <link rel="apple-touch-icon" sizes="152x152" href="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png">
     <link rel="apple-touch-icon" sizes="180x180" href="https://i.ibb.co/CKJMn29m/Logo-Luisa-Pro.png">
@@ -257,6 +258,7 @@
         <section id="view-users" class="view-section"></section>
     </div>
 
+    <!-- MODALS -->
     <div id="modal-transaction" class="modal-overlay">
         <div class="bg-zinc-900 border border-white/10 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl m-4 animate-fade-in-up max-h-[90vh] flex flex-col">
             <div class="p-6 border-b border-white/10 flex justify-between items-center bg-zinc-900/50 backdrop-blur">
@@ -514,7 +516,6 @@
             const { month, year } = state.homeFilter; 
             let rev = 0, exp = 0;
             
-            // Calcular receitas e despesas do mês selecionado
             getFilteredTransactions().forEach(t => { 
                 if(t.type === 'single') {
                     const {y, m} = safeGetYearMonth(t.date); 
@@ -531,9 +532,6 @@
                 }
             });
             
-            // ============================================================
-            // SALDO ACUMULADO COM FILTRO (ATÉ O MÊS SELECIONADO)
-            // ============================================================
             const saldoMonth = state.saldoFilter.month;
             const saldoYear = state.saldoFilter.year;
             let totalAccumulated = 0;
@@ -541,7 +539,6 @@
             getFilteredTransactions().forEach(t => { 
                 if(t.type === 'single') {
                     const {y, m} = safeGetYearMonth(t.date); 
-                    // Só inclui transações até o mês selecionado no filtro de saldo
                     if(t.status !== 'Pago' && t.status !== 'Recebido') {
                         if(y < saldoYear || (y === saldoYear && m <= saldoMonth)) { 
                             t.kind === 'income' ? totalAccumulated += t.value : totalAccumulated -= t.value; 
@@ -592,7 +589,6 @@
                         <h2 class="text-5xl md:text-6xl font-bold text-white tracking-tighter">${formatCurrency(exp)}</h2>
                     </div>
                 </div>
-                <!-- SALDO EM CONTA COM FILTRO -->
                 <div class="bg-gradient-to-r from-zinc-900 to-zinc-900/60 border border-white/5 p-8 rounded-[2rem] relative overflow-hidden">
                     <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                         <div class="flex items-center gap-8">
@@ -625,7 +621,7 @@
         }
 
         // ============================================================
-        // VIEW: DASHBOARD (COM FILTRO DE SALDO)
+        // VIEW: DASHBOARD
         // ============================================================
         function renderDashboard() {
             const { month, year } = state.dashboardFilter; 
@@ -647,7 +643,6 @@
                 }
             });
             
-            // SALDO ACUMULADO COM FILTRO
             const saldoMonth = state.saldoFilter.month;
             const saldoYear = state.saldoFilter.year;
             let totalAccumulated = 0;
@@ -751,7 +746,7 @@
         }
 
         // ============================================================
-        // VIEW: BILLS
+        // VIEW: BILLS, STATEMENT, FILTER (MANTIDOS)
         // ============================================================
         function renderBills() {
             const bills = getFilteredTransactions().filter(t => t.kind === 'expense');
@@ -768,9 +763,6 @@
             document.getElementById('view-bills').innerHTML = `<div class="flex justify-between items-center mb-8"><h2 class="text-3xl font-bold text-white tracking-tight">Contas a Pagar</h2><button onclick="openTransactionModal('expense')" class="bg-white text-black px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-zinc-200 transition-colors flex items-center gap-2"><i data-lucide="plus" class="w-4 h-4"></i> Nova Conta</button></div><div class="bg-zinc-900/40 border border-white/5 rounded-[1.5rem] overflow-hidden backdrop-blur-md"><div class="hidden md:grid grid-cols-12 gap-4 p-5 border-b border-white/5 text-xs font-semibold text-zinc-500 uppercase tracking-wider"><div class="col-span-4">Descrição</div><div class="col-span-3">Responsável / Categoria</div><div class="col-span-2">Vencimento</div><div class="col-span-2 text-right">Valor Total</div><div class="col-span-1"></div></div>${rows || '<p class="p-8 text-center text-zinc-500">Nenhuma conta pendente.</p>'}</div>`;
         }
 
-        // ============================================================
-        // VIEW: STATEMENT
-        // ============================================================
         function renderStatement() {
             const list = getFilteredTransactions().sort((a,b) => { const da = a.date || ""; const db = b.date || ""; return db.localeCompare(da); });
             const rows = list.map(t => {
@@ -780,9 +772,6 @@
             document.getElementById('view-statement').innerHTML = `<h2 class="text-3xl font-bold text-white mb-8 tracking-tight">Extrato</h2><div class="bg-zinc-900/40 border border-white/5 rounded-[1.5rem] overflow-hidden backdrop-blur-md"><div class="hidden md:grid grid-cols-12 gap-4 p-5 border-b border-white/5 text-xs font-semibold text-zinc-500 uppercase tracking-wider"><div class="col-span-5">Descrição</div><div class="col-span-3">Categoria</div><div class="col-span-2">Data</div><div class="col-span-2 text-right">Valor</div></div>${rows || '<p class="p-8 text-center text-zinc-500">Sem movimentações.</p>'}</div>`;
         }
 
-        // ============================================================
-        // VIEW: FILTER
-        // ============================================================
         function renderFilterView() {
             const {category, month, year} = state.filterView;
             const catOptions = ['Todas', ...state.categories.map(c => c.name)].map(c => `<option value="${c}" ${c === category ? 'selected' : ''}>${c}</option>`).join(''); let total = 0;
@@ -1101,7 +1090,7 @@
 
         function closeModal(id) { document.getElementById(id).classList.remove('open'); }
         function setLoading(b, id='login-loading-text') { const el=document.getElementById(id); if(el) b?el.classList.remove('hidden'):el.classList.add('hidden'); }
-        
+
         // ============================================================
         // OCR FUNCTIONS
         // ============================================================
@@ -1140,11 +1129,10 @@
         function pulseField(id, value) { const el = document.getElementById(id); if(value) el.value = value; el.classList.add('border-indigo-500', 'bg-indigo-500/20'); setTimeout(() => el.classList.remove('border-indigo-500', 'bg-indigo-500/20'), 1500); }
         function findStoreInText(text) { const lines = text.split('\n'); const ignorePatterns = ['cnpj', 'cpf', 'enpj', 'im:', 'ie:', 'extrato', 'fiscal', 'cupom', 'danfe', 'sat', 'caixa', 'notinha', 'rua', 'av.', 'tel', 'item', 'qtd', 'total', 'pago', 'troco', 'crédito', 'débito', 'venda', 'data']; const cnpjRegex = /\d{2}[\.\s]?\d{3}[\.\s]?\d{3}[\/\s]?\d{4}[-\s]?\d{2}/; const candidates = lines.map(l => l.trim()).filter(l => { const lower = l.toLowerCase(); if (l.length < 3) return false; if (ignorePatterns.some(w => lower.includes(w))) return false; if (cnpjRegex.test(l)) return false; const digits = l.replace(/[^0-9]/g, '').length; if (digits > 4) return false; return true; }); if (candidates.length > 0) return candidates[0].replace(/^[^a-zA-Z0-9À-ÿ]+/, '').substring(0, 30).trim(); return null; }
         function findValueInText(text) { const lines = text.split('\n'); let maxVal = 0; const valorRegex = /R?\s?(\d{1,3}(\.?\d{3})*,\d{2})/gi; for (let line of lines) { const lowerLine = line.toLowerCase(); if ((lowerLine.includes('total') || lowerLine.includes('valor a pagar')) && !lowerLine.includes('subtotal') && !lowerLine.includes('itens')) { const match = line.match(valorRegex); if (match) { const v = parseMoney(match[match.length - 1]); if (v > 0) return v; } } const matches = line.match(valorRegex); if (matches) { matches.forEach(m => { const v = parseMoney(m); if (v > maxVal && v < 50000) maxVal = v; }); } } return maxVal > 0 ? maxVal : null; }
-        
         function findDateInText(text) { const match = text.match(/(\d{2})[\/\s\.](\d{2})[\/\s\.](\d{4})/); return match ? `${match[3]}-${match[2]}-${match[1]}` : null; }
 
         // ============================================================
-        // FUNÇÕES DE IA (MANTIDAS)
+        // VIEW: AI - COM IA MENSAL
         // ============================================================
         function renderAI() {
             const aiHtml = gerarAnaliseCompletaIA();
@@ -1164,7 +1152,14 @@
                         <button onclick="renderAI()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-500 transition flex items-center gap-2">
                             <i data-lucide="refresh-cw" class="w-4 h-4"></i> Atualizar
                         </button>
+                        <button onclick="chamarIAFinanceira()" class="bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-emerald-500 transition flex items-center gap-2">
+                            <i data-lucide="bot" class="w-4 h-4"></i> 🤖 Perguntar à IA
+                        </button>
                     </div>
+                </div>
+                <div id="ia-thinking" class="hidden bg-zinc-800/50 p-4 rounded-xl border border-indigo-500/20 mb-4 flex items-center gap-3">
+                    <i data-lucide="loader-2" class="w-5 h-5 animate-spin text-indigo-400"></i>
+                    <span class="text-zinc-300 text-sm">🤖 IA analisando seus dados financeiros mensais...</span>
                 </div>
                 <div id="ai-results" class="space-y-6">
                     ${aiHtml}
@@ -1172,16 +1167,20 @@
                 <div class="mt-8 bg-zinc-900/40 border border-white/5 rounded-2xl p-6 backdrop-blur-sm">
                     <h4 class="text-zinc-300 font-semibold mb-4 flex items-center gap-2">
                         <i data-lucide="message-square" class="w-5 h-5 text-indigo-400"></i>
-                        💬 Pergunte à IA Financeira
+                        💬 Pergunte à IA Financeira (Mensal)
                     </h4>
                     <div id="chat-container" class="space-y-2 max-h-72 overflow-y-auto mb-4">
-                        <div class="chat-message chat-ai">Olá! Sou sua assistente financeira. Pergunte sobre <strong>gastos, economia, investimentos, dívidas, score financeiro</strong> ou peça <strong>dicas personalizadas</strong>.</div>
+                        <div class="chat-message chat-ai">Olá! Sou sua assistente financeira mensal. Pergunte sobre <strong>gastos do mês, economia, investimentos, dívidas</strong> ou peça <strong>dicas personalizadas</strong> baseadas nos seus dados mensais.</div>
                     </div>
                     <div class="flex gap-2">
-                        <input type="text" id="chat-input" placeholder="Digite sua pergunta..." class="flex-1 bg-black border border-white/10 rounded-xl p-3 text-white text-sm focus:border-indigo-500 outline-none">
+                        <input type="text" id="chat-input" placeholder="Digite sua pergunta sobre o mês atual..." class="flex-1 bg-black border border-white/10 rounded-xl p-3 text-white text-sm focus:border-indigo-500 outline-none">
                         <button onclick="enviarPerguntaIA()" class="bg-indigo-600 text-white px-4 py-2 rounded-xl hover:bg-indigo-500 transition flex items-center gap-2">
                             <i data-lucide="send" class="w-4 h-4"></i> Enviar
                         </button>
+                    </div>
+                    <div class="mt-2 text-xs text-zinc-500">
+                        <i data-lucide="info" class="w-3 h-3 inline"></i>
+                        A IA usa dados do mês atual para gerar respostas personalizadas.
                     </div>
                 </div>
             `;
@@ -1195,11 +1194,82 @@
             }
         }
 
+        // ============================================================
+        // FUNÇÃO PARA CHAMAR IA EXTERNA
+        // ============================================================
+        async function chamarIAFinanceira() {
+            const thinking = document.getElementById('ia-thinking');
+            thinking.classList.remove('hidden');
+            
+            const container = document.getElementById('chat-container');
+            container.innerHTML += `<div class="chat-message chat-ai">🤖 Processando seus dados financeiros mensais...</div>`;
+            
+            try {
+                const pergunta = document.getElementById('chat-input').value || 'Me dê uma análise completa das minhas finanças deste mês';
+                
+                const res = await fetch(`${API_URL}`, {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        action: 'callAI',
+                        userId: state.currentUser.id,
+                        selectedUserIds: state.selectedFilterUsers,
+                        pergunta: pergunta
+                    })
+                });
+                
+                const data = await res.json();
+                thinking.classList.add('hidden');
+                
+                if (data.resposta) {
+                    const messages = container.querySelectorAll('.chat-message');
+                    if (messages.length > 0) {
+                        const last = messages[messages.length - 1];
+                        if (last.textContent.includes('Processando')) {
+                            last.remove();
+                        }
+                    }
+                    
+                    container.innerHTML += `<div class="chat-message chat-ai"><strong>🤖 IA Financeira:</strong><br>${data.resposta}</div>`;
+                    container.scrollTop = container.scrollHeight;
+                    
+                    if (data.analise) {
+                        console.log('📊 Análise mensal:', data.analise);
+                    }
+                }
+            } catch (e) {
+                thinking.classList.add('hidden');
+                container.innerHTML += `<div class="chat-message chat-ai" style="background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.2);">
+                    ❌ Erro ao chamar a IA: ${e.message}
+                </div>`;
+            }
+            
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // ============================================================
+        // FUNÇÃO DE PERGUNTA IA (ATUALIZADA)
+        // ============================================================
+        async function enviarPerguntaIA() {
+            const input = document.getElementById('chat-input');
+            const pergunta = input.value.trim();
+            if (!pergunta) return;
+            
+            const container = document.getElementById('chat-container');
+            container.innerHTML += `<div class="chat-message chat-user">${pergunta}</div>`;
+            input.value = '';
+            container.scrollTop = container.scrollHeight;
+            
+            await chamarIAFinanceira();
+        }
+
         function updateAIFilter(key, value) {
             state.aiFilter[key] = Number(value);
             renderAI();
         }
 
+        // ============================================================
+        // GERAR ANÁLISE COMPLETA (MENSAL)
+        // ============================================================
         function gerarAnaliseCompletaIA() {
             const { month, year } = state.aiFilter;
             const transacoes = getFilteredTransactions();
@@ -1222,7 +1292,7 @@
                     
                     if (kind === 'expense') {
                         categoriasGastos[category] = (categoriasGastos[category] || 0) + valor;
-                        if (['Aluguel','Condomínio','Internet','Energia','Água','Telefone','Escola','Faculdade','Plano de Saúde'].includes(category)) {
+                        if (['Aluguel','Condomínio','Internet','Energia','Água','Telefone/Celular','TV por Assinatura','Streaming','Escola','Faculdade','Plano de Saúde','Plano Odontológico','Seguro de Vida','Seguro do Carro','Seguro Residencial','IPTU','IPVA','Licenciamento','Academia','Assinaturas','Financiamento','Gás'].includes(category)) {
                             totalGastosFixos += valor;
                         } else {
                             totalGastosVariaveis += valor;
@@ -1288,37 +1358,38 @@
             const topCategoria = Object.entries(categoriasGastos).sort((a,b) => b[1] - a[1])[0];
             if (topCategoria && topCategoria[1] > despesasMes * 0.3) {
                 const pct = Math.round((topCategoria[1]/despesasMes)*100);
-                alertas.push(`🔴 <strong>${topCategoria[0]}</strong> representa ${pct}% dos seus gastos!`);
+                alertas.push(`🔴 <strong>${topCategoria[0]}</strong> representa ${pct}% dos seus gastos mensais!`);
             }
             
-            if (totalReceitas > 0 && totalDespesas > totalReceitas * 0.8) {
-                alertas.push(`🚨 Você está gastando ${Math.round((totalDespesas/totalReceitas)*100)}% da sua renda total!`);
+            if (receitasMes > 0 && despesasMes > receitasMes * 0.8) {
+                alertas.push(`🚨 Você está gastando ${Math.round((despesasMes/receitasMes)*100)}% da sua renda mensal!`);
             }
             
             let scoreDetails = [];
             
-            if (totalReceitas > 0) {
-                const pctGasto = (totalDespesas / totalReceitas) * 100;
-                if (pctGasto < 50) { score += 35; scoreDetails.push('✅ Gasta menos de 50% da renda (+35)'); }
-                else if (pctGasto < 70) { score += 25; scoreDetails.push('✅ Gasta até 70% da renda (+25)'); }
-                else if (pctGasto < 90) { score += 15; scoreDetails.push('⚠️ Gasta até 90% da renda (+15)'); }
-                else { score += 5; scoreDetails.push('❌ Gasta mais de 90% da renda (+5)'); }
+            if (receitasMes > 0) {
+                const pctGasto = (despesasMes / receitasMes) * 100;
+                if (pctGasto < 50) { score += 35; scoreDetails.push('✅ Gasta menos de 50% da renda mensal (+35)'); }
+                else if (pctGasto < 70) { score += 25; scoreDetails.push('✅ Gasta até 70% da renda mensal (+25)'); }
+                else if (pctGasto < 90) { score += 15; scoreDetails.push('⚠️ Gasta até 90% da renda mensal (+15)'); }
+                else { score += 5; scoreDetails.push('❌ Gasta mais de 90% da renda mensal (+5)'); }
+            }
+            
+            if (mesSaldo > 0) {
+                if (mesSaldo > receitasMes * 0.3) { score += 25; scoreDetails.push('✅ Saldo mensal > 30% da renda (+25)'); }
+                else if (mesSaldo > 0) { score += 15; scoreDetails.push('✅ Saldo mensal positivo (+15)'); }
+            } else {
+                scoreDetails.push('❌ Saldo mensal negativo (+0)');
             }
             
             if (saldo > 0) {
-                if (saldo > totalReceitas * 0.3) { score += 25; scoreDetails.push('✅ Saldo > 30% da renda (+25)'); }
-                else if (saldo > 0) { score += 15; scoreDetails.push('✅ Saldo positivo (+15)'); }
+                if (saldo > totalReceitas * 0.3) { score += 20; scoreDetails.push('✅ Saldo total > 30% da renda (+20)'); }
+                else if (saldo > 0) { score += 10; scoreDetails.push('✅ Saldo total positivo (+10)'); }
             } else {
-                scoreDetails.push('❌ Saldo negativo (+0)');
+                scoreDetails.push('❌ Saldo total negativo (+0)');
             }
             
-            const reservaIdeal = despesasMes * 6;
-            const saldoReserva = state.reserva.saldo || 0;
-            if (saldoReserva > 0 && saldoReserva >= reservaIdeal) { score += 20; scoreDetails.push('✅ Reserva completa (+20)'); }
-            else if (saldoReserva > 0 && saldoReserva >= reservaIdeal * 0.5) { score += 10; scoreDetails.push('⚠️ Reserva parcial (+10)'); }
-            else { scoreDetails.push('⚠️ Sem reserva adequada (+0)'); }
-            
-            const totalGastos = totalDespesas || 1;
+            const totalGastos = despesasMes || 1;
             const pctFixo = (totalGastosFixos / totalGastos) * 100;
             if (pctFixo < 40) { score += 10; scoreDetails.push('✅ Poucos gastos fixos (+10)'); }
             else if (pctFixo < 60) { score += 5; scoreDetails.push('⚠️ Gastos fixos moderados (+5)'); }
@@ -1329,7 +1400,7 @@
             if (mesSaldo < 0) {
                 recomendacoes.push('💡 Seu mês está negativo. Tente cortar gastos com <strong>' + (topCategoria?.[0] || 'categorias com maior peso') + '</strong>.');
                 recomendacoes.push('📋 Revise assinaturas e serviços que não usa com frequência.');
-            } else if (mesSaldo > 0 && mesSaldo < totalReceitas * 0.1) {
+            } else if (mesSaldo > 0 && mesSaldo < receitasMes * 0.1) {
                 recomendacoes.push('💡 Você está economizando pouco. Tente aumentar a reserva em 10%');
                 recomendacoes.push('🎯 Defina uma meta de economia mensal e acompanhe.');
             }
@@ -1339,32 +1410,30 @@
                 recomendacoes.push('📊 Considere renegociar dívidas com juros altos.');
             }
             
-            if (totalGastosFixos / (totalDespesas || 1) > 0.6) {
+            if (totalGastosFixos / (despesasMes || 1) > 0.6) {
                 recomendacoes.push('🏠 Seus gastos fixos são altos. Tente reduzir aluguel, energia ou internet.');
             }
             
-            const pctGastoTotal = totalReceitas > 0 ? Math.round((totalDespesas / totalReceitas) * 100) : 0;
+            const pctGastoMensal = receitasMes > 0 ? Math.round((despesasMes / receitasMes) * 100) : 0;
             let perfilFinanceiro = "";
-            if (pctGastoTotal < 50) {
-                perfilFinanceiro = "✅ Perfil <strong>Investidor</strong> - Você gasta menos de 50% da renda. Ótimo para acumular patrimônio!";
-            } else if (pctGastoTotal < 70) {
-                perfilFinanceiro = "⚠️ Perfil <strong>Moderado</strong> - Você gasta entre 50% e 70% da renda. Ainda sobra para investir, mas pode melhorar.";
-            } else if (pctGastoTotal < 90) {
-                perfilFinanceiro = "🔴 Perfil <strong>Consumista</strong> - Você gasta entre 70% e 90% da renda. Risco de não sobrar para emergências.";
+            if (pctGastoMensal < 50) {
+                perfilFinanceiro = "✅ Perfil <strong>Investidor</strong> - Você gasta menos de 50% da sua renda mensal. Ótimo para acumular patrimônio!";
+            } else if (pctGastoMensal < 70) {
+                perfilFinanceiro = "⚠️ Perfil <strong>Moderado</strong> - Você gasta entre 50% e 70% da renda mensal. Ainda sobra para investir, mas pode melhorar.";
+            } else if (pctGastoMensal < 90) {
+                perfilFinanceiro = "🔴 Perfil <strong>Consumista</strong> - Você gasta entre 70% e 90% da renda mensal. Risco de não sobrar para emergências.";
             } else {
-                perfilFinanceiro = "🚨 Perfil <strong>Crítico</strong> - Você gasta mais de 90% da renda. Procure ajuda financeira urgente!";
+                perfilFinanceiro = "🚨 Perfil <strong>Crítico</strong> - Você gasta mais de 90% da sua renda mensal. Procure ajuda financeira urgente!";
             }
             
-            if (recomendacoes.length === 0 && totalDespesas > 0) {
-                recomendacoes.push('🎉 Parabéns! Suas finanças estão saudáveis. Continue assim!');
-                recomendacoes.push('📈 Que tal começar a investir 20% da sua renda?');
+            if (recomendacoes.length === 0 && despesasMes > 0) {
+                recomendacoes.push('🎉 Parabéns! Suas finanças mensais estão saudáveis. Continue assim!');
+                recomendacoes.push('📈 Que tal começar a investir 20% da sua renda mensal?');
             }
             
-            const reservaIdealFinal = despesasMes * 6;
-            const lazerSugerido = totalReceitas > 0 ? (totalReceitas * 0.1) : 0;
-            const investimentoSugerido = totalReceitas > 0 ? (totalReceitas * 0.2) : 0;
-            const gastoAnual = totalDespesas * 12;
-            const financProjetado = gastoAnual * 1.1;
+            const reservaIdealMensal = despesasMes * 6;
+            const lazerSugeridoMensal = receitasMes > 0 ? (receitasMes * 0.1) : 0;
+            const investimentoSugeridoMensal = receitasMes > 0 ? (receitasMes * 0.2) : 0;
             
             const statusColor = score >= 70 ? 'from-emerald-900/30 to-emerald-800/30' :
                                 score >= 40 ? 'from-amber-900/30 to-amber-800/30' :
@@ -1374,8 +1443,7 @@
                                '🔴 Crítico!';
             
             const saldoReservaAtual = state.reserva.saldo || 0;
-            const progressoReserva = reservaIdealFinal > 0 ? Math.min((saldoReservaAtual / reservaIdealFinal) * 100, 100) : 0;
-            
+            const progressoReserva = reservaIdealMensal > 0 ? Math.min((saldoReservaAtual / reservaIdealMensal) * 100, 100) : 0;
             const saldoLazer = state.lazer.saldo || 0;
             
             return `
@@ -1386,14 +1454,14 @@
                                 <span class="score-text text-3xl font-bold text-white">${score}%</span>
                             </div>
                             <div>
-                                <h3 class="text-xl font-bold text-white">Saúde Financeira</h3>
+                                <h3 class="text-xl font-bold text-white">Saúde Financeira Mensal</h3>
                                 <p class="text-sm text-zinc-400">${statusIcon}</p>
-                                <p class="text-xs text-zinc-500 mt-1">Score baseado em 4 critérios</p>
+                                <p class="text-xs text-zinc-500 mt-1">Score baseado em gastos mensais</p>
                             </div>
                         </div>
                         <div class="text-right">
-                            <p class="text-sm text-zinc-400">Saldo Total</p>
-                            <p class="text-2xl font-bold ${saldo >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${formatCurrency(saldo)}</p>
+                            <p class="text-sm text-zinc-400">Saldo do Mês</p>
+                            <p class="text-2xl font-bold ${mesSaldo >= 0 ? 'text-emerald-400' : 'text-rose-400'}">${formatCurrency(mesSaldo)}</p>
                         </div>
                     </div>
                 </div>
@@ -1410,14 +1478,14 @@
                         <h4 class="text-emerald-400 font-semibold flex items-center gap-2">
                             <i data-lucide="check-circle" class="w-5 h-5"></i> Nenhum alerta no momento
                         </h4>
-                        <p class="text-zinc-400 text-sm mt-1">Suas finanças estão sob controle!</p>
+                        <p class="text-zinc-400 text-sm mt-1">Suas finanças mensais estão sob controle!</p>
                     </div>
                 `}
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div class="bg-zinc-900/40 border border-white/5 rounded-2xl p-5">
-                        <p class="text-zinc-500 text-xs uppercase tracking-wider font-medium">💰 Reserva de Emergência</p>
-                        <p class="text-lg font-bold text-emerald-400">${formatCurrency(reservaIdealFinal)}</p>
+                        <p class="text-zinc-500 text-xs uppercase tracking-wider font-medium">💰 Reserva de Emergência (6 meses)</p>
+                        <p class="text-lg font-bold text-emerald-400">${formatCurrency(reservaIdealMensal)}</p>
                         <p class="text-xs text-zinc-500">Equivalente a 6 meses de gastos</p>
                         <div class="mt-2">
                             <div class="flex justify-between text-xs text-zinc-500">
@@ -1430,14 +1498,14 @@
                         </div>
                     </div>
                     <div class="bg-zinc-900/40 border border-white/5 rounded-2xl p-5">
-                        <p class="text-zinc-500 text-xs uppercase tracking-wider font-medium">🎯 Lazer Sugerido</p>
-                        <p class="text-lg font-bold text-purple-400">${formatCurrency(lazerSugerido)}/mês</p>
+                        <p class="text-zinc-500 text-xs uppercase tracking-wider font-medium">🎯 Lazer Sugerido (Mensal)</p>
+                        <p class="text-lg font-bold text-purple-400">${formatCurrency(lazerSugeridoMensal)}/mês</p>
                         <p class="text-xs text-zinc-500">10% da sua renda mensal</p>
                         <p class="text-xs text-zinc-500 mt-1">Saldo atual: ${formatCurrency(saldoLazer)}</p>
                     </div>
                     <div class="bg-zinc-900/40 border border-white/5 rounded-2xl p-5">
-                        <p class="text-zinc-500 text-xs uppercase tracking-wider font-medium">📈 Investimento/Reserva</p>
-                        <p class="text-lg font-bold text-indigo-400">${formatCurrency(investimentoSugerido)}/mês</p>
+                        <p class="text-zinc-500 text-xs uppercase tracking-wider font-medium">📈 Investimento (Mensal)</p>
+                        <p class="text-lg font-bold text-indigo-400">${formatCurrency(investimentoSugeridoMensal)}/mês</p>
                         <p class="text-xs text-zinc-500">20% da sua renda mensal</p>
                     </div>
                 </div>
@@ -1445,23 +1513,23 @@
                 <div class="bg-zinc-900/40 border border-white/5 rounded-2xl p-6">
                     <h4 class="text-zinc-300 font-semibold mb-2 flex items-center gap-2">
                         <i data-lucide="user" class="w-5 h-5 text-indigo-400"></i>
-                        Perfil Financeiro
+                        Perfil Financeiro (Mensal)
                     </h4>
                     <p class="text-zinc-300 text-sm">${perfilFinanceiro}</p>
                     <div class="mt-3 grid grid-cols-3 gap-2 text-xs">
                         <div class="bg-zinc-800/50 p-2 rounded-lg text-center">
                             <p class="text-zinc-500">Gastos Essenciais</p>
-                            <p class="text-white font-bold">${Math.round((totalGastosFixos / (totalDespesas || 1)) * 100)}%</p>
+                            <p class="text-white font-bold">${Math.round((totalGastosFixos / (despesasMes || 1)) * 100)}%</p>
                             <p class="text-zinc-600">Meta: 50%</p>
                         </div>
                         <div class="bg-zinc-800/50 p-2 rounded-lg text-center">
                             <p class="text-zinc-500">Estilo de Vida</p>
-                            <p class="text-white font-bold">${Math.round((totalGastosVariaveis / (totalDespesas || 1)) * 100)}%</p>
+                            <p class="text-white font-bold">${Math.round((totalGastosVariaveis / (despesasMes || 1)) * 100)}%</p>
                             <p class="text-zinc-600">Meta: 30%</p>
                         </div>
                         <div class="bg-zinc-800/50 p-2 rounded-lg text-center">
                             <p class="text-zinc-500">Investimento</p>
-                            <p class="text-white font-bold">${Math.max(0, 100 - Math.round((totalDespesas / (totalReceitas || 1)) * 100))}%</p>
+                            <p class="text-white font-bold">${Math.max(0, 100 - Math.round((despesasMes / (receitasMes || 1)) * 100))}%</p>
                             <p class="text-zinc-600">Meta: 20%</p>
                         </div>
                     </div>
@@ -1470,7 +1538,7 @@
                 <div class="bg-blue-500/5 border border-blue-500/20 rounded-2xl p-6">
                     <h4 class="text-blue-400 font-semibold mb-3 flex items-center gap-2">
                         <i data-lucide="target" class="w-5 h-5"></i>
-                        Planejamento Recomendado (Especialistas)
+                        Planejamento Mensal (Especialistas)
                     </h4>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
                         <div class="bg-zinc-800/30 p-3 rounded-lg border border-white/5">
@@ -1494,7 +1562,7 @@
                 <div class="bg-amber-500/5 border border-amber-500/20 rounded-2xl p-6">
                     <h4 class="text-amber-400 font-semibold mb-3 flex items-center gap-2">
                         <i data-lucide="lightbulb" class="w-5 h-5"></i>
-                        Recomendações da IA
+                        Recomendações da IA (Mensal)
                     </h4>
                     ${recomendacoes.map(r => `<p class="text-zinc-300 text-sm py-1">${r}</p>`).join('')}
                 </div>
@@ -1502,7 +1570,7 @@
                 <div class="bg-zinc-900/40 border border-white/5 rounded-2xl p-6">
                     <h4 class="text-zinc-300 font-semibold mb-4 flex items-center gap-2">
                         <i data-lucide="bar-chart-2" class="w-5 h-5 text-indigo-400"></i>
-                        Resumo de ${MONTHS[month]} ${year}
+                        Resumo Mensal - ${MONTHS[month]} ${year}
                     </h4>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                         <div>
@@ -1534,180 +1602,19 @@
                             </div>
                         </div>
                     ` : ''}
+                    <div class="mt-3 text-xs text-zinc-500">
+                        <i data-lucide="info" class="w-3 h-3 inline"></i>
+                        Todos os dados são baseados no mês selecionado.
+                    </div>
                 </div>
                 
                 <details class="bg-zinc-900/20 border border-white/5 rounded-2xl p-4">
-                    <summary class="text-zinc-400 text-sm cursor-pointer hover:text-white transition">📊 Ver detalhes do Score</summary>
+                    <summary class="text-zinc-400 text-sm cursor-pointer hover:text-white transition">📊 Ver detalhes do Score Mensal</summary>
                     <div class="mt-3 space-y-1">
                         ${scoreDetails.map(d => `<p class="text-xs text-zinc-500">${d}</p>`).join('')}
                     </div>
                 </details>
             `;
-        }
-
-        function enviarPerguntaIA() {
-            const input = document.getElementById('chat-input');
-            const pergunta = input.value.trim();
-            if (!pergunta) return;
-            
-            const container = document.getElementById('chat-container');
-            container.innerHTML += `<div class="chat-message chat-user">${pergunta}</div>`;
-            input.value = '';
-            container.scrollTop = container.scrollHeight;
-            
-            const resposta = processarPerguntaIA(pergunta);
-            setTimeout(() => {
-                container.innerHTML += `<div class="chat-message chat-ai">${resposta}</div>`;
-                container.scrollTop = container.scrollHeight;
-            }, 300);
-        }
-
-        function processarPerguntaIA(pergunta) {
-            const p = pergunta.toLowerCase();
-            const transacoes = getFilteredTransactions();
-            let totalReceitas = 0, totalDespesas = 0;
-            let mesAtual = new Date().getMonth();
-            let anoAtual = new Date().getFullYear();
-            let receitasMes = 0, despesasMes = 0;
-            let categorias = {};
-            let gastosFixos = 0, gastosVariaveis = 0;
-            
-            transacoes.forEach(t => {
-                const processar = (valor, data, kind, category) => {
-                    const {y, m} = safeGetYearMonth(data);
-                    if (m === mesAtual && y === anoAtual) {
-                        kind === 'income' ? receitasMes += valor : despesasMes += valor;
-                    }
-                    kind === 'income' ? totalReceitas += valor : totalDespesas += valor;
-                    if (kind === 'expense') {
-                        categorias[category] = (categorias[category] || 0) + valor;
-                        if (['Aluguel','Condomínio','Internet','Energia','Água','Telefone','Escola','Faculdade','Plano de Saúde'].includes(category)) {
-                            gastosFixos += valor;
-                        } else {
-                            gastosVariaveis += valor;
-                        }
-                    }
-                };
-                
-                if (t.type === 'single') {
-                    processar(t.value, t.date, t.kind, t.category);
-                } else if (t.type === 'installment' && t.installments) {
-                    t.installments.forEach(i => {
-                        processar(i.value, i.date, t.kind, t.category);
-                    });
-                }
-            });
-
-            const saldo = totalReceitas - totalDespesas;
-            const saldoReserva = state.reserva.saldo || 0;
-            const saldoLazer = state.lazer.saldo || 0;
-            
-            if (p.includes('gasto') || p.includes('despesa') || p.includes('gastando')) {
-                const top = Object.entries(categorias).sort((a,b) => b[1] - a[1])[0];
-                const topList = Object.entries(categorias).sort((a,b) => b[1] - a[1]).slice(0, 3);
-                return `📊 <strong>Análise de Gastos</strong><br><br>
-                Total do mês: <strong>${formatCurrency(despesasMes)}</strong><br>
-                Média diária: <strong>${formatCurrency(despesasMes/30 || 0)}</strong><br><br>
-                ${top ? `💰 <strong>Maior gasto:</strong> ${top[0]} - ${formatCurrency(top[1])}` : ''}<br>
-                ${topList.length > 1 ? `📋 <strong>Top 3 categorias:</strong><br>${topList.map(([cat, val]) => `• ${cat}: ${formatCurrency(val)}`).join('<br>')}` : ''}<br><br>
-                💡 ${gerarDicaFinanceiraIA(saldo, totalReceitas, totalDespesas)}`;
-            }
-            
-            if (p.includes('econom') || p.includes('guard') || p.includes('reserva')) {
-                const reserva = totalDespesas * 6;
-                return `💰 <strong>Reserva de Emergência</strong><br><br>
-                Ideal: <strong>${formatCurrency(reserva)}</strong> (6 meses de gastos)<br>
-                Atual: <strong>${formatCurrency(saldoReserva)}</strong><br><br>
-                ${saldoReserva >= reserva ? '✅ <strong>Parabéns!</strong> Você já atingiu sua reserva de emergência!' :
-                  `⚠️ <strong>Faltam ${formatCurrency(reserva - saldoReserva)}</strong> para atingir a meta.<br>
-                  Tente economizar ${formatCurrency((reserva - saldoReserva) / 6)} por mês.`}`;
-            }
-            
-            if (p.includes('lazer') || p.includes('diversão') || p.includes('viagem') || p.includes('gastei')) {
-                const lazer = totalReceitas > 0 ? (totalReceitas * 0.1) : 0;
-                return `🎯 <strong>Planejamento de Lazer</strong><br><br>
-                Sugestão: <strong>${formatCurrency(lazer)}/mês</strong> (10% da sua renda mensal)<br>
-                Saldo atual: <strong>${formatCurrency(saldoLazer)}</strong><br>
-                Total anual: <strong>${formatCurrency(lazer * 12)}</strong><br><br>
-                💡 Dica: Separe esse valor em uma conta separada para viagens e hobbies.`;
-            }
-            
-            if (p.includes('invest') || p.includes('rentabilidade')) {
-                const metaInv = totalReceitas * 0.2;
-                return `📈 <strong>Dicas de Investimento</strong><br><br>
-                🏦 <strong>Comece com renda fixa:</strong> CDB, Tesouro Selic<br>
-                📊 <strong>Meta sugerida:</strong> ${formatCurrency(metaInv)} por mês (20% da renda)<br><br>
-                🎯 <strong>Distribuição sugerida:</strong><br>
-                • 60% Renda Fixa (segurança)<br>
-                • 20% Ações (crescimento)<br>
-                • 20% Internacionais (diversificação)<br><br>
-                ⚠️ Sempre tenha reserva de emergência antes de investir!`;
-            }
-            
-            if (p.includes('dívida') || p.includes('parcela') || p.includes('financiamento')) {
-                return `⚠️ <strong>Gestão de Dívidas</strong><br><br>
-                📋 <strong>Plano de ação:</strong><br>
-                1. Liste todas as dívidas com juros<br>
-                2. Pague as com <strong>maior juro</strong> primeiro<br>
-                3. Negocie parcelamentos<br>
-                4. Evite novos empréstimos<br><br>
-                💡 Use <strong>30% da sua renda</strong> para quitar dívidas.<br>
-                ${saldo < 0 ? '🚨 Seu saldo está negativo. Priorize a quitação de dívidas!' : ''}`;
-            }
-            
-            if (p.includes('score') || p.includes('saúde') || p.includes('financeira')) {
-                let score = 0;
-                if (totalReceitas > 0) {
-                    const pct = (totalDespesas / totalReceitas) * 100;
-                    if (pct < 50) score = 90;
-                    else if (pct < 70) score = 75;
-                    else if (pct < 90) score = 55;
-                    else score = 30;
-                }
-                return `🏥 <strong>Saúde Financeira</strong><br><br>
-                Score: <strong>${score}%</strong><br>
-                ${score >= 70 ? '✅ Excelente! Suas finanças estão saudáveis.' :
-                  score >= 50 ? '⚠️ Atenção! Alguns pontos precisam de ajuste.' :
-                  '🔴 Crítico! É hora de rever urgentemente seus gastos.'}<br><br>
-                Saldo: ${formatCurrency(saldo)}<br>
-                Gastos: ${formatCurrency(totalDespesas)}<br>
-                Renda: ${formatCurrency(totalReceitas)}<br>
-                Reserva: ${formatCurrency(saldoReserva)}<br>
-                Lazer: ${formatCurrency(saldoLazer)}`;
-            }
-            
-            if (p.includes('fixo') || p.includes('variável')) {
-                const total = gastosFixos + gastosVariaveis || 1;
-                return `📊 <strong>Gastos Fixos vs Variáveis</strong><br><br>
-                🏠 <strong>Gastos Fixos:</strong> ${formatCurrency(gastosFixos)} (${Math.round((gastosFixos/total)*100)}%)<br>
-                🔄 <strong>Gastos Variáveis:</strong> ${formatCurrency(gastosVariaveis)} (${Math.round((gastosVariaveis/total)*100)}%)<br><br>
-                ${gastosFixos / total > 0.6 ? '⚠️ Seus gastos fixos estão altos. Tente reduzir aluguel, energia ou internet.' :
-                  '✅ Seus gastos fixos estão equilibrados. Continue assim!'}`;
-            }
-            
-            return `🤖 <strong>Como posso ajudar?</strong><br><br>
-            Pergunte sobre:<br>
-            • <strong>Gastos</strong> - análise detalhada<br>
-            • <strong>Economia</strong> - reserva de emergência<br>
-            • <strong>Lazer</strong> - quanto separar (10% da renda mensal)<br>
-            • <strong>Investimentos</strong> - dicas de onde começar (20% da renda)<br>
-            • <strong>Dívidas</strong> - como quitar<br>
-            • <strong>Score</strong> - saúde financeira<br>
-            • <strong>Gastos fixos</strong> vs variáveis<br><br>
-            Digite sua pergunta! 😊`;
-        }
-
-        function gerarDicaFinanceiraIA(saldo, receitas, despesas) {
-            if (saldo > 0 && receitas > 0) {
-                const pct = Math.round((saldo/receitas)*100);
-                if (pct > 20) return `🎉 Excelente! Você está economizando ${pct}% da sua renda. Considere investir 20% e usar o restante para lazer.`;
-                if (pct > 10) return `👍 Bom trabalho! Você está economizando ${pct}% da renda. Que tal aumentar para 20% aos poucos?`;
-                return `💪 Continue firme! Você está no azul. Analise seus gastos para ver onde pode economizar ainda mais.`;
-            }
-            if (saldo < 0) {
-                return `⚠️ Atenção! Seu saldo está negativo. Tente cortar gastos supérfluos e negociar dívidas. Lembre-se: 10% da renda deve ir para lazer, não mais.`;
-            }
-            return `📊 Acompanhe seus gastos de perto. Defina um orçamento mensal e tente não ultrapassá-lo.`;
         }
 
         function calcularDiferencaDias(dataStr, hoje) {
