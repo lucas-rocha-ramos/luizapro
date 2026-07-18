@@ -258,7 +258,6 @@
         <section id="view-users" class="view-section"></section>
     </div>
 
-    <!-- MODALS -->
     <div id="modal-transaction" class="modal-overlay">
         <div class="bg-zinc-900 border border-white/10 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl m-4 animate-fade-in-up max-h-[90vh] flex flex-col">
             <div class="p-6 border-b border-white/10 flex justify-between items-center bg-zinc-900/50 backdrop-blur">
@@ -1132,7 +1131,7 @@
         function findDateInText(text) { const match = text.match(/(\d{2})[\/\s\.](\d{2})[\/\s\.](\d{4})/); return match ? `${match[3]}-${match[2]}-${match[1]}` : null; }
 
         // ============================================================
-        // VIEW: AI - COM IA MENSAL
+        // VIEW: AI - COM IA MENSAL (CORRIGIDO - PORCENTAGENS)
         // ============================================================
         function renderAI() {
             const aiHtml = gerarAnaliseCompletaIA();
@@ -1268,7 +1267,7 @@
         }
 
         // ============================================================
-        // GERAR ANÁLISE COMPLETA (MENSAL)
+        // GERAR ANÁLISE COMPLETA (MENSAL - CORRIGIDO)
         // ============================================================
         function gerarAnaliseCompletaIA() {
             const { month, year } = state.aiFilter;
@@ -1446,6 +1445,13 @@
             const progressoReserva = reservaIdealMensal > 0 ? Math.min((saldoReservaAtual / reservaIdealMensal) * 100, 100) : 0;
             const saldoLazer = state.lazer.saldo || 0;
             
+            // ============================================================
+            // CORREÇÃO: Cálculo dos percentuais
+            // ============================================================
+            const pctEssencial = despesasMes > 0 ? Math.round((totalGastosFixos / despesasMes) * 100) : 0;
+            const pctEstilo = despesasMes > 0 ? Math.round((totalGastosVariaveis / despesasMes) * 100) : 0;
+            const pctInvestimento = receitasMes > 0 ? Math.max(0, 100 - Math.round((despesasMes / receitasMes) * 100)) : 0;
+            
             return `
                 <div class="bg-gradient-to-r ${statusColor} border border-white/10 rounded-2xl p-6">
                     <div class="flex flex-col md:flex-row items-center justify-between gap-6">
@@ -1519,17 +1525,17 @@
                     <div class="mt-3 grid grid-cols-3 gap-2 text-xs">
                         <div class="bg-zinc-800/50 p-2 rounded-lg text-center">
                             <p class="text-zinc-500">Gastos Essenciais</p>
-                            <p class="text-white font-bold">${Math.round((totalGastosFixos / (despesasMes || 1)) * 100)}%</p>
+                            <p class="text-white font-bold">${pctEssencial}%</p>
                             <p class="text-zinc-600">Meta: 50%</p>
                         </div>
                         <div class="bg-zinc-800/50 p-2 rounded-lg text-center">
                             <p class="text-zinc-500">Estilo de Vida</p>
-                            <p class="text-white font-bold">${Math.round((totalGastosVariaveis / (despesasMes || 1)) * 100)}%</p>
+                            <p class="text-white font-bold">${pctEstilo}%</p>
                             <p class="text-zinc-600">Meta: 30%</p>
                         </div>
                         <div class="bg-zinc-800/50 p-2 rounded-lg text-center">
                             <p class="text-zinc-500">Investimento</p>
-                            <p class="text-white font-bold">${Math.max(0, 100 - Math.round((despesasMes / (receitasMes || 1)) * 100))}%</p>
+                            <p class="text-white font-bold">${pctInvestimento}%</p>
                             <p class="text-zinc-600">Meta: 20%</p>
                         </div>
                     </div>
