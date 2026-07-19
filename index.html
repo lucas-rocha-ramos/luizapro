@@ -343,7 +343,7 @@
     </div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbxS_KNgdHDiFO8byjiz8e7nZ8KeIw79RR1WZSWnRxB4IHfTdlOxRV1VIdAaUr9hOO6b/exec";
+        const API_URL = "https://script.google.com/macros/s/AKfycbxUSi3le-mNyWNsjF8VE-zivKYH0TpFSgQDWjzk3hovlgQ3Bg6JhY68shjMtG2PeJw7/exec";
         const MONTHS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
         const YEARS = [2023, 2024, 2025, 2026, 2027];
 
@@ -998,7 +998,7 @@
             const newId = state.editingId ? state.editingId : String(Date.now());
             const userId = state.editingId ? state.transactions.find(x => String(x.id) === String(state.editingId)).userId : String(state.currentUser.id);
 
-            const payload = { id: newId, userId: userId, kind: state.modalMode, name: document.getElementById('t-desc').value, store: document.getElementById('t-store').value, category: cat, value: totalValue, date, status: status, type: type, installmentValue: type === 'installment' ? valPerInst : 0, totalInstallments: instCount, paidInstallments: 0, installments: [] };
+            const payload = { id: newId, userId: userId, kind: state.modalMode, name: document.getElementById('t-desc').value, store: document.getElementById('t-store').value, category: cat, value: totalValue, date, status: status, type, installmentValue: type === 'installment' ? valPerInst : 0, totalInstallments: instCount, paidInstallments: 0, installments: [] };
             
             if(type === 'installment') {
                 for(let i=0; i<instCount; i++) {
@@ -1132,7 +1132,7 @@
         function findDateInText(text) { const match = text.match(/(\d{2})[\/\s\.](\d{2})[\/\s\.](\d{4})/); return match ? `${match[3]}-${match[2]}-${match[1]}` : null; }
 
         // ============================================================
-        // VIEW: AI - CORRIGIDA
+        // VIEW: AI - COM IA MENSAL
         // ============================================================
         function renderAI() {
             const aiHtml = gerarAnaliseCompletaIA();
@@ -1195,7 +1195,7 @@
         }
 
         // ============================================================
-        // FUNÇÃO PARA CHAMAR IA EXTERNA - CORRIGIDA
+        // FUNÇÃO PARA CHAMAR IA EXTERNA
         // ============================================================
         async function chamarIAFinanceira() {
             const thinking = document.getElementById('ia-thinking');
@@ -1207,11 +1207,8 @@
             try {
                 const pergunta = document.getElementById('chat-input').value || 'Me dê uma análise completa das minhas finanças deste mês';
                 
-                const response = await fetch(API_URL, {
+                const res = await fetch(`${API_URL}`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
                     body: JSON.stringify({
                         action: 'callAI',
                         userId: state.currentUser.id,
@@ -1220,7 +1217,7 @@
                     })
                 });
                 
-                const data = await response.json();
+                const data = await res.json();
                 thinking.classList.add('hidden');
                 
                 if (data.resposta) {
@@ -1238,24 +1235,19 @@
                     if (data.analise) {
                         console.log('📊 Análise mensal:', data.analise);
                     }
-                } else {
-                    container.innerHTML += `<div class="chat-message chat-ai" style="background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.2);">
-                        ❌ Erro: A IA não retornou uma resposta válida.
-                    </div>`;
                 }
             } catch (e) {
                 thinking.classList.add('hidden');
                 container.innerHTML += `<div class="chat-message chat-ai" style="background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.2);">
                     ❌ Erro ao chamar a IA: ${e.message}
                 </div>`;
-                console.error('Erro na IA:', e);
             }
             
             container.scrollTop = container.scrollHeight;
         }
 
         // ============================================================
-        // FUNÇÃO DE PERGUNTA IA
+        // FUNÇÃO DE PERGUNTA IA (ATUALIZADA)
         // ============================================================
         async function enviarPerguntaIA() {
             const input = document.getElementById('chat-input');
@@ -1276,7 +1268,7 @@
         }
 
         // ============================================================
-        // GERAR ANÁLISE COMPLETA (MENSAL) - CORRIGIDA
+        // GERAR ANÁLISE COMPLETA (MENSAL)
         // ============================================================
         function gerarAnaliseCompletaIA() {
             const { month, year } = state.aiFilter;
